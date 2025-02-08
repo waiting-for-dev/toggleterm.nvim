@@ -137,14 +137,6 @@ function M.get_last_focused()
   return M.get(last_focus, true)
 end
 
---- @param bufnr number
-local function setup_buffer_mappings(bufnr)
-  local mapping = config.open_mapping
-  if mapping and config.terminal_mappings then
-    utils.key_map("t", mapping, "<Cmd>ToggleTerm<CR>", { buffer = bufnr, silent = true })
-  end
-end
-
 ---@param id number terminal id
 local function on_vim_resized(id)
   local term = M.get(id, true)
@@ -477,7 +469,6 @@ function Terminal:spawn()
     self:__spawn()
   end
   setup_buffer_autocommands(self)
-  setup_buffer_mappings(self.bufnr)
   if self.on_create then self:on_create() end
 end
 
@@ -502,11 +493,9 @@ function Terminal:open(size, direction)
   ui.hl_term(self)
   -- NOTE: it is important that this function is called at this point. i.e. the buffer has been correctly assigned
   if self.on_open then self:on_open() end
+  return self
 end
 
----Open if closed and close if opened
----@param size number?
----@param direction string?
 function Terminal:toggle(size, direction)
   if self:is_open() then
     self:close()

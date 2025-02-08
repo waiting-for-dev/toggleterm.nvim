@@ -33,36 +33,36 @@ describe("ToggleTerm tests:", function()
 
   describe("toggling terminals - ", function()
     it("new terminals are assigned incremental ids", function()
-      local test1 = Terminal:new():toggle()
-      local test2 = Terminal:new():toggle()
-      local test3 = Terminal:new():toggle()
+      local test1 = Terminal:new():open()
+      local test2 = Terminal:new():open()
+      local test3 = Terminal:new():open()
       assert.are.same(test1.id, 1)
       assert.are.same(test2.id, 2)
       assert.are.same(test3.id, 3)
     end)
 
     it("should assign the next id filling in any missing gaps", function()
-      Terminal:new({ id = 2 }):toggle() --2
-      Terminal:new():toggle() --1
-      Terminal:new():toggle() --3
-      Terminal:new():toggle() --4
-      Terminal:new({ id = 6 }):toggle() --6
+      Terminal:new({ id = 2 }):open() --2
+      Terminal:new():open() --1
+      Terminal:new():open() --3
+      Terminal:new():open() --4
+      Terminal:new({ id = 6 }):open() --6
       local terms = get_all()
       terms[3]:shutdown()
       terms[1]:shutdown()
-      local new1 = Terminal:new():toggle()
+      local new1 = Terminal:new():open()
       assert.equal(1, new1.id)
-      local new3 = Terminal:new():toggle()
+      local new3 = Terminal:new():open()
       assert.equal(3, new3.id)
-      local new5 = Terminal:new():toggle()
+      local new5 = Terminal:new():open()
       assert.equal(5, new5.id)
-      local new7 = Terminal:new():toggle()
+      local new7 = Terminal:new():open()
       assert.equal(7, new7.id)
     end)
 
     it("should get terminals as a list", function()
-      Terminal:new({ id = 20 }):toggle()
-      Terminal:new():toggle()
+      Terminal:new({ id = 20 }):open()
+      Terminal:new():open()
       local terms = get_all()
       assert.equal(#terms, 2)
       assert.equal(terms[#terms].id, 20)
@@ -77,33 +77,25 @@ describe("ToggleTerm tests:", function()
 
     it("should close a terminal window if open", function()
       local test1 = Terminal:new()
-      test1:toggle()
+      test1:open()
       assert.is_true(vim.tbl_contains(api.nvim_list_wins(), test1.window))
       test1:toggle()
       assert.is_not_true(vim.tbl_contains(api.nvim_list_wins(), test1.window))
     end)
 
-    it("should toggle a specific buffer if a count is passed", function()
-      toggleterm.toggle(2, 15)
-      local terminals = get_all()
-      assert.equals(#terminals, 1)
-      local term = terminals[1]
-      assert.is_true(term_has_windows(term))
-    end)
-
     it("should not list hidden terminals", function()
-      Terminal:new({ hidden = true }):toggle()
+      Terminal:new({ hidden = true }):open()
       local terminals = get_all()
       assert.equal(#terminals, 0)
-      Terminal:new():toggle()
+      Terminal:new():open()
       terminals = get_all()
       assert.equal(#terminals, 1)
     end)
 
-    -- FIXME: this test does not work despite the functionality seeming to work
-    -- the idea here is that if a custom terminal with hidden = true is created
-    -- then it shouldn't be toggled open or closed if the general toggleterm command
-    -- is run so I expect to still see that it's window is open
+    -- -- FIXME: this test does not work despite the functionality seeming to work
+    -- -- the idea here is that if a custom terminal with hidden = true is created
+    -- -- then it shouldn't be toggled open or closed if the general toggleterm command
+    -- -- is run so I expect to still see that it's window is open
     pending("should not toggle a terminal if hidden", function()
       local term = Terminal:new({ cmd = "bash", hidden = true }):toggle()
       assert.is_true(term_has_windows(term))
@@ -111,19 +103,12 @@ describe("ToggleTerm tests:", function()
       assert.is_true(term_has_windows(term))
     end)
 
-    it("should not toggle a terminal if not hidden", function()
-      local term = Terminal:new():toggle()
-      assert.is_true(term_has_windows(term))
-      toggleterm.toggle(1)
-      assert.is_false(term_has_windows(term))
-    end)
-
     it("should create a terminal with a custom command", function()
-      Terminal:new({ cmd = "ls" }):toggle()
+      Terminal:new({ cmd = "ls" }):open()
       assert.truthy(vim.b.term_title:match("ls"))
     end)
 
-    -- FIXME: Fix flaky test
+    -- -- FIXME: Fix flaky test
     pending("should spawn in the background", function()
       local stdout = {}
       local has_spawned = function() return table.concat(stdout, ""):match("SPAWNED") ~= nil end
@@ -136,7 +121,7 @@ describe("ToggleTerm tests:", function()
       assert.is_true(has_spawned())
     end)
 
-    -- FIXME: Fix flaky test
+    -- -- FIXME: Fix flaky test
     pending("should pass environmental variables", function()
       local stdout = {}
       local expected = "TESTVAR = 0123456789"
@@ -151,105 +136,9 @@ describe("ToggleTerm tests:", function()
       assert.are.equal(expected, table.concat(stdout, " "):match("TESTVAR = %S+"))
     end)
 
-    it("should open the correct terminal if a user specifies a count", function()
-      local term = Terminal:new({ count = 5 }):toggle()
-      term:toggle()
-      assert.is_false(ui.term_has_open_win(term))
-      toggleterm.toggle(5)
-      assert.is_true(ui.term_has_open_win(term))
-    end)
-
-    it("should open the last toggled terminal", function()
-      -- GIVEN two opened terminals
-      toggleterm.toggle(1)
-      toggleterm.toggle(2)
-      -- AND then closed first terminal
-      toggleterm.toggle(1)
-      -- AND then close second terminal via smart toggle
-      toggleterm.toggle(0)
-
-      -- WHEN a smart toggle is hit
-      toggleterm.toggle(0)
-
-      local terms = get_all()
-      --- THEN only the second terminal should be opened
-      assert.is_true(ui.term_has_open_win(terms[2]))
-      assert.is_false(ui.term_has_open_win(terms[1]))
-    end)
-
-    it("should open the last toggled terminal view", function()
-      -- GIVEN two opened terminals
-      toggleterm.toggle(1)
-      toggleterm.toggle(2)
-      get_all()[1]:focus()
-      -- AND then closed terminal view via smart toggle
-      toggleterm.toggle(0)
-
-      -- WHEN a smart toggle is hit
-      toggleterm.toggle(0)
-
-      --- THEN both terminals should be opened
-      local terms = get_all()
-      local term1 = terms[1]
-      local term2 = terms[2]
-      assert.is_true(term1:is_focused())
-      assert.is_false(term2:is_focused())
-      assert.is_true(ui.term_has_open_win(term2))
-      assert.is_true(ui.term_has_open_win(term1))
-    end)
-
-    it("should open the last toggled nth terminal", function()
-      -- GIVEN two opened terminals
-      toggleterm.toggle(1)
-      toggleterm.toggle(2)
-      -- AND then closed terminal view via smart toggle
-      toggleterm.toggle(0)
-      -- AND then open and close 3rd terminal
-      toggleterm.toggle(3)
-      toggleterm.toggle(3)
-
-      -- WHEN a smart toggle is hit
-      toggleterm.toggle(0)
-
-      local terms = get_all()
-      --- THEN only 3rd terminal should be opened
-      assert.is_true(ui.term_has_open_win(terms[3]))
-      assert.is_false(ui.term_has_open_win(terms[2]))
-      assert.is_false(ui.term_has_open_win(terms[1]))
-    end)
-
-    it("should open a hidden terminal and a visible one", function()
-      local hidden = Terminal:new({ hidden = true }):toggle()
-      local visible = Terminal:new():toggle()
-      hidden:toggle()
-      visible:toggle()
-    end)
-
-    it("should close all open terminals using toggle all", function()
-      local test1 = Terminal:new():toggle()
-      local test2 = Terminal:new():toggle()
-      toggleterm.toggle_all()
-
-      assert.is_false(ui.term_has_open_win(test1))
-      assert.is_false(ui.term_has_open_win(test2))
-    end)
-
-    it("should open all open terminals using toggle all", function()
-      local test1 = Terminal:new():toggle()
-      local test2 = Terminal:new():toggle()
-      toggleterm.toggle_all()
-
-      assert.is_false(ui.term_has_open_win(test1))
-      assert.is_false(ui.term_has_open_win(test2))
-
-      toggleterm.toggle_all()
-      assert.is_true(ui.term_has_open_win(test1))
-      assert.is_true(ui.term_has_open_win(test2))
-    end)
-
-    -- FIXME: broken in CI
+    -- -- FIXME: broken in CI
     -- it("should close on exit", function()
-    --   local term = Terminal:new():toggle()
+    --   local term = Terminal:new():open()
     --   assert.is_true(ui.term_has_open_win(term))
     --   term:send("exit")
     --   vim.wait(1000, function() end)
@@ -302,7 +191,7 @@ describe("ToggleTerm tests:", function()
     end)
 
     it("should send commands to a terminal on exec", function()
-      local test1 = Terminal:new():toggle()
+      local test1 = Terminal:new():open()
       local _ = match._
       spy.on(test1, "send")
       toggleterm.exec('echo "hello world"', 1)
@@ -358,13 +247,6 @@ describe("ToggleTerm tests:", function()
       t.Terminal:new():toggle()
       local result = vim.fn.mapcheck("<space>t", "t")
       assert.equal("", result)
-    end)
-
-    it("should map in terminal mode if terminal_mappings is true", function()
-      toggleterm.setup({ open_mapping = [[<space>t]], terminal_mappings = true })
-      t.Terminal:new():toggle()
-      local result = vim.fn.mapcheck("<space>t", "t")
-      assert.is_true(#result > 0)
     end)
   end)
 

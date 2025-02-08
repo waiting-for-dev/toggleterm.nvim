@@ -33,47 +33,12 @@ local function apply_colors()
   end
 end
 
-local function setup_global_mappings()
-  local mapping = config.open_mapping
-  -- v:count defaults the count to 0 but if a count is passed in uses that instead
-  if mapping then
-    utils.key_map("n", mapping, '<Cmd>execute v:count . "ToggleTerm"<CR>', {
-      desc = "Toggle Terminal",
-      silent = true,
-    })
-    if config.insert_mappings then
-      utils.key_map("i", mapping, "<Esc><Cmd>ToggleTerm<CR>", {
-        desc = "Toggle Terminal",
-        silent = true,
-      })
-    end
-  end
-end
-
--- Creates a new terminal if none are present or closes terminals that are
--- currently opened, or opens terminals that were previously closed.
----@param size number?
----@param dir string?
----@param direction string?
----@param name string?
-local function smart_toggle(size, dir, direction, name)
-  local has_open, windows = ui.find_open_windows()
-  if not has_open then
-    if not ui.open_terminal_view(size, direction) then
-      local term_id = terms.get_toggled_id()
-      terms.get_or_create_term(term_id, dir, direction, name):open(size, direction)
-    end
-  else
-    ui.close_and_save_terminal_view(windows)
-  end
-end
-
 --- @param num number
 --- @param size number?
 --- @param dir string?
 --- @param direction string?
 --- @param name string?
-local function toggle_nth_term(num, size, dir, direction, name)
+local function new_term(num, size, dir, direction, name)
   local term = terms.get_or_create_term(num, dir, direction, name)
   ui.update_origin_window(term.window)
   term:toggle(size, direction)
@@ -270,18 +235,6 @@ function M.new_command(args)
   M.new(parsed.size, parsed.dir, parsed.direction, parsed.name)
 end
 
-function M.toggle_command(args, count)
-  local parsed = commandline.parse(args)
-  vim.validate({
-    size = { parsed.size, "number", true },
-    dir = { parsed.dir, "string", true },
-    direction = { parsed.direction, "string", true },
-    name = { parsed.name, "string", true },
-  })
-  if parsed.size then parsed.size = tonumber(parsed.size) end
-  M.toggle(count, parsed.size, parsed.dir, parsed.direction, parsed.name)
-end
-
 function _G.___toggleterm_winbar_click(id)
   if id then
     local term = terms.get_or_create_term(id)
@@ -296,51 +249,7 @@ end
 --- @param direction string?
 --- @param name string?
 function M.new(size, dir, direction, name)
-  toggle_nth_term(terms.next_id(), size, dir, direction, name)
-end
-
---- If a count is provided we operate on the specific terminal buffer
---- i.e. 2ToggleTerm => open or close Term 2
---- if the count is 1 we use a heuristic which is as follows
---- if there is no open terminal window we toggle the first one i.e. assumed
---- to be the primary. However if several are open we close them.
---- this can be used with the count commands to allow specific operations
---- per term or mass actions
---- @param count number?
---- @param size number?
---- @param dir string?
---- @param direction string?
---- @param name string?
-function M.toggle(count, size, dir, direction, name)
-  if count and count >= 1 then
-    toggle_nth_term(count, size, dir, direction, name)
-  else
-    smart_toggle(size, dir, direction, name)
-  end
-end
-
--- Toggle all terminals
--- If any terminal is open it will be closed
--- If no terminal exists it will do nothing
--- If any terminal exists but is not open it will be open
-function M.toggle_all(force)
-  local terminals = terms.get_all()
-
-  if force and ui.find_open_windows() then
-    for _, term in pairs(terminals) do
-      term:close()
-    end
-  else
-    if not ui.find_open_windows() then
-      for _, term in pairs(terminals) do
-        term:open()
-      end
-    else
-      for _, term in pairs(terminals) do
-        term:close()
-      end
-    end
-  end
+  new_term(terms.next_id(), size, dir, direction, name)
 end
 
 ---@param _ ToggleTermConfig
@@ -445,14 +354,6 @@ local function setup_commands()
   )
 
   command(
-    "ToggleTerm",
-    function(opts) M.toggle_command(opts.args, opts.count) end,
-    { count = true, complete = commandline.toggle_term_complete, nargs = "*" }
-  )
-
-  command("ToggleTermToggleAll", function(opts) M.toggle_all(opts.bang) end, { bang = true })
-
-  command(
     "TermSend",
     function(opts)
       local selection = nil
@@ -509,7 +410,6 @@ end
 
 function M.setup(user_prefs)
   local conf = config.set(user_prefs)
-  setup_global_mappings()
   setup_autocommands(conf)
   setup_commands()
 end
