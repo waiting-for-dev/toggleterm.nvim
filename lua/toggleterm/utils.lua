@@ -4,11 +4,6 @@ local fn, api, opt = vim.fn, vim.api, vim.opt
 local fmt = string.format
 local levels = vim.log.levels
 
-function M.is_nightly()
-  local v = vim.version()
-  return v.minor >= 8
-end
-
 ---@alias error_types 'error' | 'info' | 'warn'
 ---Inform a user about something
 ---@param msg string

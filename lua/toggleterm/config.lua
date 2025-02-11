@@ -92,7 +92,6 @@ local function get_highlights(conf)
     StatusLineNC = { cterm = "italic", gui = "NONE" },
   }
   local overrides = {}
-  local nightly = utils.is_nightly()
 
   local comment_fg = colors.get_hex("Comment", "fg")
   local dir_fg = colors.get_hex("Directory", "fg")
@@ -113,17 +112,14 @@ local function get_highlights(conf)
       EndOfBuffer = { guibg = terminal_bg },
       StatusLine = { guibg = terminal_bg },
       StatusLineNC = { guibg = terminal_bg },
+      winbar_inactive_opts = { guibg = terminal_bg },
+      winbar_active_opts = { guibg = terminal_bg },
+      WinBarNC = { guibg = terminal_bg },
+      WinBar = { guibg = terminal_bg }
     }
-    -- TODO: Move this to the main overrides block once nvim 0.8 is stable
-    if nightly then
-      winbar_inactive_opts.guibg = terminal_bg
-      winbar_active_opts.guibg = terminal_bg
-      overrides.WinBarNC = { guibg = terminal_bg }
-      overrides.WinBar = { guibg = terminal_bg }
-    end
   end
 
-  if nightly and conf.winbar.enabled then
+  if conf.winbar.enabled then
     colors.set_hl("WinBarActive", winbar_active_opts)
     colors.set_hl("WinBarInactive", winbar_inactive_opts)
   end
