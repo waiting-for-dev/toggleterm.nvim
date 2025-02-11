@@ -33,19 +33,6 @@ local function apply_colors()
   end
 end
 
---- @param num number
---- @param size number?
---- @param dir string?
---- @param direction string?
---- @param name string?
-local function new_term(num, size, dir, direction, name)
-  local term = terms.get_or_create_term(num, dir, direction, name)
-  ui.update_origin_window(term.window)
-  term:toggle(size, direction)
-  -- Save the terminal in view if it was last closed terminal.
-  if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
-end
-
 ---Close the last window if only a terminal *split* is open
 ---@param term Terminal
 ---@return boolean
@@ -223,7 +210,7 @@ function M.send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
   api.nvim_win_set_cursor(current_window, { start_line, start_col - 1 })
 end
 
-function M.new_command(args)
+function M.new(args)
   local parsed = commandline.parse(args)
   vim.validate({
     size = { parsed.size, "number", true },
@@ -232,7 +219,11 @@ function M.new_command(args)
     name = { parsed.name, "string", true },
   })
   if parsed.size then parsed.size = tonumber(parsed.size) end
-  M.new(parsed.size, parsed.dir, parsed.direction, parsed.name)
+  local term = terms.create_term(terms.next_id(), parsed.dir, parsed.direction, parsed.name)
+  ui.update_origin_window(term.window)
+  term:open(size, direction)
+  -- Save the terminal in view if it was last closed terminal.
+  if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
 end
 
 function _G.___toggleterm_winbar_click(id)
@@ -241,15 +232,6 @@ function _G.___toggleterm_winbar_click(id)
     if not term then return end
     term:toggle()
   end
-end
-
---- Creates new terminal at the first available id
---- @param size number?
---- @param dir string?
---- @param direction string?
---- @param name string?
-function M.new(size, dir, direction, name)
-  new_term(terms.next_id(), size, dir, direction, name)
 end
 
 ---@param _ ToggleTermConfig
@@ -349,7 +331,7 @@ local function setup_commands()
 
   command(
     "TermNew",
-    function(opts) M.new_command(opts.args) end,
+    function(opts) M.new(opts.args) end,
     { count = true, complete = commandline.toggle_term_complete, nargs = "*" }
   )
 

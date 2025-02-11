@@ -533,6 +533,11 @@ function M.get_or_create_term(num, dir, direction, name)
   return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name }), true
 end
 
+function M.create_term(num, dir, direction, name)
+  if dir and fn.isdirectory(fn.expand(dir)) == 0 then dir = nil end
+  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name }), true
+end
+
 ---Get a single terminal by id, unless it is hidden
 ---@param id number?
 ---@param include_hidden boolean? whether or nor to filter out hidden
