@@ -21,18 +21,6 @@ local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
 local M = {}
 
---- only shade explicitly specified filetypes
-local function apply_colors()
-  local ft = vim.bo.filetype
-  ft = (not ft or ft == "") and "none" or ft
-  local allow_list = config.shade_filetypes or {}
-  local is_enabled_ft = vim.tbl_contains(allow_list, ft)
-  if vim.bo.buftype == "terminal" and is_enabled_ft then
-    local _, term = terms.identify()
-    ui.hl_term(term)
-  end
-end
-
 ---Close the last window if only a terminal *split* is open
 ---@param term Terminal
 ---@return boolean
@@ -273,7 +261,7 @@ local function setup_autocommands(_)
   api.nvim_create_autocmd("TermOpen", {
     group = AUGROUP,
     pattern = "term://*",
-    callback = apply_colors,
+    callback = ui.apply_colors,
   })
 end
 

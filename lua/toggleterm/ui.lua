@@ -476,4 +476,16 @@ end
 ---@return TerminalView
 function M.get_terminal_view() return terminal_view end
 
+--- only shade explicitly specified filetypes
+function M.apply_colors()
+  local ft = vim.bo.filetype
+  ft = (not ft or ft == "") and "none" or ft
+  local allow_list = config.shade_filetypes or {}
+  local is_enabled_ft = vim.tbl_contains(allow_list, ft)
+  if vim.bo.buftype == "terminal" and is_enabled_ft then
+    local _, term = terms.identify()
+    ui.hl_term(term)
+  end
+end
+
 return M
