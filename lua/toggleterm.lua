@@ -216,14 +216,6 @@ end
 -- Commands
 ---------------------------------------------------------------------------------
 
----@param callback fun(t: Terminal?)
-local function get_subject_terminal(callback)
-  terms.select_terminal(true, "Please select a terminal to name: ", function(term)
-    if not term then return end
-    callback(term)
-  end)
-end
-
 ---@param name string
 ---@param term Terminal
 local function set_term_name(name, term) term.display_name = name end
@@ -234,12 +226,6 @@ local function select_terminal_and_send_selection(selection, trim_spaces)
   terms.select_terminal(trim_spaces, "Please select a terminal to send text to: ", function(term)
     if not term then return end
     M.send_lines_to_terminal(selection, trim_spaces, { args = term.id })
-  end)
-end
-
-local function request_term_name(term)
-  vim.ui.input({ prompt = "Please set a name for the terminal" }, function(name)
-    if name and #name > 0 then set_term_name(name, term) end
   end)
 end
 
@@ -307,21 +293,10 @@ local function setup_commands()
   )
 
   command("ToggleTermSetName", function(opts)
-    local no_count = not opts.count or opts.count < 1
-    local no_name = opts.args == ""
-    if no_count and no_name then
-      get_subject_terminal(request_term_name)
-    elseif no_name then
-      local term = terms.get(opts.count)
-      if not term then return end
-      request_term_name(term)
-    elseif no_count then
-      get_subject_terminal(function(t) set_term_name(opts.args, t) end)
-    else
-      local term = terms.get(opts.count)
+    terms.select_terminal(trim_spaces, "Please select a terminal to name: ", function(term)
       if not term then return end
       set_term_name(opts.args, term)
-    end
+    end)
   end, { nargs = "?", count = true })
 end
 
