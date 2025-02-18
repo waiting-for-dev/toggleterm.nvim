@@ -199,6 +199,17 @@ local function setup_autocommands(_)
     pattern = "term://*",
     callback = ui.apply_colors,
   })
+
+  -- https://github.com/akinsho/toggleterm.nvim/issues/610
+  api.nvim_create_autocmd("FileType", {
+    group = AUGROUP,
+    pattern = toggleterm_pattern,
+    callback = function(ev)
+      local bufnr = ev.buf
+      vim.api.nvim_buf_set_option(bufnr, "foldmethod", "manual")
+      vim.api.nvim_buf_set_option(bufnr, "foldtext", "foldtext()")
+    end,
+  })
 end
 
 ---------------------------------------------------------------------------------
