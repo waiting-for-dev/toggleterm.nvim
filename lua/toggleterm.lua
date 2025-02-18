@@ -21,62 +21,6 @@ local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
 local M = {}
 
----Close the last window if only a terminal *split* is open
----@param term Terminal
----@return boolean
-local function close_last_window(term)
-  local only_one_window = fn.winnr("$") == 1
-  if only_one_window and vim.bo[term.bufnr].filetype == constants.FILETYPE then
-    if term:is_split() then
-      local has_next = pcall(vim.cmd, "keepalt bnext")
-      return has_next
-    end
-  end
-  return false
-end
-
-local function handle_term_enter()
-  local _, term = terms.identify()
-  if term then
-    --- FIXME: we have to reset the filetype here because it is reset by other plugins
-    --- i.e. telescope.nvim
-    if vim.bo[term.bufnr] ~= constants.FILETYPE then term:__set_ft_options() end
-
-    local closed = close_last_window(term)
-    if closed then return end
-    if config.persist_mode then
-      term:__restore_mode()
-    elseif config.start_in_insert then
-      term:set_mode(terms.mode.INSERT)
-    end
-  end
-end
-
-local function handle_term_leave()
-  local _, term = terms.identify()
-  if not term then return end
-  if config.persist_mode then term:persist_mode() end
-  if term:is_float() then term:close() end
-end
-
-local function on_term_open()
-  local id, term = terms.identify()
-  if not term then
-    local buf = api.nvim_get_current_buf()
-    terms.Terminal
-      :new({
-        id = id,
-        bufnr = buf,
-        window = api.nvim_get_current_win(),
-        highlights = config.highlights,
-        job_id = vim.b[buf].terminal_job_id,
-        direction = ui.guess_direction(),
-      })
-      :__resurrect()
-  end
-  ui.set_winbar(term)
-end
-
 function M.exec_command(args, count)
   vim.validate({ args = { args, "string" } })
   if not args:match("cmd") then
@@ -214,14 +158,6 @@ function M.new(args)
   if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
 end
 
-function _G.___toggleterm_winbar_click(id)
-  if id then
-    local term = terms.get_or_create_term(id)
-    if not term then return end
-    term:toggle()
-  end
-end
-
 ---@param _ ToggleTermConfig
 local function setup_autocommands(_)
   api.nvim_create_augroup(AUGROUP, { clear = true })
@@ -231,19 +167,19 @@ local function setup_autocommands(_)
     pattern = toggleterm_pattern,
     group = AUGROUP,
     nested = true, -- this is necessary in case the buffer is the last
-    callback = handle_term_enter,
+    callback = ui.handle_term_enter,
   })
 
   api.nvim_create_autocmd("WinLeave", {
     pattern = toggleterm_pattern,
     group = AUGROUP,
-    callback = handle_term_leave,
+    callback = ui.handle_term_leave,
   })
 
   api.nvim_create_autocmd("TermOpen", {
     pattern = toggleterm_pattern,
     group = AUGROUP,
-    callback = on_term_open,
+    callback = ui.on_term_open,
   })
 
   api.nvim_create_autocmd("ColorScheme", {
