@@ -158,6 +158,12 @@ function M.new(args)
   if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
 end
 
+function M.set_name(args)
+  terms.select_terminal(trim_spaces, "Please select a terminal to name: ", function(term)
+    term.display_name = args
+  end)
+end
+
 ---@param _ ToggleTermConfig
 local function setup_autocommands(_)
   api.nvim_create_augroup(AUGROUP, { clear = true })
@@ -215,10 +221,6 @@ end
 ---------------------------------------------------------------------------------
 -- Commands
 ---------------------------------------------------------------------------------
-
----@param name string
----@param term Terminal
-local function set_term_name(name, term) term.display_name = name end
 
 ---@param selection string
 ---@param trim_spaces boolean
@@ -291,9 +293,7 @@ local function setup_commands()
   )
 
   command("ToggleTermSetName", function(opts)
-    terms.select_terminal(trim_spaces, "Please select a terminal to name: ", function(term)
-      set_term_name(opts.args, term)
-    end)
+    M.set_name(opts.args)
   end, { nargs = "?", count = true })
 end
 
