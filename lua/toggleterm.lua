@@ -158,9 +158,18 @@ function M.new(args)
   if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
 end
 
-function M.set_name(args)
+function M.update(args)
+  local parsed = commandline.parse(args)
+  vim.validate({
+    size = { parsed.size, "number", true },
+    dir = { parsed.dir, "string", true },
+    direction = { parsed.direction, "string", true },
+    name = { parsed.name, "string", true },
+  })
   terms.select_terminal(trim_spaces, "Please select a terminal to name: ", function(term)
-    term.display_name = args
+    if parsed.size then term.size = parsed.size end
+    if parsed.direction then term.direction = parsed.direction end
+    if parsed.name then term.name = parsed.name end
   end)
 end
 
@@ -292,9 +301,9 @@ local function setup_commands()
     { nargs = "?" }
   )
 
-  command("ToggleTermSetName", function(opts)
-    M.set_name(opts.args)
-  end, { nargs = "?", count = true })
+  command("TermUpdate", function(opts)
+    M.update(opts.args)
+  end, { nargs = "?", count = true, complete = commandline.term_update_complete })
 end
 
 function M.setup(user_prefs)

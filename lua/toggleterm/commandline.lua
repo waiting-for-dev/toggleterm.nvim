@@ -164,6 +164,12 @@ local toggle_term_options = {
   name = term_exec_options.name,
 }
 
+local term_update_options = {
+  direction = term_exec_options.direction,
+  size = term_exec_options.size,
+  name = term_exec_options.name,
+}
+
 ---@param options table a dictionary of key to function
 ---@return fun(lead: string, command: string, _: number)
 local function complete(options)
@@ -194,5 +200,8 @@ M.term_exec_complete = complete(term_exec_options)
 
 --- See :h :command-completion-custom
 M.toggle_term_complete = complete(toggle_term_options)
+
+--- See :h :command-completion-custom
+M.term_update_complete = complete(term_update_options)
 
 return M
