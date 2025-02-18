@@ -224,14 +224,12 @@ local function set_term_name(name, term) term.display_name = name end
 ---@param trim_spaces boolean
 local function select_terminal_and_send_selection(selection, trim_spaces)
   terms.select_terminal(trim_spaces, "Please select a terminal to send text to: ", function(term)
-    if not term then return end
     M.send_lines_to_terminal(selection, trim_spaces, { args = term.id })
   end)
 end
 
 local function select_terminal(opts)
   terms.select_terminal(true, "Please select a terminal to open (or focus): ", function(term)
-    if not term then return end
     if term:is_open() then
       term:focus()
     else
@@ -294,7 +292,6 @@ local function setup_commands()
 
   command("ToggleTermSetName", function(opts)
     terms.select_terminal(trim_spaces, "Please select a terminal to name: ", function(term)
-      if not term then return end
       set_term_name(opts.args, term)
     end)
   end, { nargs = "?", count = true })
