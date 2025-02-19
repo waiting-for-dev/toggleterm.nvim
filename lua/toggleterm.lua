@@ -267,7 +267,7 @@ local function setup_commands()
   command(
     "TermNew",
     function(opts) M.new(opts.args) end,
-    { count = true, complete = commandline.toggle_term_complete, nargs = "*" }
+    { complete = commandline.toggle_term_complete, nargs = "*" }
   )
 
   command(
@@ -312,7 +312,7 @@ local function setup_commands()
     else
       M.update(opts.args)
     end
-  end, { nargs = "?", count = true, complete = commandline.term_update_complete, bang = true })
+  end, { nargs = "?", complete = commandline.term_update_complete, bang = true })
 end
 
 function M.setup(user_prefs)
