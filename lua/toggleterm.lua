@@ -158,7 +158,7 @@ function M.new(args)
   if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
 end
 
-function M.update(args)
+function M.update(args, term)
   local parsed = commandline.parse(args)
   vim.validate({
     size = { parsed.size, "number", true },
@@ -166,11 +166,16 @@ function M.update(args)
     direction = { parsed.direction, "string", true },
     name = { parsed.name, "string", true },
   })
-  terms.select_terminal(trim_spaces, "Please select a terminal to name: ", function(term)
+  local callback = function(term)
     if parsed.size then term.size = parsed.size end
     if parsed.direction then term.direction = parsed.direction end
     if parsed.name then term.name = parsed.name end
-  end)
+  end
+  if term then
+    callback(term)
+  else
+    terms.select_terminal(true, "Please select a terminal to update: ", callback)
+  end
 end
 
 ---@param _ ToggleTermConfig
@@ -302,8 +307,12 @@ local function setup_commands()
   )
 
   command("TermUpdate", function(opts)
-    M.update(opts.args)
-  end, { nargs = "?", count = true, complete = commandline.term_update_complete })
+    if opts.bang then
+      M.update(opts.args, terms.get_last_focused())
+    else
+      M.update(opts.args)
+    end
+  end, { nargs = "?", count = true, complete = commandline.term_update_complete, bang = true })
 end
 
 function M.setup(user_prefs)
