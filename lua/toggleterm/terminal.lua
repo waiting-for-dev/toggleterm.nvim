@@ -282,6 +282,11 @@ function Terminal:close()
   ui.update_origin_window(self.window)
 end
 
+function Terminal:refresh()
+  self:close()
+  self:open()
+end
+
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   ui.delete_buf(self)
