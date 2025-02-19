@@ -155,7 +155,7 @@ function M.new(args)
   ui.update_origin_window(term.window)
   term:open(size, direction)
   -- Save the terminal in view if it was last closed terminal.
-  if not ui.find_open_windows() then ui.save_terminal_view({ term.id }, term.id) end
+  ui.save_terminal_view({ term.id }, term.id)
 end
 
 function M.update(args, term)
