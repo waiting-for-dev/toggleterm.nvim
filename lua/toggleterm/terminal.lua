@@ -20,6 +20,11 @@ local mode = {
   UNSUPPORTED = "?",
 }
 
+local state = {
+  ---Last focused terminal ID in the view.
+  last_focused_id = nil
+}
+
 local AUGROUP = api.nvim_create_augroup("ToggleTermBuffer", { clear = true })
 
 local is_windows = fn.has("win32") == 1
@@ -133,8 +138,11 @@ function M.get_focused_id()
 end
 
 function M.get_last_focused()
-  local last_focus = ui.get_terminal_view().focus_term_id
-  return M.get(last_focus, true)
+  return M.get(state.last_focused_id, true)
+end
+
+function M.set_last_focused(term)
+  state.last_focused_id = term.id
 end
 
 ---@param id number terminal id

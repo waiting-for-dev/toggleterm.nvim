@@ -154,8 +154,7 @@ function M.new(args)
   local term = terms.create_term(terms.next_id(), parsed.dir, parsed.direction, parsed.name)
   ui.update_origin_window(term.window)
   term:open(size, direction)
-  -- Save the terminal in view if it was last closed terminal.
-  ui.save_terminal_view({ term.id }, term.id)
+  terms.set_last_focused(term)
 end
 
 function M.update(args, term)

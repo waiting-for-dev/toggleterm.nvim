@@ -19,18 +19,6 @@ local api = vim.api
 local origin_window
 local persistent = {}
 
----@alias TerminalView {terminals: number[], focus_term_id: number}
-
----@type TerminalView
-local terminal_view = {
-  ---@type number[]
-  -- A list of terminal IDs that are saved from the view on smart toggle.
-  terminals = {},
-  ---@type number
-  ---Last focused terminal ID in the view.
-  focus_term_id = nil,
-}
-
 --- @class TerminalWindow
 --- @field term_id number ID for the terminal in the window
 --- @field window number window handle
@@ -438,17 +426,6 @@ function M.term_has_open_win(term)
   return vim.tbl_contains(wins, term.window)
 end
 
----Save the terminal view with the just closed terminals and the previously
---focused terminal.
----@param terminals number[]
----@param focus_term_id number?
-function M.save_terminal_view(terminals, focus_term_id)
-  terminal_view = { terminals = terminals, focus_term_id = focus_term_id }
-end
-
----@return TerminalView
-function M.get_terminal_view() return terminal_view end
-
 --- only shade explicitly specified filetypes
 function M.apply_colors()
   local ft = vim.bo.filetype
@@ -489,6 +466,7 @@ function M.handle_term_enter()
     elseif config.start_in_insert then
       term:set_mode(terms.mode.INSERT)
     end
+    terms.set_last_focused(term)
   end
 end
 
