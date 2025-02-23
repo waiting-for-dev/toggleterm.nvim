@@ -506,6 +506,7 @@ function Terminal:open(size, direction)
   ui.hl_term(self)
   -- NOTE: it is important that this function is called at this point. i.e. the buffer has been correctly assigned
   if self.on_open then self:on_open() end
+  M.set_last_focused(self)
   return self
 end
 

@@ -154,7 +154,6 @@ function M.new(args)
   local term = terms.create_term(terms.next_id(), parsed.dir, parsed.direction, parsed.name)
   ui.update_origin_window(term.window)
   term:open(size, direction)
-  terms.set_last_focused(term)
 end
 
 function M.update(args, term)
