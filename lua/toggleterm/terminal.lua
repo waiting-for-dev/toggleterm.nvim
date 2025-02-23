@@ -184,12 +184,21 @@ end
 ---@param dir string?
 ---@return string
 local function _get_dir(dir)
-  if dir == "git_dir" then dir = utils.git_dir() end
-  if dir then
-    return fn.expand(dir)
+  local parsed_dir = nil
+  if dir == "git_dir" then
+    parsed_dir = utils.git_dir()
+  elseif dir == nil then
+    parsed_dir = vim.loop.cwd()
   else
-    return vim.loop.cwd()
+    parsed_dir = fn.expand(dir)
+    if fn.isdirectory(parsed_dir) == 0 then
+      vim.notify(
+        string.format("%s is not a directory", parsed_dir),
+        vim.log.levels.ERROR
+      )
+    end
   end
+  return parsed_dir
 end
 
 ---Create a new terminal object
@@ -543,13 +552,11 @@ end
 function M.get_or_create_term(num, dir, direction, name)
   local term = M.get(num)
   if term then return term, false end
-  if dir and fn.isdirectory(fn.expand(dir)) == 0 then dir = nil end
-  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name }), true
+  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name })
 end
 
 function M.create_term(num, dir, direction, name)
-  if dir and fn.isdirectory(fn.expand(dir)) == 0 then dir = nil end
-  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name }), true
+  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name })
 end
 
 ---Get a single terminal by id, unless it is hidden
