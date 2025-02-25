@@ -21,36 +21,6 @@ local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
 local M = {}
 
-function M.exec_command(args, count)
-  vim.validate({ args = { args, "string" } })
-  if not args:match("cmd") then
-    return utils.notify(
-      "TermExec requires a cmd specified using the syntax cmd='ls -l' e.g. TermExec cmd='ls -l'",
-      "error"
-    )
-  end
-  local parsed = require("toggleterm.commandline").parse(args)
-  vim.validate({
-    cmd = { parsed.cmd, "string" },
-    size = { parsed.size, "number", true },
-    dir = { parsed.dir, "string", true },
-    direction = { parsed.direction, "string", true },
-    name = { parsed.name, "string", true },
-    go_back = { parsed.go_back, "boolean", true },
-    open = { parsed.open, "boolean", true },
-  })
-  M.exec(
-    parsed.cmd,
-    count,
-    parsed.size,
-    parsed.dir,
-    parsed.direction,
-    parsed.name,
-    parsed.go_back,
-    parsed.open
-  )
-end
-
 --- @param cmd string
 --- @param num number?
 --- @param size number?
@@ -59,29 +29,21 @@ end
 --- @param name string?
 --- @param go_back boolean? whether or not to return to original window
 --- @param open boolean? whether or not to open terminal window
-function M.exec(cmd, num, size, dir, direction, name, go_back, open)
+function M.exec(args, term)
+  local parsed = commandline.parse(args)
   vim.validate({
-    cmd = { cmd, "string" },
-    num = { num, "number", true },
-    size = { size, "number", true },
-    dir = { dir, "string", true },
-    direction = { direction, "string", true },
-    name = { name, "string", true },
-    go_back = { go_back, "boolean", true },
-    open = { open, "boolean", true },
+    cmd = { parsed.cmd, "string" },
+    focus = { parsed.focus, "boolean", true },
+    open = { parsed.open, "boolean", true },
   })
-  num = (num and num >= 1) and num or terms.get_toggled_id()
-  open = open == nil or open
-  local term = terms.get_or_create_term(num, dir, direction, name)
-  if not term:is_open() then term:open(size, direction) end
-  -- going back from floating window closes it
-  if term:is_float() then go_back = false end
-  if go_back == nil then go_back = true end
-  if not open then
-    term:close()
-    go_back = false
+  local callback = function(term)
+    term:send(parsed.cmd, parsed.focus, parsed.open)
   end
-  term:send(cmd, go_back)
+  if term then
+    callback(term)
+  else
+    terms.select_terminal(true, "Please select a terminal to execute command: ", callback)
+  end
 end
 
 --- @param selection_type string
@@ -256,11 +218,16 @@ end
 local function setup_commands()
   local command = api.nvim_create_user_command
   command("TermSelect", select_terminal, { bang = true })
-  -- Count is 0 by default
   command(
     "TermExec",
-    function(opts) M.exec_command(opts.args, opts.count) end,
-    { count = true, complete = commandline.term_exec_complete, nargs = "*" }
+    function(opts)
+      if opts.bang then
+        M.exec(opts.args, terms.get_last_focused())
+      else
+        M.exec(opts.args)
+      end
+    end,
+    { complete = commandline.term_exec_complete, nargs = "*", bang = true }
   )
 
   command(

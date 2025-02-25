@@ -336,16 +336,22 @@ end
 ---Send a command to a running terminal
 ---@param cmd string|string[]
 ---@param go_back boolean? whether or not to return to original window
-function Terminal:send(cmd, go_back)
+function Terminal:send(cmd, focus, open)
+  local caller_window = vim.api.nvim_get_current_win()
   cmd = type(cmd) == "table" and with_cr(self.newline_chr, unpack(cmd))
     or with_cr(self.newline_chr, cmd --[[@as string]])
   fn.chansend(self.job_id, cmd)
   self:scroll_bottom()
-  if go_back and self:is_focused() then
-    ui.goto_previous()
-    ui.stopinsert()
-  elseif not go_back and not self:is_focused() then
+  if open and not self:is_open() then
+    self:open()
+  end
+  if focus then
     self:focus()
+  else
+    vim.api.nvim_set_current_win(caller_window)
+    vim.schedule(function()
+      vim.cmd("stopinsert")
+    end)
   end
 end
 

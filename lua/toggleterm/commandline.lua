@@ -16,7 +16,7 @@ local is_windows = vim.loop.os_uname().version:match("Windows")
 ---@field dir string?
 ---@field size number?
 ---@field name string?
----@field go_back boolean?
+---@field focus boolean?
 ---@field open boolean?
 
 ---Take a users command arguments in the format "cmd='git commit' dir=~/dotfiles"
@@ -54,7 +54,7 @@ function M.parse(args)
         local key, value = arg[1], arg[2]
         if key == "size" then
           value = tonumber(value)
-        elseif key == "go_back" or key == "open" then
+        elseif key == "focus" or key == "open" then
           value = value ~= "0"
         end
         result[key] = value
@@ -62,6 +62,16 @@ function M.parse(args)
     end
   end
   return result
+end
+
+function M.parse_boolean(value)
+  if type(value) == "string" then
+    return value:lower() == "true"
+  elseif type(value) == "false" then
+    return value
+  else
+    vim.notify("Invalid boolean value: " .. value, vim.log.levels.ERROR)
+  end
 end
 
 -- Get a valid base path for a user provided path
@@ -85,7 +95,7 @@ function M.get_path_parts(typed_path)
   return nil, nil
 end
 
-local term_exec_options = {
+local all_options = {
   --- Suggests commands
   ---@param typed_cmd string|nil
   cmd = function(typed_cmd)
@@ -155,19 +165,29 @@ local term_exec_options = {
   --- The name param takes in arbitrary strings, we keep this function only to
   --- match the signature of other options
   name = function() return {} end,
+
+  open = function() return { "0", "1" } end,
+
+  focus = function() return { "0", "1" } end,
 }
 
 local toggle_term_options = {
-  dir = term_exec_options.dir,
-  direction = term_exec_options.direction,
-  size = term_exec_options.size,
-  name = term_exec_options.name,
+  dir = all_options.dir,
+  direction = all_options.direction,
+  size = all_options.size,
+  name = all_options.name,
 }
 
 local term_update_options = {
-  direction = term_exec_options.direction,
-  size = term_exec_options.size,
-  name = term_exec_options.name,
+  direction = all_options.direction,
+  size = all_options.size,
+  name = all_options.name,
+}
+
+local term_exec_options = {
+  cmd = all_options.cmd,
+  open = all_options.open,
+  focus = all_options.focus,
 }
 
 ---@param options table a dictionary of key to function
