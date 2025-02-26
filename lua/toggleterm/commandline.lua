@@ -16,8 +16,6 @@ local is_windows = vim.loop.os_uname().version:match("Windows")
 ---@field dir string?
 ---@field size number?
 ---@field name string?
----@field focus boolean?
----@field open boolean?
 
 ---Take a users command arguments in the format "cmd='git commit' dir=~/dotfiles"
 ---and parse this into a table of arguments
@@ -54,24 +52,12 @@ function M.parse(args)
         local key, value = arg[1], arg[2]
         if key == "size" then
           value = tonumber(value)
-        elseif key == "focus" or key == "open" then
-          value = value ~= "0"
         end
         result[key] = value
       end
     end
   end
   return result
-end
-
-function M.parse_boolean(value)
-  if type(value) == "string" then
-    return value:lower() == "true"
-  elseif type(value) == "false" then
-    return value
-  else
-    vim.notify("Invalid boolean value: " .. value, vim.log.levels.ERROR)
-  end
 end
 
 -- Get a valid base path for a user provided path
@@ -166,9 +152,7 @@ local all_options = {
   --- match the signature of other options
   name = function() return {} end,
 
-  open = function() return { "0", "1" } end,
-
-  focus = function() return { "0", "1" } end,
+  mode = function() return { "interactive", "visible", "silent" } end,
 }
 
 local toggle_term_options = {
@@ -186,8 +170,7 @@ local term_update_options = {
 
 local term_exec_options = {
   cmd = all_options.cmd,
-  open = all_options.open,
-  focus = all_options.focus,
+  mode = all_options.mode,
 }
 
 ---@param options table a dictionary of key to function

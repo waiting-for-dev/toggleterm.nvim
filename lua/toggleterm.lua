@@ -21,23 +21,14 @@ local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
 local M = {}
 
---- @param cmd string
---- @param num number?
---- @param size number?
---- @param dir string?
---- @param direction string?
---- @param name string?
---- @param go_back boolean? whether or not to return to original window
---- @param open boolean? whether or not to open terminal window
 function M.exec(args, term)
   local parsed = commandline.parse(args)
   vim.validate({
     cmd = { parsed.cmd, "string" },
-    focus = { parsed.focus, "boolean", true },
-    open = { parsed.open, "boolean", true },
+    mode = { parsed.mode, "string", "interactive" },
   })
   local callback = function(term)
-    term:send(parsed.cmd, parsed.focus, parsed.open)
+    term:send(parsed.cmd, parsed.mode)
   end
   if term then
     callback(term)

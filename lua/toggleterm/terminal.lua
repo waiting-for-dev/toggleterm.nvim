@@ -334,23 +334,26 @@ function Terminal:focus()
 end
 
 ---Send a command to a running terminal
----@param cmd string|string[]
----@param go_back boolean? whether or not to return to original window
-function Terminal:send(cmd, focus, open)
+---@param cmd string|string[] Command(s) to send to the terminal
+---@param mode? "interactive"|"visible"|"silent" How to handle the terminal:
+---  - "interactive": Opens the terminal and focuses it (user can interact)
+---  - "visible": Opens the terminal but keeps focus on original window (user can see output)
+---  - "silent": Just sends the command without changing terminal visibility
+function Terminal:send(cmd, mode)
+  local mode = mode or "interactive"
   local caller_window = vim.api.nvim_get_current_win()
   cmd = type(cmd) == "table" and with_cr(self.newline_chr, unpack(cmd))
     or with_cr(self.newline_chr, cmd --[[@as string]])
   fn.chansend(self.job_id, cmd)
   self:scroll_bottom()
-  if open and not self:is_open() then
+  if mode ~= "silent" and not self:is_open() then
     self:open()
   end
-  if focus then
+  if mode == "interactive" then
     self:focus()
   else
-    vim.api.nvim_set_current_win(caller_window)
     vim.schedule(function()
-      vim.cmd("stopinsert")
+      vim.api.nvim_set_current_win(caller_window)
     end)
   end
 end
@@ -363,10 +366,10 @@ end
 
 ---Update the directory of an already opened terminal
 ---@param dir string
-function Terminal:change_dir(dir, go_back)
+function Terminal:change_dir(dir, mode)
   dir = _get_dir(dir)
   if self.dir == dir then return end
-  self:send({ fmt("cd %s", dir), self:clear() }, go_back)
+  self:send({ fmt("cd %s", dir), self:clear() }, mode)
   self.dir = dir
 end
 
@@ -515,7 +518,7 @@ function Terminal:open(size, direction)
   else
     local ok, err = pcall(opener, size, self)
     if not ok and err then return utils.notify(err, "error") end
-    ui.switch_buf(self.bufnr)
+    -- ui.switch_buf(self.bufnr)
     if config.autochdir and self.dir ~= cwd then self:change_dir(cwd) end
   end
   ui.hl_term(self)
