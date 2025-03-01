@@ -339,12 +339,20 @@ end
 ---  - "interactive": Opens the terminal and focuses it (user can interact)
 ---  - "visible": Opens the terminal but keeps focus on original window (user can see output)
 ---  - "silent": Just sends the command without changing terminal visibility
-function Terminal:send(cmd, mode)
+function Terminal:send(input, mode, trim, new_line)
   local mode = mode or "interactive"
+  local trim = trim == nil or trim
+  local new_line = new_line == nil or new_line
   local caller_window = vim.api.nvim_get_current_win()
-  cmd = type(cmd) == "table" and with_cr(self.newline_chr, unpack(cmd))
-    or with_cr(self.newline_chr, cmd --[[@as string]])
-  fn.chansend(self.job_id, cmd)
+  if new_line then
+    table.insert(input, "")
+  end
+  if trim then
+    for i, line in ipairs(input) do
+      input[i] = line:gsub("^%s+", ""):gsub("%s+$", "")
+    end
+  end
+  fn.chansend(self.job_id, input)
   self:scroll_bottom()
   if mode ~= "silent" and not self:is_open() then
     self:open()

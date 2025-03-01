@@ -25,10 +25,12 @@ function M.exec(args, term)
   local parsed = commandline.parse(args)
   vim.validate({
     cmd = { parsed.cmd, "string" },
-    mode = { parsed.mode, "string", "interactive" },
+    mode = { parsed.mode, "string", true },
+    trim = { parsed.trim, "boolean", true },
+    new_line = { parsed.new_line, "boolean", true },
   })
   local callback = function(term)
-    term:send(parsed.cmd, parsed.mode)
+    term:send({ parsed.cmd }, parsed.mode, parsed.trim, parsed.new_line)
   end
   if term then
     callback(term)
@@ -37,62 +39,22 @@ function M.exec(args, term)
   end
 end
 
---- @param selection_type string
---- @param trim_spaces boolean
---- @param cmd_data table<string, any>
-function M.send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
-  local id = tonumber(cmd_data.args) or 1
-  trim_spaces = trim_spaces == nil or trim_spaces
-
+function M.select(args, selection, term)
+  local parsed = commandline.parse(args)
   vim.validate({
-    selection_type = { selection_type, "string", true },
-    trim_spaces = { trim_spaces, "boolean", true },
-    terminal_id = { id, "number", true },
+    mode = { parsed.mode, "string", true },
+    trim = { parsed.trim, "boolean", true },
+    new_line = { parsed.new_line, "boolean", true },
   })
-
-  local current_window = api.nvim_get_current_win() -- save current window
-
-  local lines = {}
-  -- Beginning of the selection: line number, column number
-  local start_line, start_col
-  if selection_type == "single_line" then
-    start_line, start_col = unpack(api.nvim_win_get_cursor(0))
-    -- nvim_win_get_cursor uses 0-based indexing for columns, while we use 1-based indexing
-    start_col = start_col + 1
-    table.insert(lines, fn.getline(start_line))
-  else
-    local res = nil
-    if string.match(selection_type, "visual") then
-      -- This calls vim.fn.getpos, which uses 1-based indexing for columns
-      res = utils.get_line_selection("visual")
-    else
-      -- This calls vim.fn.getpos, which uses 1-based indexing for columns
-      res = utils.get_line_selection("motion")
-    end
-    start_line, start_col = unpack(res.start_pos)
-    -- char, line and block are used for motion/operatorfunc. 'block' is ignored
-    if selection_type == "visual_lines" or selection_type == "line" then
-      lines = res.selected_lines
-    elseif selection_type == "visual_selection" or selection_type == "char" then
-      lines = utils.get_visual_selection(res, true)
-    end
+  local input = ui.select_text(selection)
+  local callback = function(term)
+    term:send(input, parsed.mode, parsed.trim, parsed.new_line)
   end
-
-  if not lines or not next(lines) then return end
-
-  if not trim_spaces then
-    M.exec(table.concat(lines, "\n"), id)
+  if term then
+    callback(term)
   else
-    for _, line in ipairs(lines) do
-      local l = trim_spaces and line:gsub("^%s+", ""):gsub("%s+$", "") or line
-      M.exec(l, id)
-    end
+    terms.select_terminal(true, "Please select a terminal to send text: ", callback)
   end
-
-  -- Jump back with the cursor where we were at the beginning of the selection
-  api.nvim_set_current_win(current_window)
-  -- nvim_win_set_cursor() uses 0-based indexing for columns, while we use 1-based indexing
-  api.nvim_win_set_cursor(current_window, { start_line, start_col - 1 })
 end
 
 function M.new(args)
@@ -188,14 +150,6 @@ end
 -- Commands
 ---------------------------------------------------------------------------------
 
----@param selection string
----@param trim_spaces boolean
-local function select_terminal_and_send_selection(selection, trim_spaces)
-  terms.select_terminal(trim_spaces, "Please select a terminal to send text to: ", function(term)
-    M.send_lines_to_terminal(selection, trim_spaces, { args = term.id })
-  end)
-end
-
 local function select_terminal(opts)
   terms.select_terminal(true, "Please select a terminal to open (or focus): ", function(term)
     if term:is_open() then
@@ -240,27 +194,13 @@ local function setup_commands()
           selection = "visual_selection"
         end
       end
-      select_terminal_and_send_selection(selection, true)
+      if opts.bang then
+        M.select(opts.args, selection, terms.get_last_focused())
+      else
+        M.select(opts.args, selection)
+      end
     end,
-    { range = true }
-  )
-
-  command(
-    "ToggleTermSendVisualLines",
-    function(args) M.send_lines_to_terminal("visual_lines", true, args) end,
-    { range = true, nargs = "?" }
-  )
-
-  command(
-    "ToggleTermSendVisualSelection",
-    function(args) M.send_lines_to_terminal("visual_selection", true, args) end,
-    { range = true, nargs = "?" }
-  )
-
-  command(
-    "ToggleTermSendCurrentLine",
-    function(args) M.send_lines_to_terminal("single_line", true, args) end,
-    { nargs = "?" }
+    { range = true, nargs = "*", complete = commandline.term_select_complete, bang = true }
   )
 
   command("TermUpdate", function(opts)

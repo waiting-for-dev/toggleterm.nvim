@@ -495,4 +495,39 @@ function M.on_term_open()
   M.set_winbar(term)
 end
 
+function M.select_text(selection_type)
+  local current_window = api.nvim_get_current_win() -- save current window
+
+  local lines = {}
+  -- Beginning of the selection: line number, column number
+  local start_line, start_col
+  if selection_type == "single_line" then
+    start_line, start_col = unpack(api.nvim_win_get_cursor(0))
+    -- nvim_win_get_cursor uses 0-based indexing for columns, while we use 1-based indexing
+    start_col = start_col + 1
+    table.insert(lines, fn.getline(start_line))
+  else
+    local res = nil
+    if string.match(selection_type, "visual") then
+      -- This calls vim.fn.getpos, which uses 1-based indexing for columns
+      res = utils.get_line_selection("visual")
+    else
+      -- This calls vim.fn.getpos, which uses 1-based indexing for columns
+      res = utils.get_line_selection("motion")
+    end
+    start_line, start_col = unpack(res.start_pos)
+    -- char, line and block are used for motion/operatorfunc. 'block' is ignored
+    if selection_type == "visual_lines" or selection_type == "line" then
+      lines = res.selected_lines
+    elseif selection_type == "visual_selection" or selection_type == "char" then
+      lines = utils.get_visual_selection(res, true)
+    end
+  end
+  if not lines or not next(lines) then
+    return
+  else
+    return lines
+  end
+end
+
 return M

@@ -10,6 +10,16 @@ local p = {
 
 local is_windows = vim.loop.os_uname().version:match("Windows")
 
+local function toboolean(value)
+  if value == "true" then
+    return true
+  elseif value == "false" then
+    return false
+  else
+    vim.notify("Invalid value for boolean option, expected 'true' or 'false'", vim.log.levels.ERROR)
+  end
+end
+
 ---@class ParsedArgs
 ---@field direction string?
 ---@field cmd string?
@@ -52,9 +62,17 @@ function M.parse(args)
         local key, value = arg[1], arg[2]
         if key == "size" then
           value = tonumber(value)
+        elseif key == "trim" or key == "new_line" then
+          value = toboolean(value)
         end
         result[key] = value
       end
+    end
+
+    -- capture trailing arguments as anything after the last key=value pair
+    local trailing = args:match("%s+(.+)")
+    if trailing then
+      result.trailing = trailing
     end
   end
   return result
@@ -152,7 +170,22 @@ local all_options = {
   --- match the signature of other options
   name = function() return {} end,
 
-  mode = function() return { "interactive", "visible", "silent" } end,
+  mode = function(typed_mode)
+    local modes = {
+      "interactive",
+      "silent",
+      "visible"
+    }
+    if u.str_is_empty(typed_mode) then return modes end
+    return vim.tbl_filter(
+      function(mode) return mode:match("^" .. typed_mode .. "*") ~= nil end,
+      modes
+    )
+  end,
+
+  trim = function() return { "true", "false" } end,
+
+  new_line = function() return { "true", "false" } end,
 }
 
 local toggle_term_options = {
@@ -171,6 +204,14 @@ local term_update_options = {
 local term_exec_options = {
   cmd = all_options.cmd,
   mode = all_options.mode,
+  trim = all_options.trim,
+  new_line = all_options.new_line,
+}
+
+local term_select_options = {
+  mode = all_options.mode,
+  trim = all_options.trim,
+  new_line = all_options.new_line,
 }
 
 ---@param options table a dictionary of key to function
@@ -200,6 +241,8 @@ end
 
 --- See :h :command-completion-custom
 M.term_exec_complete = complete(term_exec_options)
+
+M.term_select_complete = complete(term_select_options)
 
 --- See :h :command-completion-custom
 M.toggle_term_complete = complete(toggle_term_options)
