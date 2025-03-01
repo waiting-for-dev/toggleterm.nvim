@@ -201,14 +201,8 @@ local term_update_options = {
   name = all_options.name,
 }
 
-local term_exec_options = {
+local term_send_options = {
   cmd = all_options.cmd,
-  mode = all_options.mode,
-  trim = all_options.trim,
-  new_line = all_options.new_line,
-}
-
-local term_select_options = {
   mode = all_options.mode,
   trim = all_options.trim,
   new_line = all_options.new_line,
@@ -242,7 +236,7 @@ end
 --- See :h :command-completion-custom
 M.term_exec_complete = complete(term_exec_options)
 
-M.term_select_complete = complete(term_select_options)
+M.term_send_complete = complete(term_send_options)
 
 --- See :h :command-completion-custom
 M.toggle_term_complete = complete(toggle_term_options)

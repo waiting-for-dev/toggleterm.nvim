@@ -21,32 +21,20 @@ local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
 local M = {}
 
-function M.exec(args, term)
-  local parsed = commandline.parse(args)
-  vim.validate({
-    cmd = { parsed.cmd, "string" },
-    mode = { parsed.mode, "string", true },
-    trim = { parsed.trim, "boolean", true },
-    new_line = { parsed.new_line, "boolean", true },
-  })
-  local callback = function(term)
-    term:send({ parsed.cmd }, parsed.mode, parsed.trim, parsed.new_line)
-  end
-  if term then
-    callback(term)
-  else
-    terms.select_terminal(true, "Please select a terminal to execute command: ", callback)
-  end
-end
-
 function M.select(args, selection, term)
   local parsed = commandline.parse(args)
   vim.validate({
+    cmd = { parsed.cmd, "string", true },
     mode = { parsed.mode, "string", true },
     trim = { parsed.trim, "boolean", true },
     new_line = { parsed.new_line, "boolean", true },
   })
-  local input = ui.select_text(selection)
+  local input = nil
+  if parsed.cmd then
+    input = { parsed.cmd }
+  else
+    input = ui.select_text(selection)
+  end
   local callback = function(term)
     term:send(input, parsed.mode, parsed.trim, parsed.new_line)
   end
@@ -163,17 +151,6 @@ end
 local function setup_commands()
   local command = api.nvim_create_user_command
   command("TermSelect", select_terminal, { bang = true })
-  command(
-    "TermExec",
-    function(opts)
-      if opts.bang then
-        M.exec(opts.args, terms.get_last_focused())
-      else
-        M.exec(opts.args)
-      end
-    end,
-    { complete = commandline.term_exec_complete, nargs = "*", bang = true }
-  )
 
   command(
     "TermNew",
@@ -200,7 +177,7 @@ local function setup_commands()
         M.select(opts.args, selection)
       end
     end,
-    { range = true, nargs = "*", complete = commandline.term_select_complete, bang = true }
+    { range = true, nargs = "*", complete = commandline.term_send_complete, bang = true }
   )
 
   command("TermUpdate", function(opts)
