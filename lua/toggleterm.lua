@@ -155,7 +155,7 @@ local function setup_commands()
   command(
     "TermNew",
     function(opts) M.new(opts.args) end,
-    { complete = commandline.toggle_term_complete, nargs = "*" }
+    { complete = commandline.term_new_complete, nargs = "*" }
   )
 
   command(

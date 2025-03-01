@@ -188,7 +188,7 @@ local all_options = {
   new_line = function() return { "true", "false" } end,
 }
 
-local toggle_term_options = {
+local term_new_options = {
   dir = all_options.dir,
   direction = all_options.direction,
   size = all_options.size,
@@ -239,7 +239,7 @@ M.term_exec_complete = complete(term_exec_options)
 M.term_send_complete = complete(term_send_options)
 
 --- See :h :command-completion-custom
-M.toggle_term_complete = complete(toggle_term_options)
+M.term_new_complete = complete(term_new_options)
 
 --- See :h :command-completion-custom
 M.term_update_complete = complete(term_update_options)
