@@ -255,6 +255,13 @@ function Terminal:resize(size)
   if self:is_split() then ui.resize_split(self, size) end
 end
 
+function Terminal:update(opts)
+  if opts.size then self.size = opts.size end
+  if opts.direction then self.direction = opts.direction end
+  if opts.name then self.name = opts.name end
+  if self:is_open() then self:refresh() end
+end
+
 function Terminal:is_open()
   if not self.window then return false end
   local win_type = fn.win_gettype(self.window)

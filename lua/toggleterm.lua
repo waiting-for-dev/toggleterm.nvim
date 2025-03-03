@@ -68,10 +68,7 @@ function M.update(args, term)
     name = { parsed.name, "string", true },
   })
   local callback = function(term)
-    if parsed.size then term.size = parsed.size end
-    if parsed.direction then term.direction = parsed.direction end
-    if parsed.name then term.name = parsed.name end
-    if term:is_open() then term:refresh() end
+    term:update(parsed)
   end
   if term then
     callback(term)
