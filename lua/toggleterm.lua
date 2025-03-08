@@ -136,14 +136,7 @@ end
 ---------------------------------------------------------------------------------
 
 local function select_terminal(picker)
-  callback = function(term)
-    if term:is_open() then
-      term:focus()
-    else
-      term:open()
-    end
-  end
-  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ", { default = callback })
+  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ", picker.select_actions())
 end
 
 local function setup_commands(conf)

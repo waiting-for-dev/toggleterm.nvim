@@ -543,6 +543,14 @@ function Terminal:open(size, direction)
   return self
 end
 
+function Terminal:focus_or_open()
+  if self:is_open() then
+    self:focus()
+  else
+    self:open()
+  end
+end
+
 function Terminal:toggle(size, direction)
   if self:is_open() then
     self:close()

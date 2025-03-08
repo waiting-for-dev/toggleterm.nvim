@@ -1,4 +1,12 @@
+local terms = require("toggleterm.terminal")
+
 local M = {}
+
+function M.select_actions()
+  return {
+    default = terms.Terminal.focus_or_open
+  }
+end
 
 function M.select(terminals, prompt, callbacks)
   vim.ui.select(terminals, {

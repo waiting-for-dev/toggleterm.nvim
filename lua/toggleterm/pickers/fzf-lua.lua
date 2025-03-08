@@ -63,12 +63,18 @@ function M.get_actions(callbacks)
   local actions = {}
   for key, callback in pairs(callbacks) do
     actions[key] = function(selected)
-      local id = get_term_id_from_selected(selected[1])
+      local id = M.get_term_id_from_selected(selected[1])
       local term = terms.get(id)
       callback(term)
     end
   end
   return actions
+end
+
+function M.select_actions()
+  return {
+    default = terms.Terminal.focus_or_open
+  }
 end
 
 function M.select(terminals, prompt, callbacks)
