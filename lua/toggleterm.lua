@@ -21,7 +21,7 @@ local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
 local M = {}
 
-function M.select(args, selection, term)
+function M.send(args, selection, picker, term)
   local parsed = commandline.parse(args)
   vim.validate({
     cmd = { parsed.cmd, "string", true },
@@ -41,7 +41,7 @@ function M.select(args, selection, term)
   if term then
     callback(term)
   else
-    terms.select_terminal(true, "Please select a terminal to send text: ", callback)
+    terms.select_terminal(picker, false, "Please select a terminal to send text: ", { default = callback })
   end
 end
 
@@ -59,7 +59,7 @@ function M.new(args)
   term:open(size, direction)
 end
 
-function M.update(args, term)
+function M.update(args, picker, term)
   local parsed = commandline.parse(args)
   vim.validate({
     size = { parsed.size, "number", true },
@@ -73,7 +73,7 @@ function M.update(args, term)
   if term then
     callback(term)
   else
-    terms.select_terminal(true, "Please select a terminal to update: ", callback)
+    terms.select_terminal(picker, false, "Please select a terminal to update: ", { default = callback })
   end
 end
 
@@ -135,19 +135,22 @@ end
 -- Commands
 ---------------------------------------------------------------------------------
 
-local function select_terminal(opts)
-  terms.select_terminal(true, "Please select a terminal to open (or focus): ", function(term)
+local function select_terminal(picker)
+  callback = function(term)
     if term:is_open() then
       term:focus()
     else
       term:open()
     end
-  end)
+  end
+  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ", { default = callback })
 end
 
-local function setup_commands()
+local function setup_commands(conf)
   local command = api.nvim_create_user_command
-  command("TermSelect", select_terminal, { bang = true })
+  command("TermSelect", function()
+    select_terminal(conf.resolved_picker)
+  end, { bang = true })
 
   command(
     "TermNew",
@@ -169,9 +172,9 @@ local function setup_commands()
         end
       end
       if opts.bang then
-        M.select(opts.args, selection, terms.get_last_focused())
+        M.send(opts.args, selection, conf.resolved_picker, terms.get_last_focused())
       else
-        M.select(opts.args, selection)
+        M.send(opts.args, selection, conf.resolved_picker)
       end
     end,
     { range = true, nargs = "*", complete = commandline.term_send_complete, bang = true }
@@ -179,9 +182,9 @@ local function setup_commands()
 
   command("TermUpdate", function(opts)
     if opts.bang then
-      M.update(opts.args, terms.get_last_focused())
+      M.update(opts.args, conf.resolved_picker, terms.get_last_focused())
     else
-      M.update(opts.args)
+      M.update(opts.args, conf.resolved_picker)
     end
   end, { nargs = "?", complete = commandline.term_update_complete, bang = true })
 end
@@ -189,7 +192,7 @@ end
 function M.setup(user_prefs)
   local conf = config.set(user_prefs)
   setup_autocommands(conf)
-  setup_commands()
+  setup_commands(conf)
 end
 
 return M

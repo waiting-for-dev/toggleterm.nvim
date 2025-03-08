@@ -59,6 +59,7 @@ local config = {
   shading_factor = constants.shading_amount,
   shading_ratio = constants.shading_ratio,
   shell = vim.o.shell,
+  picker = nil,
   autochdir = false,
   auto_scroll = true,
   winbar = {
@@ -127,6 +128,23 @@ local function get_highlights(conf)
   return vim.tbl_deep_extend("force", defaults, conf.highlights, overrides)
 end
 
+local function detect_picker()
+  if require("fzf-lua") then
+    return "fzf-lua"
+  else
+    return "vim-ui-select"
+  end
+end
+
+local function get_picker(conf)
+  local user_picker = conf.picker or detect_picker()
+  if user_picker == "fzf-lua" then
+    return require("toggleterm.pickers.fzf-lua")
+  else
+    return require("toggleterm.pickers.vim-ui-select")
+  end
+end
+
 --- get the full user config or just a specified value
 ---@param key string?
 ---@return any
@@ -144,6 +162,7 @@ function M.set(user_conf)
   user_conf.highlights = user_conf.highlights or {}
   config = vim.tbl_deep_extend("force", config, user_conf)
   config.highlights = get_highlights(config)
+  config.resolved_picker = get_picker(config)
   return config
 end
 
