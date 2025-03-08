@@ -4,23 +4,22 @@ local constants = require("toggleterm.constants")
 local M = {}
 
 local fzf_lua = require("fzf-lua")
-local builtin = require("fzf-lua.previewer.builtin")
+local fzf_lua_builtin_previewer = require("fzf-lua.previewer.builtin")
 
-local function get_term_id_from_selected(selected)
+function M.get_term_id_from_selected(selected)
   return tonumber(selected:match("(%d+)-"))
 end
 
--- Inherit from the base previewer                                                         
-local ToggleTermBufferPreviewer = builtin.base:extend()                                          
-function ToggleTermBufferPreviewer:new(o, opts, fzf_win)
-  ToggleTermBufferPreviewer.super.new(self, o, opts, fzf_win)
-  setmetatable(self, ToggleTermBufferPreviewer)
+M.previewer = fzf_lua_builtin_previewer.base:extend()
+
+function M.previewer:new(o, opts, fzf_win)
+  M.previewer.super.new(self, o, opts, fzf_win)
+  setmetatable(self, M.previewer)
   return self
 end                                                                                        
 
--- Parse the entry string to extract buffer number                                         
-function ToggleTermBufferPreviewer:parse_entry(entry_str)
-  local term_id = get_term_id_from_selected(entry_str)
+function M.previewer:parse_entry(entry_str)
+  local term_id = M.get_term_id_from_selected(entry_str)
   local term = terms.get(term_id)
   local bufnr = term.bufnr
   local name = term.name
@@ -31,26 +30,19 @@ function ToggleTermBufferPreviewer:parse_entry(entry_str)
   }                                                                                        
 end                                                                                        
 
--- Populate the preview buffer with terminal buffer contents                               
-function ToggleTermBufferPreviewer:populate_preview_buf(entry_str)
+function M.previewer:populate_preview_buf(entry_str)
   if not self.win or not self.win:validate_preview() then return end                       
   local entry = self:parse_entry(entry_str)                                                
-  -- Get the terminal buffer lines                                                         
   local lines = vim.api.nvim_buf_get_lines(entry.bufnr, 0, -1, false)                      
-  -- Create a new buffer for preview                                                       
   local tmpbuf = self:get_tmp_buffer()                                                     
   vim.api.nvim_buf_set_lines(tmpbuf, 0, -1, false, lines)                                  
   vim.bo[tmpbuf].filetype = "sh"
-  -- Set the preview buffer                                                                
   self:set_preview_buf(tmpbuf)                                                             
-
-  -- Update title and scrollbar                                                            
   self.win:update_preview_title(" " .. entry.name .. " ")
   self.win:update_preview_scrollbar()                                                      
 end                                                                                        
 
--- Customize window options if needed                                                      
-function ToggleTermBufferPreviewer:gen_winopts()
+function M.previewer:gen_winopts()
   local winopts = {                                                                        
     wrap = true,                                                                           
     cursorline = false,                                                                    
@@ -59,7 +51,7 @@ function ToggleTermBufferPreviewer:gen_winopts()
   return vim.tbl_extend("keep", winopts, self.winopts)                                     
 end                                                                                        
 
-local function get_options(terminals)
+function M.get_options(terminals)
   local options = {}
   for _, term in pairs(terminals) do
     table.insert(options, term.id .. "-" .. term.name)
@@ -67,7 +59,7 @@ local function get_options(terminals)
   return options
 end
 
-local function get_actions(callbacks)
+function M.get_actions(callbacks)
   local actions = {}
   for key, callback in pairs(callbacks) do
     actions[key] = function(selected)
@@ -81,11 +73,11 @@ end
 
 function M.select(terminals, prompt, callbacks)
   fzf_lua.fzf_exec(
-    get_options(terminals),
+    M.get_options(terminals),
     {
       prompt = prompt,
-      actions = get_actions(callbacks),
-      previewer = ToggleTermBufferPreviewer
+      actions = M.get_actions(callbacks),
+      previewer = M.previewer
     }
   )
 end
