@@ -1,3 +1,5 @@
+--- Entry point for the plugin.
+---
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
@@ -10,10 +12,15 @@ local config = lazy.require("ergoterm.config")
 
 local M = {}
 
+--- Setup the plugin.
+---
+--- @param user_prefs ErgoTermConfig
+--- @return nil
 function M.setup(user_prefs)
   local conf = config.set(user_prefs)
   commands.setup(conf)
   autocommands.setup(conf)
+  return nil
 end
 
 return M

@@ -8,7 +8,7 @@ local fmt = string.format
 
 local function shade(color, factor) return colors.shade_color(color, factor) end
 
---- @alias ToggleTermHighlights table<string, table<string, string>>
+--- @alias ErgoTermHighlights table<string, table<string, string>>
 
 ---@class WinbarOpts
 ---@field name_formatter fun(term: Terminal):string
@@ -17,7 +17,7 @@ local function shade(color, factor) return colors.shade_color(color, factor) end
 --- @class Responsiveness
 --- @field horizontal_breakpoint number
 
---- @class ToggleTermConfig
+--- @class ErgoTermConfig
 --- @field size number
 --- @field shade_filetypes string[]
 --- @field hide_numbers boolean
@@ -36,13 +36,13 @@ local function shade(color, factor) return colors.shade_color(color, factor) end
 --- @field shell string|fun():string
 --- @field auto_scroll boolean
 --- @field float_opts table<string, any>
---- @field highlights ToggleTermHighlights
+--- @field highlights ErgoTermHighlights
 --- @field winbar WinbarOpts
 --- @field autochdir boolean
 --- @field title_pos '"left"' | '"center"' | '"right"'
 --- @field responsiveness Responsiveness
 
----@type ToggleTermConfig
+---@type ErgoTermConfig
 local config = {
   size = 12,
   shade_filetypes = {},
@@ -82,8 +82,8 @@ local config = {
 ---so I check that they have not attempted to highlight these themselves. Also
 ---if they have chosen to shade the terminal then this takes priority over their own highlights
 ---since they can't have it both ways i.e. custom highlighting and shading
----@param conf ToggleTermConfig
----@return ToggleTermHighlights
+---@param conf ErgoTermConfig
+---@return ErgoTermHighlights
 local function get_highlights(conf)
   local user = conf.highlights
   local defaults = {
@@ -155,8 +155,8 @@ end
 
 function M.reset_highlights() config.highlights = get_highlights(config) end
 
----@param user_conf ToggleTermConfig
----@return ToggleTermConfig
+---@param user_conf ErgoTermConfig
+---@return ErgoTermConfig
 function M.set(user_conf)
   user_conf = user_conf or {}
   user_conf.highlights = user_conf.highlights or {}
@@ -166,7 +166,7 @@ function M.set(user_conf)
   return config
 end
 
----@return ToggleTermConfig
+---@return ErgoTermConfig
 return setmetatable(M, {
   __index = function(_, k) return config[k] end,
 })

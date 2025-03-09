@@ -8,11 +8,11 @@ local terms = lazy.require("ergoterm.terminal")
 ---@module "ergoterm.ui"
 local ui = lazy.require("ergoterm.ui")
 
-local AUGROUP = "ToggleTermCommands"
+local AUGROUP = "ErgoTermCommands"
 
 local M = {}
 
----@param _ ToggleTermConfig
+---@param _ ErgoTermConfig
 function M.setup(_)
   vim.api.nvim_create_augroup(AUGROUP, { clear = true })
   local ergoterm_pattern = { "term://*#ergoterm#*", "term://*::ergoterm::*" }
