@@ -1,12 +1,13 @@
-local lazy = require("toggleterm.lazy")
----@module "toggleterm.config"
-local config = lazy.require("toggleterm.config")
----@module "toggleterm.ui"
-local ui = lazy.require("toggleterm.ui")
----@module "toggleterm.commandline"
-local commandline = lazy.require("toggleterm.commandline")
-
-local terms = require("toggleterm.terminal")
+---@module "ergoterm.lazy"
+local lazy = require("ergoterm.lazy")
+---@module "ergoterm.config"
+local config = lazy.require("ergoterm.config")
+---@module "ergoterm.ui"
+local ui = lazy.require("ergoterm.ui")
+---@module "ergoterm.commandline"
+local commandline = lazy.require("ergoterm.commandline")
+---@module "ergoterm.terminal"
+local terms = lazy.require("ergoterm.terminal")
 
 local AUGROUP = "ToggleTermCommands"
 -----------------------------------------------------------
@@ -73,23 +74,23 @@ end
 ---@param _ ToggleTermConfig
 local function setup_autocommands(_)
   vim.api.nvim_create_augroup(AUGROUP, { clear = true })
-  local toggleterm_pattern = { "term://*#toggleterm#*", "term://*::toggleterm::*" }
+  local ergoterm_pattern = { "term://*#ergoterm#*", "term://*::ergoterm::*" }
 
   vim.api.nvim_create_autocmd("BufEnter", {
-    pattern = toggleterm_pattern,
+    pattern = ergoterm_pattern,
     group = AUGROUP,
     nested = true, -- this is necessary in case the buffer is the last
     callback = ui.handle_term_enter,
   })
 
   vim.api.nvim_create_autocmd("WinLeave", {
-    pattern = toggleterm_pattern,
+    pattern = ergoterm_pattern,
     group = AUGROUP,
     callback = ui.handle_term_leave,
   })
 
   vim.api.nvim_create_autocmd("TermOpen", {
-    pattern = toggleterm_pattern,
+    pattern = ergoterm_pattern,
     group = AUGROUP,
     callback = ui.on_term_open,
   })
@@ -115,7 +116,7 @@ local function setup_autocommands(_)
   -- https://github.com/akinsho/toggleterm.nvim/issues/610
   vim.api.nvim_create_autocmd("FileType", {
     group = AUGROUP,
-    pattern = toggleterm_pattern,
+    pattern = ergoterm_pattern,
     callback = function(ev)
       local bufnr = ev.buf
       vim.api.nvim_buf_set_option(bufnr, "foldmethod", "manual")

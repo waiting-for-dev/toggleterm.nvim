@@ -11,7 +11,7 @@ local levels = vim.log.levels
 function M.notify(msg, level)
   local err = level:upper()
   level = level and levels[err] or levels.INFO
-  vim.schedule(function() vim.notify(msg, level, { title = "Toggleterm" }) end)
+  vim.schedule(function() vim.notify(msg, level, { title = "Ergoterm" }) end)
 end
 
 ---@private
@@ -32,7 +32,7 @@ function M.str_is_empty(str) return str == nil or str == "" end
 ---@return table
 function M.tbl_filter_empty(tbl)
   return vim.tbl_filter(
-    ---@param str string|nil
+  ---@param str string|nil
     function(str) return not M.str_is_empty(str) end,
     tbl
   )

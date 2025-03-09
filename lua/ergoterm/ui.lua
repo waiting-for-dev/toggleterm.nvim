@@ -1,16 +1,16 @@
 local M = {}
 
-local lazy = require("toggleterm.lazy")
----@module "toggleterm.constants"
-local constants = lazy.require("toggleterm.constants")
----@module "toggleterm.utils"
-local utils = lazy.require("toggleterm.utils")
----@module "toggleterm.colors"
-local colors = lazy.require("toggleterm.colors")
----@module "toggleterm.config"
-local config = lazy.require("toggleterm.config")
----@module "toggleterm.terminal"
-local terms = lazy.require("toggleterm.terminal")
+local lazy = require("ergoterm.lazy")
+---@module "ergoterm.constants"
+local constants = lazy.require("ergoterm.constants")
+---@module "ergoterm.utils"
+local utils = lazy.require("ergoterm.utils")
+---@module "ergoterm.colors"
+local colors = lazy.require("ergoterm.colors")
+---@module "ergoterm.config"
+local config = lazy.require("ergoterm.config")
+---@module "ergoterm.terminal"
+local terms = lazy.require("ergoterm.terminal")
 
 local fn = vim.fn
 local fmt = string.format
@@ -66,21 +66,21 @@ local hl_end = "%*"
 ---@param id number
 ---@return string
 function M.winbar(id)
-  local terms = require("toggleterm.terminal").get_all()
+  local terms = require("ergoterm.terminal").get_all()
   local str = " "
   for _, t in pairs(terms) do
     local h = id == t.id and "WinBarActive" or "WinBarInactive"
     str = str
-      .. fmt("%%%d@v:lua.___toggleterm_winbar_click@", t.id)
-      .. hl(h)
-      .. config.winbar.name_formatter(t)
-      .. hl_end
-      .. " "
+        .. fmt("%%%d@v:lua.___ergoterm_winbar_click@", t.id)
+        .. hl(h)
+        .. config.winbar.name_formatter(t)
+        .. hl_end
+        .. " "
   end
   return str
 end
 
-function _G.___toggleterm_winbar_click(id)
+function _G.___ergoterm_winbar_click(id)
   if id then
     local term = terms.get_or_create_term(id)
     if not term then return end
@@ -88,20 +88,19 @@ function _G.___toggleterm_winbar_click(id)
   end
 end
 
-
 ---@param term Terminal?
 function M.set_winbar(term)
   if
-    not config.winbar.enabled
-    or not term
-    or term:is_float() -- TODO: make this configurable
-    or fn.exists("+winbar") ~= 1
-    or not term.window
-    or not api.nvim_win_is_valid(term.window)
+      not config.winbar.enabled
+      or not term
+      or term:is_float() -- TODO: make this configurable
+      or fn.exists("+winbar") ~= 1
+      or not term.window
+      or not api.nvim_win_is_valid(term.window)
   then
     return
   end
-  local value = fmt('%%{%%v:lua.require("toggleterm.ui").winbar(%d)%%}', term.id)
+  local value = fmt('%%{%%v:lua.require("ergoterm.ui").winbar(%d)%%}', term.id)
   utils.wo_setlocal(term.window, "winbar", value)
 end
 
@@ -111,7 +110,7 @@ end
 function M.hl_term(term)
   local hls = (term and term.highlights and not vim.tbl_isempty(term.highlights))
       and term.highlights
-    or config.highlights
+      or config.highlights
 
   if not hls or vim.tbl_isempty(hls) then return end
 
@@ -352,7 +351,7 @@ end
 ---@param term Terminal
 local function close_split(term)
   if term.window and api.nvim_win_is_valid(term.window) then
-    local persist_size = require("toggleterm.config").get("persist_size")
+    local persist_size = require("ergoterm.config").get("persist_size")
     if persist_size then M.save_window_size(term.direction, term.window) end
     api.nvim_win_close(term.window, true)
   end
@@ -482,15 +481,15 @@ function M.on_term_open()
   if not term then
     local buf = api.nvim_get_current_buf()
     terms.Terminal
-      :new({
-        id = id,
-        bufnr = buf,
-        window = api.nvim_get_current_win(),
-        highlights = config.highlights,
-        job_id = vim.b[buf].terminal_job_id,
-        direction = M.guess_direction(),
-      })
-      :__resurrect()
+        :new({
+          id = id,
+          bufnr = buf,
+          window = api.nvim_get_current_win(),
+          highlights = config.highlights,
+          job_id = vim.b[buf].terminal_job_id,
+          direction = M.guess_direction(),
+        })
+        :__resurrect()
   end
   M.set_winbar(term)
 end

@@ -1,5 +1,5 @@
 local fn = vim.fn
-local u = require("toggleterm.utils")
+local u = require("ergoterm.utils")
 
 local M = {}
 

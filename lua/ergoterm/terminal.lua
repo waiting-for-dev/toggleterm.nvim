@@ -1,14 +1,14 @@
 local M = {}
 
-local lazy = require("toggleterm.lazy")
----@module "toggleterm.ui"
-local ui = lazy.require("toggleterm.ui")
----@module "toggleterm.config"
-local config = lazy.require("toggleterm.config")
----@module "toggleterm.utils"
-local utils = lazy.require("toggleterm.utils")
----@module "toggleterm.constants"
-local constants = lazy.require("toggleterm.constants")
+local lazy = require("ergoterm.lazy")
+---@module "ergoterm.ui"
+local ui = lazy.require("ergoterm.ui")
+---@module "ergoterm.config"
+local config = lazy.require("ergoterm.config")
+---@module "ergoterm.utils"
+local utils = lazy.require("ergoterm.utils")
+---@module "ergoterm.constants"
+local constants = lazy.require("ergoterm.constants")
 
 local api = vim.api
 local fmt = string.format
@@ -246,7 +246,7 @@ function Terminal:is_float() return self.direction == "float" and ui.is_float(se
 
 function Terminal:is_split()
   return (self.direction == "vertical" or self.direction == "horizontal")
-    and not ui.is_float(self.window)
+      and not ui.is_float(self.window)
 end
 
 function Terminal:is_tab() return self.direction == "tab" and not ui.is_float(self.window) end
@@ -288,7 +288,7 @@ end
 function Terminal:persist_mode()
   local raw_mode = api.nvim_get_mode().mode
   local m = "?"
-  if raw_mode:match("nt") then -- nt is normal mode in the terminal
+  if raw_mode:match("nt") then    -- nt is normal mode in the terminal
     m = mode.NORMAL
   elseif raw_mode:match("t") then -- t is insert mode in the terminal
     m = mode.INSERT
@@ -561,7 +561,7 @@ function Terminal:toggle(size, direction)
 end
 
 --- get the toggle term number from
---- the name e.g. term://~/.dotfiles//3371887:/usr/bin/zsh;#toggleterm#1
+--- the name e.g. term://~/.dotfiles//3371887:/usr/bin/zsh;#ergoterm#1
 --- the number in this case is 1
 --- @param name string?
 --- @return number?
@@ -635,7 +635,7 @@ end
 -- @param callback fun the function to call with the selected terminal
 function M.select_terminal(picker, include_hidden, prompt, callbacks)
   local terminals = terminals or M.get_all(include_hidden)
-  if #terminals == 0 then return utils.notify("No toggleterms are open yet", "info") end
+  if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
   -- if #terminals == 1 then return callback(terminals[1]) end
   picker.select(terminals, prompt, callbacks)
 end

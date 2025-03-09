@@ -1,6 +1,6 @@
-local colors = require("toggleterm.colors")
-local constants = require("toggleterm.constants")
-local utils = require("toggleterm.utils")
+local colors = require("ergoterm.colors")
+local constants = require("ergoterm.constants")
+local utils = require("ergoterm.utils")
 
 local M = {}
 
@@ -75,7 +75,7 @@ local config = {
   },
 }
 
----Derive the highlights for a toggleterm and merge these with the user's preferences
+---Derive the highlights for a ergoterm and merge these with the user's preferences
 ---A few caveats must be noted. Since I link the normal and float border to the Normal
 ---highlight this has to be done carefully as if the user has specified any Float highlights
 ---themselves merging will result in a mix of user highlights and the link key which is invalid
@@ -139,9 +139,9 @@ end
 local function get_picker(conf)
   local user_picker = conf.picker or detect_picker()
   if user_picker == "fzf-lua" then
-    return require("toggleterm.pickers.fzf-lua")
+    return require("ergoterm.pickers.fzf-lua")
   else
-    return require("toggleterm.pickers.vim-ui-select")
+    return require("ergoterm.pickers.vim-ui-select")
   end
 end
 

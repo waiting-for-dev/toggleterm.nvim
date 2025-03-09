@@ -1,4 +1,4 @@
-local terms = require("toggleterm.terminal")
+local terms = require("ergoterm.terminal")
 
 local M = {}
 
@@ -13,8 +13,8 @@ function M.select(terminals, prompt, callbacks)
     prompt = "Select a terminal",
     format_item = function(term) return term.id .. ": " .. term.name end,
   }, function(term)
-      callbacks.default(term)
-    end)
+    callbacks.default(term)
+  end)
 end
 
 return M
