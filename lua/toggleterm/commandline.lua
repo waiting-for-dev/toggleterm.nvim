@@ -26,6 +26,10 @@ end
 ---@field dir string?
 ---@field size number?
 ---@field name string?
+---@field mode string?
+---@field trim boolean?
+---@field new_line boolean?
+---@field trailing string?
 
 ---Take a users command arguments in the format "cmd='git commit' dir=~/dotfiles"
 ---and parse this into a table of arguments
@@ -232,9 +236,6 @@ local function complete(options)
     return vim.tbl_map(function(option) return option .. "=" end, available_options)
   end
 end
-
---- See :h :command-completion-custom
-M.term_exec_complete = complete(term_exec_options)
 
 M.term_send_complete = complete(term_send_options)
 

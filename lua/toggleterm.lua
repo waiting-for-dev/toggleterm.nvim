@@ -1,11 +1,4 @@
-local api = vim.api
-local fn = vim.fn
-
 local lazy = require("toggleterm.lazy")
----@module "toggleterm.utils"
-local utils = lazy.require("toggleterm.utils")
----@module "toggleterm.constants"
-local constants = require("toggleterm.constants")
 ---@module "toggleterm.config"
 local config = lazy.require("toggleterm.config")
 ---@module "toggleterm.ui"
@@ -35,8 +28,8 @@ function M.send(args, selection, picker, term)
   else
     input = ui.select_text(selection)
   end
-  local callback = function(term)
-    term:send(input, parsed.mode, parsed.trim, parsed.new_line)
+  local callback = function(t)
+    t:send(input, parsed.mode, parsed.trim, parsed.new_line)
   end
   if term then
     callback(term)
@@ -56,7 +49,7 @@ function M.new(args)
   if parsed.size then parsed.size = tonumber(parsed.size) end
   local term = terms.create_term(terms.next_id(), parsed.dir, parsed.direction, parsed.name)
   ui.update_origin_window(term.window)
-  term:open(size, direction)
+  term:open(parsed.size, parsed.direction)
 end
 
 function M.update(args, picker, term)
@@ -67,8 +60,8 @@ function M.update(args, picker, term)
     direction = { parsed.direction, "string", true },
     name = { parsed.name, "string", true },
   })
-  local callback = function(term)
-    term:update(parsed)
+  local callback = function(t)
+    t:update(parsed)
   end
   if term then
     callback(term)
@@ -79,48 +72,48 @@ end
 
 ---@param _ ToggleTermConfig
 local function setup_autocommands(_)
-  api.nvim_create_augroup(AUGROUP, { clear = true })
+  vim.api.nvim_create_augroup(AUGROUP, { clear = true })
   local toggleterm_pattern = { "term://*#toggleterm#*", "term://*::toggleterm::*" }
 
-  api.nvim_create_autocmd("BufEnter", {
+  vim.api.nvim_create_autocmd("BufEnter", {
     pattern = toggleterm_pattern,
     group = AUGROUP,
     nested = true, -- this is necessary in case the buffer is the last
     callback = ui.handle_term_enter,
   })
 
-  api.nvim_create_autocmd("WinLeave", {
+  vim.api.nvim_create_autocmd("WinLeave", {
     pattern = toggleterm_pattern,
     group = AUGROUP,
     callback = ui.handle_term_leave,
   })
 
-  api.nvim_create_autocmd("TermOpen", {
+  vim.api.nvim_create_autocmd("TermOpen", {
     pattern = toggleterm_pattern,
     group = AUGROUP,
     callback = ui.on_term_open,
   })
 
-  api.nvim_create_autocmd("ColorScheme", {
+  vim.api.nvim_create_autocmd("ColorScheme", {
     group = AUGROUP,
     callback = function()
       config.reset_highlights()
       for _, term in pairs(terms.get_all()) do
-        if api.nvim_win_is_valid(term.window) then
-          api.nvim_win_call(term.window, function() ui.hl_term(term) end)
+        if vim.api.nvim_win_is_valid(term.window) then
+          vim.api.nvim_win_call(term.window, function() ui.hl_term(term) end)
         end
       end
     end,
   })
 
-  api.nvim_create_autocmd("TermOpen", {
+  vim.api.nvim_create_autocmd("TermOpen", {
     group = AUGROUP,
     pattern = "term://*",
     callback = ui.apply_colors,
   })
 
   -- https://github.com/akinsho/toggleterm.nvim/issues/610
-  api.nvim_create_autocmd("FileType", {
+  vim.api.nvim_create_autocmd("FileType", {
     group = AUGROUP,
     pattern = toggleterm_pattern,
     callback = function(ev)
@@ -140,7 +133,7 @@ local function select_terminal(picker)
 end
 
 local function setup_commands(conf)
-  local command = api.nvim_create_user_command
+  local command = vim.api.nvim_create_user_command
   command("TermSelect", function()
     select_terminal(conf.resolved_picker)
   end, { bang = true })
