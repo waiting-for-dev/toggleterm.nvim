@@ -41,6 +41,7 @@ local function shade(color, factor) return colors.shade_color(color, factor) end
 --- @field autochdir boolean
 --- @field title_pos '"left"' | '"center"' | '"right"'
 --- @field responsiveness Responsiveness
+--- @field resolved_picker Picker
 
 ---@type ErgoTermConfig
 local config = {

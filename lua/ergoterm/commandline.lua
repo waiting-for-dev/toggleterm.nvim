@@ -26,7 +26,7 @@ end
 ---@field dir string?
 ---@field size number?
 ---@field name string?
----@field mode string?
+---@field action string?
 ---@field trim boolean?
 ---@field new_line boolean?
 ---@field trailing string?
@@ -174,16 +174,16 @@ local all_options = {
   --- match the signature of other options
   name = function() return {} end,
 
-  mode = function(typed_mode)
-    local modes = {
+  action = function(typed_action)
+    local actions = {
       "interactive",
       "silent",
       "visible"
     }
-    if u.str_is_empty(typed_mode) then return modes end
+    if u.str_is_empty(typed_action) then return actions end
     return vim.tbl_filter(
-      function(mode) return mode:match("^" .. typed_mode .. "*") ~= nil end,
-      modes
+      function(action) return action:match("^" .. typed_action .. "*") ~= nil end,
+      actions
     )
   end,
 
@@ -207,7 +207,7 @@ local term_update_options = {
 
 local term_send_options = {
   cmd = all_options.cmd,
-  mode = all_options.mode,
+  action = all_options.action,
   trim = all_options.trim,
   new_line = all_options.new_line,
 }

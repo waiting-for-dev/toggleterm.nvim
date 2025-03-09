@@ -1,3 +1,5 @@
+---ErgoTerm vim commands
+
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
@@ -9,30 +11,6 @@ local terms = lazy.require("ergoterm.terminal")
 local ui = lazy.require("ergoterm.ui")
 
 local M = {}
-
-function M.send(args, selection, picker, term)
-  local parsed = commandline.parse(args)
-  vim.validate({
-    cmd = { parsed.cmd, "string", true },
-    mode = { parsed.mode, "string", true },
-    trim = { parsed.trim, "boolean", true },
-    new_line = { parsed.new_line, "boolean", true },
-  })
-  local input = nil
-  if parsed.cmd then
-    input = { parsed.cmd }
-  else
-    input = ui.select_text(selection)
-  end
-  local callback = function(t)
-    t:send(input, parsed.mode, parsed.trim, parsed.new_line)
-  end
-  if term then
-    callback(term)
-  else
-    terms.select_terminal(picker, false, "Please select a terminal to send text: ", { default = callback })
-  end
-end
 
 function M.new(args)
   local parsed = commandline.parse(args)
@@ -46,6 +24,56 @@ function M.new(args)
   local term = terms.create_term(terms.next_id(), parsed.dir, parsed.direction, parsed.name)
   ui.update_origin_window(term.window)
   term:open(parsed.size, parsed.direction)
+end
+
+---Sends text to a terminal
+---
+---Text to be sent to the terminal can be provided in different ways:
+---
+---1. If the `cmd` argument is provided, it will be sent directly to the terminal.
+---2. If no `cmd` argument is provided, the text will be extracted from the current buffer depending on the current mode:
+---  - `normal`: The current line where the cursor is located.
+---  - `visual`: The text selected in visual mode.
+---  - `visual_line`: The lines selected in visual mode line-wise.
+---
+---The `action` argument can be used to specify the behavior after sending the text:
+---- `interactive`: The terminal will be opened and focused.
+---- `visible`: The terminal will be opened but focus will not change.
+---- `silent`: The terminal will not be opened.
+---
+---The `new_line` argument can be used to add a new line after the text (default is `true`).
+---
+---The `trim` argument can be used to remove leading and trailing whitespace from the text before sending it.
+---
+---If no terminal is provided, the user will be prompted to select one. In bang mode, the last focused terminal will be used.
+---@param args string
+---@param range number
+---@param bang boolean
+---@param conf ErgoTermConfig
+function M.send(args, range, bang, conf)
+  local parsed = commandline.parse(args)
+  vim.validate({
+    cmd = { parsed.cmd, "string", true },
+    action = { parsed.action, "string", true },
+    trim = { parsed.trim, "boolean", true },
+    new_line = { parsed.new_line, "boolean", true },
+  })
+  local selection = range == 0 and "single_line" or
+      (vim.fn.visualmode() == "V" and "visual_lines" or "visual_selection")
+  local input = parsed.cmd and { parsed.cmd } or ui.select_text(selection)
+  local send_to_terminal = function(t)
+    t:send(input, parsed.action, parsed.trim, parsed.new_line)
+  end
+  if bang then
+    send_to_terminal(terms.get_last_focused())
+  else
+    terms.select_terminal(conf.resolved_picker, false, "Please select a terminal to send text: ",
+      { default = send_to_terminal })
+  end
+end
+
+function M.select(picker)
+  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ", picker.select_actions())
 end
 
 function M.update(args, picker, term)
@@ -66,42 +94,24 @@ function M.update(args, picker, term)
   end
 end
 
-function M.select(picker)
-  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ", picker.select_actions())
-end
-
 function M.setup(conf)
   local command = vim.api.nvim_create_user_command
-  command("TermSelect", function()
-    M.select(conf.resolved_picker)
-  end, { bang = true })
-
   command(
     "TermNew",
     function(opts) M.new(opts.args) end,
     { complete = commandline.term_new_complete, nargs = "*" }
   )
 
+  command("TermSelect", function()
+    M.select(conf.resolved_picker)
+  end, { bang = true })
+
   command(
     "TermSend",
     function(opts)
-      local selection = nil
-      if opts.range == 0 then
-        selection = "single_line"
-      else
-        if vim.fn.visualmode() == "V" then
-          selection = "visual_lines"
-        else
-          selection = "visual_selection"
-        end
-      end
-      if opts.bang then
-        M.send(opts.args, selection, conf.resolved_picker, terms.get_last_focused())
-      else
-        M.send(opts.args, selection, conf.resolved_picker)
-      end
+      M.send(opts.args, opts.range, opts.bang, conf)
     end,
-    { range = true, nargs = "*", complete = commandline.term_send_complete, bang = true }
+    { nargs = "?", complete = commandline.term_send_complete, range = true, bang = true }
   )
 
   command("TermUpdate", function(opts)

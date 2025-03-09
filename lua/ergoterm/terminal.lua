@@ -52,6 +52,10 @@ end
 
 ---@alias Mode "n" | "i" | "?"
 
+---@class Picker
+---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
+---@field select_actions fun(): table<string, fun(term: Terminal)>
+
 --- @class TerminalState
 --- @field mode Mode
 

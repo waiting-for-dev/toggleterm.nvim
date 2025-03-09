@@ -19,6 +19,7 @@ local api = vim.api
 local origin_window
 local persistent = {}
 
+---@alias SendSelection "single_line" | "visual_selection" | "visual_lines"
 --- @class TerminalWindow
 --- @field term_id number ID for the terminal in the window
 --- @field window number window handle
