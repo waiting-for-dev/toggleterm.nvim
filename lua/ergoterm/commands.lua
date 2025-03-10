@@ -59,7 +59,7 @@ end
 ---
 ---The `trim` argument can be used to remove leading and trailing whitespace from the text before sending it.
 ---
----If no terminal is provided, the user will be prompted to select one. In bang mode, the last focused terminal will be used.
+---In bang mode, the last focused terminal will be used. Otherwise, the user will be prompted to select a terminal.
 ---@param args string
 ---@param range number
 ---@param bang boolean
@@ -86,7 +86,16 @@ function M.send(args, range, bang, conf)
   end
 end
 
-function M.update(args, picker, term)
+---Updates a terminal
+---
+---The following fields can be updated by providing the corresponding arguments: size, dir, direction and name.
+---
+---In bang mode, the last focused terminal will be used. Otherwise, the user will be prompted to select a terminal.
+---
+---@param args string
+---@param bang boolean
+---@param conf ErgoTermConfig
+function M.update(args, bang, conf)
   local parsed = commandline.parse(args)
   vim.validate({
     size = { parsed.size, "number", true },
@@ -94,43 +103,38 @@ function M.update(args, picker, term)
     direction = { parsed.direction, "string", true },
     name = { parsed.name, "string", true },
   })
-  local callback = function(t)
+  local update_terminal = function(t)
     t:update(parsed)
   end
-  if term then
-    callback(term)
+  if bang then
+    update_terminal(terms.get_last_focused())
   else
-    terms.select_terminal(picker, false, "Please select a terminal to update: ", { default = callback })
+    terms.select_terminal(conf.resolved_picker, false, "Please select a terminal to update: ",
+      { default = update_terminal })
   end
 end
 
+---Sets up the ErgoTerm default commands
+---
+---@param conf ErgoTermConfig
 function M.setup(conf)
   local command = vim.api.nvim_create_user_command
-  command(
-    "TermNew",
-    function(opts) M.new(opts.args) end,
-    { complete = commandline.term_new_complete, nargs = "*" }
-  )
+
+  command("TermNew", function(opts)
+    M.new(opts.args)
+  end, { complete = commandline.term_new_complete, nargs = "*" })
 
   command("TermSelect", function()
     M.select(conf)
   end, { nargs = 0 })
 
-  command(
-    "TermSend",
-    function(opts)
-      M.send(opts.args, opts.range, opts.bang, conf)
-    end,
-    { nargs = "?", complete = commandline.term_send_complete, range = true, bang = true }
-  )
+  command("TermSend", function(opts)
+    M.send(opts.args, opts.range, opts.bang, conf)
+  end, { nargs = "?", complete = commandline.term_send_complete, range = true, bang = true })
 
   command("TermUpdate", function(opts)
-    if opts.bang then
-      M.update(opts.args, conf.resolved_picker, terms.get_last_focused())
-    else
-      M.update(opts.args, conf.resolved_picker)
-    end
-  end, { nargs = "?", complete = commandline.term_update_complete, bang = true })
+    M.update(opts.args, opts.bang, conf)
+  end, { nargs = 1, complete = commandline.term_update_complete, bang = true })
 end
 
 return M
