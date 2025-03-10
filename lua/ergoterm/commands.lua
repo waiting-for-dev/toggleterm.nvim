@@ -29,6 +29,17 @@ function M.new(args)
   terms.create_term(parsed.dir, parsed.direction, parsed.size, parsed.name)
 end
 
+---Selects a terminal and performs an action
+---
+---Actions are defined in the picker configuration.
+---
+---@param conf ErgoTermConfig
+function M.select(conf)
+  local picker = conf.resolved_picker
+  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ",
+    picker.select_actions())
+end
+
 ---Sends text to a terminal
 ---
 ---Text to be sent to the terminal can be provided in different ways:
@@ -75,10 +86,6 @@ function M.send(args, range, bang, conf)
   end
 end
 
-function M.select(picker)
-  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ", picker.select_actions())
-end
-
 function M.update(args, picker, term)
   local parsed = commandline.parse(args)
   vim.validate({
@@ -106,8 +113,8 @@ function M.setup(conf)
   )
 
   command("TermSelect", function()
-    M.select(conf.resolved_picker)
-  end, { bang = true })
+    M.select(conf)
+  end, { nargs = 0 })
 
   command(
     "TermSend",
