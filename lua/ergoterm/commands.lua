@@ -12,6 +12,11 @@ local ui = lazy.require("ergoterm.ui")
 
 local M = {}
 
+---Creates and opens a new terminal
+---
+---Direction, size, name and working directory can be provided as arguments.
+---
+---@param args string
 function M.new(args)
   local parsed = commandline.parse(args)
   vim.validate({
@@ -21,9 +26,7 @@ function M.new(args)
     name = { parsed.name, "string", true },
   })
   if parsed.size then parsed.size = tonumber(parsed.size) end
-  local term = terms.create_term(terms.next_id(), parsed.dir, parsed.direction, parsed.name)
-  ui.update_origin_window(term.window)
-  term:open(parsed.size, parsed.direction)
+  terms.create_term(parsed.dir, parsed.direction, parsed.size, parsed.name)
 end
 
 ---Sends text to a terminal

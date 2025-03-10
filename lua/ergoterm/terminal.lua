@@ -591,8 +591,11 @@ function M.get_or_create_term(num, dir, direction, name)
   return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name })
 end
 
-function M.create_term(num, dir, direction, name)
-  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name })
+function M.create_term(dir, direction, size, name)
+  local term = Terminal:new({ id = M.next_id(), dir = dir, direction = direction, display_name = name })
+  ui.update_origin_window(term.window)
+  term:open(size, direction)
+  return term
 end
 
 ---Get a single terminal by id, unless it is hidden
