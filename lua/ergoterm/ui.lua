@@ -438,20 +438,6 @@ function M.apply_colors()
   end
 end
 
----Close the last window if only a terminal *split* is open
----@param term Terminal
----@return boolean
-function M.close_last_window(term)
-  -- local only_one_window = fn.winnr("$") == 1
-  -- if only_one_window and vim.bo[term.bufnr].filetype == constants.FILETYPE then
-  --   if term:is_split() then
-  --     local has_next = pcall(vim.cmd, "keepalt bnext")
-  --     return has_next
-  --   end
-  -- end
-  return false
-end
-
 function M.select_text(selection_type)
   local current_window = api.nvim_get_current_win() -- save current window
 

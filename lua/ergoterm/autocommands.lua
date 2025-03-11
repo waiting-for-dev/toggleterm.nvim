@@ -18,8 +18,6 @@ function M.on_buf_enter()
     --- FIXME: we have to reset the filetype here because it is reset by other plugins
     --- i.e. telescope.nvim
     if vim.bo[term.bufnr] ~= constants.FILETYPE then term:__set_ft_options() end
-    local closed = ui.close_last_window(term)
-    if closed then return end
     if config.persist_mode then
       term:__restore_mode()
     elseif config.start_in_insert then
