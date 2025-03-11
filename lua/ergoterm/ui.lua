@@ -442,57 +442,14 @@ end
 ---@param term Terminal
 ---@return boolean
 function M.close_last_window(term)
-  local only_one_window = fn.winnr("$") == 1
-  if only_one_window and vim.bo[term.bufnr].filetype == constants.FILETYPE then
-    if term:is_split() then
-      local has_next = pcall(vim.cmd, "keepalt bnext")
-      return has_next
-    end
-  end
+  -- local only_one_window = fn.winnr("$") == 1
+  -- if only_one_window and vim.bo[term.bufnr].filetype == constants.FILETYPE then
+  --   if term:is_split() then
+  --     local has_next = pcall(vim.cmd, "keepalt bnext")
+  --     return has_next
+  --   end
+  -- end
   return false
-end
-
-function M.handle_term_enter()
-  local _, term = terms.identify()
-  if term then
-    --- FIXME: we have to reset the filetype here because it is reset by other plugins
-    --- i.e. telescope.nvim
-    if vim.bo[term.bufnr] ~= constants.FILETYPE then term:__set_ft_options() end
-
-    local closed = M.close_last_window(term)
-    if closed then return end
-    if config.persist_mode then
-      term:__restore_mode()
-    elseif config.start_in_insert then
-      term:set_mode(terms.mode.INSERT)
-    end
-    terms.set_last_focused(term)
-  end
-end
-
-function M.handle_term_leave()
-  local _, term = terms.identify()
-  if not term then return end
-  if config.persist_mode then term:persist_mode() end
-  if term:is_float() then term:close() end
-end
-
-function M.on_term_open()
-  local id, term = terms.identify()
-  if not term then
-    local buf = api.nvim_get_current_buf()
-    terms.Terminal
-        :new({
-          id = id,
-          bufnr = buf,
-          window = api.nvim_get_current_win(),
-          highlights = config.highlights,
-          job_id = vim.b[buf].terminal_job_id,
-          direction = M.guess_direction(),
-        })
-        :__resurrect()
-  end
-  M.set_winbar(term)
 end
 
 function M.select_text(selection_type)
