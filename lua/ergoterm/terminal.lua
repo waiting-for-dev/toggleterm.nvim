@@ -274,8 +274,15 @@ function Terminal:is_open()
   return win_open and api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
----@package
-function Terminal:__restore_mode() self:set_mode(self.__state.mode) end
+function Terminal:set_start_mode()
+  if config.persist_mode then
+    self:restore_mode()
+  elseif config.start_in_insert then
+    self:set_mode(mode.INSERT)
+  end
+end
+
+function Terminal:restore_mode() self:set_mode(self.__state.mode) end
 
 --- Set the terminal's mode
 ---@param m Mode
@@ -466,8 +473,7 @@ function Terminal:__resurrect()
   ui.hl_term(self)
 end
 
----@package
-function Terminal:__set_ft_options()
+function Terminal:set_ft_options()
   local buf = vim.bo[self.bufnr]
   buf.filetype = constants.FILETYPE
   buf.buflisted = false
@@ -488,7 +494,7 @@ end
 
 ---@package
 function Terminal:__set_options()
-  self:__set_ft_options()
+  self:set_ft_options()
   self:__set_win_options()
   vim.b[self.bufnr].toggle_number = self.id
 end
@@ -568,14 +574,13 @@ end
 --- the name e.g. term://~/.dotfiles//3371887:/usr/bin/zsh;#ergoterm#1
 --- the number in this case is 1
 --- @param name string?
---- @return number?
---- @return Terminal?
+--- @return Terminal
 function M.identify(name)
   name = name or api.nvim_buf_get_name(api.nvim_get_current_buf())
   local comment_sep = get_comment_sep()
   local parts = vim.split(name, comment_sep)
   local id = tonumber(parts[#parts])
-  return id, terminals[id]
+  return terminals[id]
 end
 
 ---get existing terminal or create an empty term table

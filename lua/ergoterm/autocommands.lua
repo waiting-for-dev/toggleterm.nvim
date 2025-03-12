@@ -13,24 +13,14 @@ local terms = lazy.require("ergoterm.terminal")
 local M = {}
 
 function M.on_buf_enter()
-  local _, term = terms.identify()
-  if term then
-    --- FIXME: we have to reset the filetype here because it is reset by other plugins
-    --- i.e. telescope.nvim
-    if vim.bo[term.bufnr] ~= constants.FILETYPE then term:__set_ft_options() end
-    if config.persist_mode then
-      term:__restore_mode()
-    elseif config.start_in_insert then
-      term:set_mode(terms.mode.INSERT)
-    end
-    terms.set_last_focused(term)
-  end
+  local term = terms.identify()
+  term:set_ft_options() -- reset by other plugins like telescope.nvim
+  term:set_start_mode()
   ui.apply_colors()
 end
 
 function M.on_win_leave()
-  local _, term = terms.identify()
-  if not term then return end
+  local term = terms.identify()
   if config.persist_mode then term:persist_mode() end
   if term:is_float() then term:close() end
 end
