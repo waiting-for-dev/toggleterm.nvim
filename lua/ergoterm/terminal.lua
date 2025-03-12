@@ -463,16 +463,6 @@ function Terminal:__spawn()
   self.dir = dir
 end
 
----@package
----Add an orphaned terminal to the list of terminal and re-apply settings
-function Terminal:__resurrect()
-  self:__add()
-  if self:is_split() then ui.resize_split(self) end
-  -- set the window options including fixing height or width once the window is resized
-  self:__set_options()
-  ui.hl_term(self)
-end
-
 function Terminal:set_ft_options()
   local buf = vim.bo[self.bufnr]
   buf.filetype = constants.FILETYPE

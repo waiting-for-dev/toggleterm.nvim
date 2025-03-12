@@ -26,20 +26,7 @@ function M.on_win_leave()
 end
 
 function M.on_term_open()
-  local id, term = terms.identify()
-  if not term then
-    local buf = vim.api.nvim_get_current_buf()
-    terms.Terminal
-        :new({
-          id = id,
-          bufnr = buf,
-          window = vim.api.nvim_get_current_win(),
-          highlights = config.highlights,
-          job_id = vim.b[buf].terminal_job_id,
-          direction = ui.guess_direction(),
-        })
-        :__resurrect()
-  end
+  local term = terms.identify()
   ui.set_winbar(term)
 end
 
