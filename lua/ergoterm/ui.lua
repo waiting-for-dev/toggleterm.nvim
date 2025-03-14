@@ -5,8 +5,6 @@ local lazy = require("ergoterm.lazy")
 local constants = lazy.require("ergoterm.constants")
 ---@module "ergoterm.utils"
 local utils = lazy.require("ergoterm.utils")
----@module "ergoterm.colors"
-local colors = lazy.require("ergoterm.colors")
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.terminal"
@@ -57,45 +55,6 @@ function M.get_size(size, direction)
   local valid_size = size ~= nil and size > 0
   if not config.persist_size then return valid_size and size or config.size end
   return valid_size and size or persistent[direction] or config.size
-end
-
-local function hl(name) return "%#" .. name .. "#" end
-
-local hl_end = "%*"
-
----apply highlights to a terminal
----if no term is passed in we use default values instead
----@param term Terminal?
-function M.hl_term(term)
-  local hls = (term and term.highlights and not vim.tbl_isempty(term.highlights))
-      and term.highlights
-      or config.highlights
-
-  if not hls or vim.tbl_isempty(hls) then return end
-
-  local window = term and term.window or api.nvim_get_current_win()
-  local id = term and term.id or "Default"
-  local is_float = M.is_float(window)
-
-  -- If the terminal is a floating window we only want to set the background and border
-  -- not the statusline etc. which are not applicable to floating windows
-  local hl_names = vim.tbl_filter(
-    function(name)
-      return not is_float or (is_float and vim.tbl_contains({ "FloatBorder", "NormalFloat" }, name))
-    end,
-    vim.tbl_keys(hls)
-  )
-
-  local highlights = vim.tbl_map(function(hl_group_name)
-    local name = constants.highlight_group_name_prefix .. id .. hl_group_name
-    local hi_target = fmt("%s:%s", hl_group_name, name)
-    local attrs = hls[hl_group_name]
-    attrs.default = true
-    colors.set_hl(name, attrs)
-    return hi_target
-  end, hl_names)
-
-  utils.wo_setlocal(window, "winhighlight", table.concat(highlights, ","))
 end
 
 ---Create a terminal buffer with the correct buffer/window options
@@ -382,18 +341,6 @@ function M.term_has_open_win(term)
     vim.list_extend(wins, api.nvim_tabpage_list_wins(tab))
   end
   return vim.tbl_contains(wins, term.window)
-end
-
---- only shade explicitly specified filetypes
-function M.apply_colors()
-  local ft = vim.bo.filetype
-  ft = (not ft or ft == "") and "none" or ft
-  local allow_list = config.shade_filetypes or {}
-  local is_enabled_ft = vim.tbl_contains(allow_list, ft)
-  if vim.bo.buftype == "terminal" and is_enabled_ft then
-    local _, term = terms.identify()
-    M.hl_term(term)
-  end
 end
 
 function M.select_text(selection_type)

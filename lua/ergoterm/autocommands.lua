@@ -16,22 +16,12 @@ function M.on_buf_enter()
   local term = terms.identify()
   term:set_ft_options() -- reset by other plugins like telescope.nvim
   term:set_start_mode()
-  ui.apply_colors()
 end
 
 function M.on_win_leave()
   local term = terms.identify()
   if config.persist_mode then term:persist_mode() end
   if term:is_float() then term:close() end
-end
-
-function M.on_colorscheme()
-  config.reset_highlights()
-  for _, term in pairs(terms.get_all()) do
-    if vim.api.nvim_win_is_valid(term.window) then
-      vim.api.nvim_win_call(term.window, function() ui.hl_term(term) end)
-    end
-  end
 end
 
 function M.on_filetype(ev)
@@ -46,24 +36,18 @@ function M.setup()
   local ergoterm_pattern = { "term://*#ergoterm#*", "term://*::ergoterm::*" }
 
   vim.api.nvim_create_autocmd("BufEnter", {
-    pattern = ergoterm_pattern,
     group = constants.AUGROUP,
+    pattern = ergoterm_pattern,
     nested = true, -- this is necessary in case the buffer is the last
     callback = M.on_buf_enter
   })
 
   vim.api.nvim_create_autocmd("WinLeave", {
-    pattern = ergoterm_pattern,
     group = constants.AUGROUP,
+    pattern = ergoterm_pattern,
     callback = M.on_win_leave
   })
 
-  vim.api.nvim_create_autocmd("ColorScheme", {
-    group = constants.AUGROUP,
-    callback = M.on_colorscheme
-  })
-
-  -- https://github.com/akinsho/toggleterm.nvim/issues/610
   vim.api.nvim_create_autocmd("FileType", {
     group = constants.AUGROUP,
     pattern = ergoterm_pattern,

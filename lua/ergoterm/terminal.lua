@@ -67,7 +67,6 @@ local terminals = {}
 --- @field cmd? string a custom command to run
 --- @field direction? string the layout style for the terminal
 --- @field id number?
---- @field highlights table<string, table<string, string>>?
 --- @field dir string? the directory for the terminal
 --- @field count number? the count that triggers that specific terminal
 --- @field display_name string?
@@ -90,7 +89,6 @@ local terminals = {}
 --- @field bufnr number
 --- @field window number
 --- @field job_id number
---- @field highlights table<string, table<string, string>>
 --- @field dir string the directory for the terminal
 --- @field name string the name of the terminal
 --- @field count number the count that triggers that specific terminal
@@ -536,7 +534,6 @@ function Terminal:open(size, direction)
     -- ui.switch_buf(self.bufnr)
     if config.autochdir and self.dir ~= cwd then self:change_dir(cwd) end
   end
-  ui.hl_term(self)
   -- NOTE: it is important that this function is called at this point. i.e. the buffer has been correctly assigned
   if self.on_open then self:on_open() end
   M.set_last_focused(self)
