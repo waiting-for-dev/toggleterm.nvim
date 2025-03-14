@@ -10,10 +10,6 @@ local function shade(color, factor) return colors.shade_color(color, factor) end
 
 --- @alias ErgoTermHighlights table<string, table<string, string>>
 
----@class WinbarOpts
----@field name_formatter fun(term: Terminal):string
----@field enabled boolean
-
 --- @class Responsiveness
 --- @field horizontal_breakpoint number
 
@@ -37,7 +33,6 @@ local function shade(color, factor) return colors.shade_color(color, factor) end
 --- @field auto_scroll boolean
 --- @field float_opts table<string, any>
 --- @field highlights ErgoTermHighlights
---- @field winbar WinbarOpts
 --- @field autochdir boolean
 --- @field title_pos '"left"' | '"center"' | '"right"'
 --- @field responsiveness Responsiveness
@@ -63,10 +58,6 @@ local config = {
   picker = nil,
   autochdir = false,
   auto_scroll = true,
-  winbar = {
-    enabled = false,
-    name_formatter = function(term) return fmt("%d:%s", term.id, term:_display_name()) end,
-  },
   float_opts = {
     winblend = 0,
     title_pos = "left",
@@ -98,9 +89,6 @@ local function get_highlights(conf)
   local comment_fg = colors.get_hex("Comment", "fg")
   local dir_fg = colors.get_hex("Directory", "fg")
 
-  local winbar_inactive_opts = { guifg = comment_fg }
-  local winbar_active_opts = { guifg = dir_fg, gui = "underline" }
-
   if conf.shade_terminals then
     local is_bright = colors.is_bright_background()
     local degree = is_bright and conf.shading_ratio or 1
@@ -114,16 +102,7 @@ local function get_highlights(conf)
       EndOfBuffer = { guibg = terminal_bg },
       StatusLine = { guibg = terminal_bg },
       StatusLineNC = { guibg = terminal_bg },
-      winbar_inactive_opts = { guibg = terminal_bg },
-      winbar_active_opts = { guibg = terminal_bg },
-      WinBarNC = { guibg = terminal_bg },
-      WinBar = { guibg = terminal_bg }
     }
-  end
-
-  if conf.winbar.enabled then
-    colors.set_hl("WinBarActive", winbar_active_opts)
-    colors.set_hl("WinBarInactive", winbar_inactive_opts)
   end
 
   return vim.tbl_deep_extend("force", defaults, conf.highlights, overrides)

@@ -25,11 +25,6 @@ function M.on_win_leave()
   if term:is_float() then term:close() end
 end
 
-function M.on_term_open()
-  local term = terms.identify()
-  ui.set_winbar(term)
-end
-
 function M.on_colorscheme()
   config.reset_highlights()
   for _, term in pairs(terms.get_all()) do
@@ -61,12 +56,6 @@ function M.setup()
     pattern = ergoterm_pattern,
     group = constants.AUGROUP,
     callback = M.on_win_leave
-  })
-
-  vim.api.nvim_create_autocmd("TermOpen", {
-    pattern = ergoterm_pattern,
-    group = constants.AUGROUP,
-    callback = M.on_term_open
   })
 
   vim.api.nvim_create_autocmd("ColorScheme", {
