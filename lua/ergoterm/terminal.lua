@@ -119,15 +119,6 @@ function M.next_id()
   return #all + 1
 end
 
----Get an opened (valid) toggle terminal by id, defaults to the first opened
----@param position number?
----@return number?
-function M.get_toggled_id(position)
-  position = position or 1
-  local t = M.get_all()
-  return t[position] and t[position].id or nil
-end
-
 ---Return currently focused terminal id.
 ---@return number?
 function M.get_focused_id()
@@ -322,18 +313,6 @@ function Terminal:shutdown()
   if self:is_open() then self:close() end
   ui.delete_buf(self)
   delete(self.id)
-end
-
----Combine arguments into strings separated by new lines
----@vararg string
----@param newline_chr string
----@return string
-local function with_cr(newline_chr, ...)
-  local result = {}
-  for _, str in ipairs({ ... }) do
-    table.insert(result, str .. newline_chr)
-  end
-  return table.concat(result, "")
 end
 
 function Terminal:scroll_bottom()
