@@ -1,18 +1,16 @@
 local M = {}
 
+---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
----@module "ergoterm.ui"
-local ui = lazy.require("ergoterm.ui")
+
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
----@module "ergoterm.utils"
-local utils = lazy.require("ergoterm.utils")
 ---@module "ergoterm.constants"
 local constants = lazy.require("ergoterm.constants")
-
-local api = vim.api
-local fmt = string.format
-local fn = vim.fn
+---@module "ergoterm.ui"
+local ui = lazy.require("ergoterm.ui")
+---@module "ergoterm.utils"
+local utils = lazy.require("ergoterm.utils")
 
 local mode = {
   INSERT = "i",
@@ -25,9 +23,9 @@ local state = {
   last_focused_id = nil
 }
 
-local AUGROUP = api.nvim_create_augroup("ToggleTermBuffer", { clear = true })
+local AUGROUP = vim.api.nvim_create_augroup("ToggleTermBuffer", { clear = true })
 
-local is_windows = fn.has("win32") == 1
+local is_windows = vim.fn.has("win32") == 1
 local function is_cmd(shell) return shell:find("cmd") end
 
 local function is_pwsh(shell) return shell:find("pwsh") or shell:find("powershell") end
@@ -163,13 +161,13 @@ end
 ---Terminal buffer autocommands
 ---@param term Terminal
 local function setup_buffer_autocommands(term)
-  api.nvim_create_autocmd("TermClose", {
+  vim.api.nvim_create_autocmd("TermClose", {
     buffer = term.bufnr,
     group = AUGROUP,
     callback = function() delete(term.id) end,
   })
   if term:is_float() then
-    api.nvim_create_autocmd("VimResized", {
+    vim.api.nvim_create_autocmd("VimResized", {
       buffer = term.bufnr,
       group = AUGROUP,
       callback = function() on_vim_resized(term.id) end,
@@ -178,7 +176,7 @@ local function setup_buffer_autocommands(term)
 
   if config.start_in_insert then
     -- Avoid entering insert mode when spawning terminal in the background
-    if term.window == api.nvim_get_current_win() then vim.cmd("startinsert") end
+    if term.window == vim.api.nvim_get_current_win() then vim.cmd("startinsert") end
   end
 end
 
@@ -192,8 +190,8 @@ local function _get_dir(dir)
   elseif dir == nil then
     parsed_dir = vim.loop.cwd()
   else
-    parsed_dir = fn.expand(dir)
-    if fn.isdirectory(parsed_dir) == 0 then
+    parsed_dir = vim.fn.expand(dir)
+    if vim.fn.isdirectory(parsed_dir) == 0 then
       vim.notify(
         string.format("%s is not a directory", parsed_dir),
         vim.log.levels.ERROR
@@ -266,10 +264,10 @@ end
 
 function Terminal:is_open()
   if not self.window then return false end
-  local win_type = fn.win_gettype(self.window)
+  local win_type = vim.fn.win_gettype(self.window)
   -- empty string window type corresponds to a normal window
   local win_open = win_type == "" or win_type == "popup"
-  return win_open and api.nvim_win_get_buf(self.window) == self.bufnr
+  return win_open and vim.api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
 function Terminal:set_start_mode()
@@ -295,7 +293,7 @@ function Terminal:set_mode(m)
 end
 
 function Terminal:persist_mode()
-  local raw_mode = api.nvim_get_mode().mode
+  local raw_mode = vim.api.nvim_get_mode().mode
   local m = "?"
   if raw_mode:match("nt") then    -- nt is normal mode in the terminal
     m = mode.NORMAL
@@ -339,14 +337,14 @@ local function with_cr(newline_chr, ...)
 end
 
 function Terminal:scroll_bottom()
-  if not api.nvim_buf_is_loaded(self.bufnr) or not api.nvim_buf_is_valid(self.bufnr) then return end
-  if ui.term_has_open_win(self) then api.nvim_buf_call(self.bufnr, ui.scroll_to_bottom) end
+  if not vim.api.nvim_buf_is_loaded(self.bufnr) or not vim.api.nvim_buf_is_valid(self.bufnr) then return end
+  if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self.bufnr, ui.scroll_to_bottom) end
 end
 
-function Terminal:is_focused() return self.window == api.nvim_get_current_win() end
+function Terminal:is_focused() return self.window == vim.api.nvim_get_current_win() end
 
 function Terminal:focus()
-  if ui.term_has_open_win(self) then api.nvim_set_current_win(self.window) end
+  if ui.term_has_open_win(self) then vim.api.nvim_set_current_win(self.window) end
 end
 
 ---Send a command to a running terminal
@@ -368,7 +366,7 @@ function Terminal:send(input, mode, trim, new_line)
       input[i] = line:gsub("^%s+", ""):gsub("%s+$", "")
     end
   end
-  fn.chansend(self.job_id, input)
+  vim.fn.chansend(self.job_id, input)
   self:scroll_bottom()
   if mode ~= "silent" and not self:is_open() then
     self:open()
@@ -393,7 +391,7 @@ end
 function Terminal:change_dir(dir, mode)
   dir = _get_dir(dir)
   if self.dir == dir then return end
-  self:send({ fmt("cd %s", dir), self:clear() }, mode)
+  self:send({ string.format("cd %s", dir), self:clear() }, mode)
   self.dir = dir
 end
 
@@ -411,8 +409,8 @@ local function __handle_exit(term)
     if term.on_exit then term:on_exit(...) end
     if term.close_on_exit then
       term:close()
-      if api.nvim_buf_is_loaded(term.bufnr) then
-        api.nvim_buf_delete(term.bufnr, { force = true })
+      if vim.api.nvim_buf_is_loaded(term.bufnr) then
+        vim.api.nvim_buf_delete(term.bufnr, { force = true })
       end
     end
   end
@@ -448,7 +446,7 @@ function Terminal:__spawn()
     self.id,
   })
   local dir = _get_dir(self.dir)
-  self.job_id = fn.termopen(cmd, {
+  self.job_id = vim.fn.termopen(cmd, {
     detach = 1,
     cwd = dir,
     on_exit = __handle_exit(self),
@@ -505,10 +503,10 @@ end
 
 ---Spawn terminal background job in a buffer without a window
 function Terminal:spawn()
-  if not self.bufnr or not api.nvim_buf_is_valid(self.bufnr) then self.bufnr = ui.create_buf() end
+  if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then self.bufnr = ui.create_buf() end
   self:__add()
-  if api.nvim_get_current_buf() ~= self.bufnr then
-    api.nvim_buf_call(self.bufnr, function() self:__spawn() end)
+  if vim.api.nvim_get_current_buf() ~= self.bufnr then
+    vim.api.nvim_buf_call(self.bufnr, function() self:__spawn() end)
   else
     self:__spawn()
   end
@@ -520,11 +518,11 @@ end
 ---@param size number?
 ---@param direction string?
 function Terminal:open(size, direction)
-  local cwd = fn.getcwd()
+  local cwd = vim.fn.getcwd()
   self.dir = _get_dir(config.autochdir and cwd or self.dir)
   ui.set_origin_window()
   if direction then self:change_direction(direction) end
-  if not self.bufnr or not api.nvim_buf_is_valid(self.bufnr) then
+  if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then
     local ok, err = pcall(opener, size, self)
     if not ok and err then return utils.notify(err, "error") end
     self:spawn()
@@ -563,7 +561,7 @@ end
 --- @param name string?
 --- @return Terminal
 function M.identify(name)
-  name = name or api.nvim_buf_get_name(api.nvim_get_current_buf())
+  name = name or vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
   local comment_sep = get_comment_sep()
   local parts = vim.split(name, comment_sep)
   local id = tonumber(parts[#parts])
