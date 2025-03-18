@@ -35,7 +35,7 @@ end
 ---@param conf ErgoTermConfig
 function M.select(conf)
   local picker = conf.resolved_picker
-  terms.select_terminal(picker, false, "Please select a terminal to open (or focus): ",
+  terms.select_terminal(picker, "Please select a terminal to open (or focus): ",
     picker.select_actions())
 end
 
@@ -80,7 +80,7 @@ function M.send(args, range, bang, conf)
   if bang then
     send_to_terminal(terms.get_last_focused())
   else
-    terms.select_terminal(conf.resolved_picker, false, "Please select a terminal to send text: ",
+    terms.select_terminal(conf.resolved_picker, "Please select a terminal to send text: ",
       { default = send_to_terminal })
   end
 end
@@ -108,7 +108,7 @@ function M.update(args, bang, conf)
   if bang then
     update_terminal(terms.get_last_focused())
   else
-    terms.select_terminal(conf.resolved_picker, false, "Please select a terminal to update: ",
+    terms.select_terminal(conf.resolved_picker, "Please select a terminal to update: ",
       { default = update_terminal })
   end
 end

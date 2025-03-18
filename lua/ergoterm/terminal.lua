@@ -513,13 +513,12 @@ function M.create_term(dir, direction, name)
   return term
 end
 
----Get a single terminal by id, unless it is hidden
+---Get a single terminal by id
 ---@param id number?
----@param include_hidden boolean? whether or nor to filter out hidden
 ---@return Terminal?
-function M.get(id, include_hidden)
+function M.get(id)
   local term = terminals[id]
-  return (term and (include_hidden == true or not term.hidden)) and term or nil
+  return term
 end
 
 ---Get the first terminal that matches a predicate
@@ -537,12 +536,11 @@ function M.find(predicate)
 end
 
 ---Return the potentially non contiguous map of terminals as a sorted array
----@param include_hidden boolean? whether or nor to filter out hidden
 ---@return Terminal[]
-function M.get_all(include_hidden)
+function M.get_all()
   local result = {}
   for _, v in pairs(terminals) do
-    if include_hidden or (not include_hidden and not v.hidden) then table.insert(result, v) end
+    table.insert(result, v)
   end
   table.sort(result, function(a, b) return a.id < b.id end)
   return result
@@ -550,15 +548,11 @@ end
 
 -- Prompts to select an open terminal
 --
--- It will short circuit to the given callback if there is only one terminal open
---
--- @param include_hidden boolean whether or not to include hidden terminals
 -- @param prompt string the prompt to display
 -- @param callback fun the function to call with the selected terminal
-function M.select_terminal(picker, include_hidden, prompt, callbacks)
-  local terminals = terminals or M.get_all(include_hidden)
+function M.select_terminal(picker, prompt, callbacks)
+  local terminals = terminals or M.get_all()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
-  -- if #terminals == 1 then return callback(terminals[1]) end
   picker.select(terminals, prompt, callbacks)
 end
 
