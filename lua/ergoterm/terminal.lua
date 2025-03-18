@@ -421,7 +421,6 @@ function Terminal:__set_win_options()
   end
 end
 
----@package
 function Terminal:set_options()
   self:set_ft_options()
   self:__set_win_options()
