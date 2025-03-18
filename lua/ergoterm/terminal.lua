@@ -63,7 +63,6 @@ local terminals = {}
 --- @class TermCreateArgs
 --- @field newline_chr? string user specified newline chararacter
 --- @field cmd? string a custom command to run
---- @field direction? string the layout style for the terminal
 --- @field id number?
 --- @field dir string? the directory for the terminal
 --- @field count number? the count that triggers that specific terminal
@@ -82,7 +81,6 @@ local terminals = {}
 --- @class Terminal
 --- @field newline_chr string
 --- @field cmd string
---- @field direction string the layout style for the terminal
 --- @field id number
 --- @field bufnr number
 --- @field window number
@@ -139,7 +137,7 @@ end
 ---@param id number terminal id
 local function on_vim_resized(id)
   local term = M.get(id, true)
-  if not term or not term:is_float() or not term:is_open() then return end
+  if not term or not ui.is_float() or not term:is_open() then return end
   ui.update_float(term)
 end
 
@@ -157,7 +155,7 @@ local function setup_buffer_autocommands(term)
     group = AUGROUP,
     callback = function() delete(term.id) end,
   })
-  if term:is_float() then
+  if ui.is_float() then
     vim.api.nvim_create_autocmd("VimResized", {
       buffer = term.bufnr,
       group = AUGROUP,
@@ -204,7 +202,6 @@ function Terminal:new(term)
   local conf = config.get()
   self.__index = self
   term.newline_chr = term.newline_chr or get_newline_chr()
-  term.direction = term.direction or conf.direction
   term.id = id or M.next_id()
   term.display_name = term.display_name
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
@@ -233,24 +230,8 @@ function Terminal:__add()
   return self
 end
 
-function Terminal:is_float() return self.direction == "float" and ui.is_float(self.window) end
-
-function Terminal:is_split()
-  return (self.direction == "vertical" or self.direction == "horizontal")
-      and not ui.is_float(self.window)
-end
-
-function Terminal:is_tab() return self.direction == "tab" and not ui.is_float(self.window) end
-
-function Terminal:resize(size)
-  if self:is_split() then ui.resize_split(self, size) end
-end
-
 function Terminal:update(opts)
-  if opts.size then self.size = opts.size end
-  if opts.direction then self.direction = opts.direction end
   if opts.name then self.name = opts.name end
-  if self:is_open() then self:refresh() end
 end
 
 function Terminal:is_open()
@@ -302,11 +283,6 @@ function Terminal:close()
   ui.close(self)
   ui.stopinsert()
   ui.update_origin_window(self.window)
-end
-
-function Terminal:refresh()
-  self:close()
-  self:open()
 end
 
 function Terminal:shutdown()
@@ -374,13 +350,6 @@ function Terminal:change_dir(dir, mode)
   self.dir = dir
 end
 
----Update the direction of an already opened terminal
----@param direction string
-function Terminal:change_direction(direction)
-  self.direction = direction
-  self.window = nil
-end
-
 --- Handle when a terminal process exits
 ---@param term Terminal
 local function __handle_exit(term)
@@ -446,11 +415,6 @@ end
 
 ---@package
 function Terminal:__set_win_options()
-  if self:is_split() then
-    local field = self.direction == "vertical" and "winfixwidth" or "winfixheight"
-    utils.wo_setlocal(self.window, field, true)
-  end
-
   if config.hide_numbers then
     utils.wo_setlocal(self.window, "number", false)
     utils.wo_setlocal(self.window, "relativenumber", false)
@@ -465,21 +429,7 @@ function Terminal:__set_options()
 end
 
 ---Open a terminal in a type of window i.e. a split,full window or tab
----@param size number
 ---@param term table
-local function opener(size, term)
-  local direction = term.direction
-  if term:is_split() then
-    ui.open_split(size, term)
-  elseif direction == "tab" then
-    ui.open_tab(term)
-  elseif direction == "float" then
-    ui.open_float(term)
-  else
-    error("Invalid terminal direction")
-  end
-end
-
 ---Spawn terminal background job in a buffer without a window
 function Terminal:spawn()
   if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then self.bufnr = ui.create_buf() end
@@ -494,19 +444,17 @@ function Terminal:spawn()
 end
 
 ---Open a terminal window
----@param size number?
 ---@param direction string?
-function Terminal:open(size, direction)
+function Terminal:open(direction)
   local cwd = vim.fn.getcwd()
   self.dir = _get_dir(config.autochdir and cwd or self.dir)
   ui.set_origin_window()
-  if direction then self:change_direction(direction) end
   if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then
-    local ok, err = pcall(opener, size, self)
+    local ok, err = ui.open(direction, self)
     if not ok and err then return utils.notify(err, "error") end
     self:spawn()
   else
-    local ok, err = pcall(opener, size, self)
+    local ok, err = ui.open(direction, self)
     if not ok and err then return utils.notify(err, "error") end
     -- ui.switch_buf(self.bufnr)
     if config.autochdir and self.dir ~= cwd then self:change_dir(cwd) end
@@ -517,19 +465,19 @@ function Terminal:open(size, direction)
   return self
 end
 
-function Terminal:focus_or_open()
+function Terminal:focus_or_open(direction)
   if self:is_open() then
     self:focus()
   else
-    self:open()
+    self:open(direction)
   end
 end
 
-function Terminal:toggle(size, direction)
+function Terminal:toggle(direction)
   if self:is_open() then
     self:close()
   else
-    self:open(size, direction)
+    self:open(direction)
   end
   return self
 end
@@ -550,20 +498,19 @@ end
 ---get existing terminal or create an empty term table
 ---@param num number?
 ---@param dir string?
----@param direction string?
 ---@param name string?
 ---@return Terminal
 ---@return boolean
-function M.get_or_create_term(num, dir, direction, name)
+function M.get_or_create_term(num, dir, name)
   local term = M.get(num)
   if term then return term, false end
-  return Terminal:new({ id = num, dir = dir, direction = direction, display_name = name })
+  return Terminal:new({ id = num, dir = dir, display_name = name })
 end
 
-function M.create_term(dir, direction, size, name)
+function M.create_term(dir, direction, name)
   local term = Terminal:new({ id = M.next_id(), dir = dir, direction = direction, display_name = name })
   ui.update_origin_window(term.window)
-  term:open(size, direction)
+  term:open(direction)
   return term
 end
 

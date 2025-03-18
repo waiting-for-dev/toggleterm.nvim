@@ -21,7 +21,7 @@ end
 function M.on_win_leave()
   local term = terms.identify()
   if config.persist_mode then term:persist_mode() end
-  if term:is_float() then term:close() end
+  if ui.is_float() then term:close() end
 end
 
 function M.on_filetype(ev)

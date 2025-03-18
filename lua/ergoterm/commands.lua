@@ -20,13 +20,12 @@ local M = {}
 function M.new(args)
   local parsed = commandline.parse(args)
   vim.validate({
-    size = { parsed.size, "number", true },
     dir = { parsed.dir, "string", true },
     direction = { parsed.direction, "string", true },
     name = { parsed.name, "string", true },
   })
   if parsed.size then parsed.size = tonumber(parsed.size) end
-  terms.create_term(parsed.dir, parsed.direction, parsed.size, parsed.name)
+  terms.create_term(parsed.dir, parsed.direction, parsed.name)
 end
 
 ---Selects a terminal and performs an action

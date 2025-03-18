@@ -9,7 +9,6 @@ local fmt = string.format
 --- @field horizontal_breakpoint number
 
 --- @class ErgoTermConfig
---- @field size number
 --- @field shade_filetypes string[]
 --- @field hide_numbers boolean
 --- @field open_mapping string | string[]
@@ -17,11 +16,9 @@ local fmt = string.format
 --- @field insert_mappings boolean
 --- @field terminal_mappings boolean
 --- @field start_in_insert boolean
---- @field persist_size boolean
 --- @field persist_mode boolean
 --- @field close_on_exit boolean
 --- @field clear_env boolean
---- @field direction  '"horizontal"' | '"vertical"' | '"float"'
 --- @field shading_factor number
 --- @field shading_ratio number
 --- @field shell string|fun():string
@@ -34,18 +31,15 @@ local fmt = string.format
 
 ---@type ErgoTermConfig
 local config = {
-  size = 12,
   shade_filetypes = {},
   hide_numbers = true,
   shade_terminals = true,
   insert_mappings = true,
   terminal_mappings = true,
   start_in_insert = true,
-  persist_size = true,
   persist_mode = false,
   close_on_exit = true,
   clear_env = false,
-  direction = "horizontal",
   shading_factor = constants.shading_amount,
   shading_ratio = constants.shading_ratio,
   shell = vim.o.shell,

@@ -157,9 +157,12 @@ local all_options = {
   direction = function(typed_direction)
     local directions = {
       "float",
-      "horizontal",
+      "left",
+      "right",
+      "top",
+      "bottom",
       "tab",
-      "vertical",
+      "buffer",
     }
     if u.str_is_empty(typed_direction) then return directions end
     return vim.tbl_filter(
