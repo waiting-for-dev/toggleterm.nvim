@@ -134,6 +134,7 @@ end
 
 ---@param term Terminal
 function M.open(direction, term)
+  local direction = direction or "bottom"
   if direction == "top" then
     vim.cmd("split")
     M.create_term_buf_if_needed(term)
@@ -154,8 +155,6 @@ function M.open(direction, term)
     M.create_term_buf_if_needed(term)
   elseif direction == "float" then
     M.open_float(term)
-  else
-    error("Invalid terminal direction " .. direction)
   end
 end
 
