@@ -422,7 +422,7 @@ function Terminal:__set_win_options()
 end
 
 ---@package
-function Terminal:__set_options()
+function Terminal:set_options()
   self:set_ft_options()
   self:__set_win_options()
   vim.b[self.bufnr].toggle_number = self.id

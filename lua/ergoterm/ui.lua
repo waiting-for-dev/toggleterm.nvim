@@ -3,6 +3,9 @@ local M = {}
 local lazy = require("ergoterm.lazy")
 ---@module "ergoterm.constants"
 local constants = lazy.require("ergoterm.constants")
+---@module "ergoterm.utils"
+local utils = lazy.require("ergoterm.utils")
+
 local fn = vim.fn
 local fmt = string.format
 local api = vim.api
@@ -26,7 +29,7 @@ function M.create_term_buf_if_needed(term)
   -- Assign buf to window to ensure window options are set correctly
   api.nvim_win_set_buf(window, bufnr)
   term.window, term.bufnr = window, bufnr
-  term:__set_options()
+  term:set_options()
   api.nvim_set_current_buf(bufnr)
 end
 
@@ -96,7 +99,7 @@ end
 --- @param opening boolean
 function M._get_float_config(term, opening)
   local opts = term.float_opts or {}
-  local border = opts.border == "curved" and curved or opts.border or "single"
+  local border = opts.border == "curved" or opts.border or "single"
 
   local width = math.ceil(math.min(vim.o.columns, math.max(80, vim.o.columns - 20)))
   local height = math.ceil(math.min(vim.o.lines, math.max(20, vim.o.lines - 10)))
@@ -169,7 +172,7 @@ function M.open_float(term)
   utils.wo_setlocal(win, "sidescrolloff", 0)
 
   if opts.winblend then utils.wo_setlocal(win, "winblend", opts.winblend) end
-  term:__set_options()
+  term:set_options()
 end
 
 ---Updates the floating terminal size
@@ -212,8 +215,6 @@ function M.term_has_open_win(term)
 end
 
 function M.select_text(selection_type)
-  local current_window = api.nvim_get_current_win() -- save current window
-
   local lines = {}
   -- Beginning of the selection: line number, column number
   local start_line, start_col
