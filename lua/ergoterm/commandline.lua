@@ -8,8 +8,6 @@ local p = {
   double = '"(.-)"',
 }
 
-local is_windows = vim.loop.os_uname().version:match("Windows")
-
 local function toboolean(value)
   if value == "true" then
     return true
@@ -48,7 +46,7 @@ function M.parse(args)
         -- Check if the current OS is Windows so we can determine if +shellslash
         -- exists and if it exists, then determine if it is enabled. In that way,
         -- we can determine if we should match the value with single or double quotes.
-        if is_windows then
+        if u.is_windows() then
           quotes = not vim.opt.shellslash:get() and quotes or p.single
         else
           quotes = p.single

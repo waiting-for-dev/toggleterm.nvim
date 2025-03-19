@@ -1,3 +1,7 @@
+local lazy = require("ergoterm.lazy")
+---@module "ergoterm.config"
+local config = lazy.require("ergoterm.config")
+
 local M = {}
 
 local fn, api, opt = vim.fn, vim.api, vim.opt
@@ -110,6 +114,42 @@ end
 ---@param value any
 function M.wo_setlocal(win, option, value)
   api.nvim_set_option_value(option, value, { scope = "local", win = win })
+end
+
+function M.is_windows()
+  return fn.has("win32") == 1
+end
+
+function M.is_cmd(shell)
+  return shell:find("cmd")
+end
+
+function M.is_pwsh(shell)
+  return shell:find("pwsh") or shell:find("powershell")
+end
+
+function M.is_nushell(shell)
+  return shell:find("nu")
+end
+
+function M.get_command_sep()
+  return M.is_windows() and M.is_cmd(vim.o.shell) and "&" or ";"
+end
+
+function M.get_comment_sep()
+  return M.is_windows() and M.is_cmd(vim.o.shell) and "::" or "#"
+end
+
+function M.get_newline_chr()
+  local shell = config.get("shell")
+  if type(shell) == "function" then shell = shell() end
+  if M.is_windows() then
+    return M.is_pwsh(shell) and "\r" or "\r\n"
+  elseif M.is_nushell(shell) then
+    return "\r"
+  else
+    return "\n"
+  end
 end
 
 return M

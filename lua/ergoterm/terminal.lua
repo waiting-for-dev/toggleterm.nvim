@@ -25,29 +25,6 @@ local state = {
 
 local AUGROUP = vim.api.nvim_create_augroup("ToggleTermBuffer", { clear = true })
 
-local is_windows = vim.fn.has("win32") == 1
-local function is_cmd(shell) return shell:find("cmd") end
-
-local function is_pwsh(shell) return shell:find("pwsh") or shell:find("powershell") end
-
-local function is_nushell(shell) return shell:find("nu") end
-
-local function get_command_sep() return is_windows and is_cmd(vim.o.shell) and "&" or ";" end
-
-local function get_comment_sep() return is_windows and is_cmd(vim.o.shell) and "::" or "#" end
-
-local function get_newline_chr()
-  local shell = config.get("shell")
-  if type(shell) == "function" then shell = shell() end
-  if is_windows then
-    return is_pwsh(shell) and "\r" or "\r\n"
-  elseif is_nushell(shell) then
-    return "\r"
-  else
-    return "\n"
-  end
-end
-
 ---@alias Mode "n" | "i" | "?"
 
 ---@class Picker
@@ -201,7 +178,7 @@ function Terminal:new(term)
   if id and terminals[id] then return terminals[id] end
   local conf = config.get()
   self.__index = self
-  term.newline_chr = term.newline_chr or get_newline_chr()
+  term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.id = id or M.next_id()
   term.display_name = term.display_name
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
@@ -337,7 +314,7 @@ end
 
 --check for os type and perform os specific clear command
 function Terminal:clear()
-  local clear = is_windows and "cls" or "clear"
+  local clear = utils.is_windows() and "cls" or "clear"
   self:send(clear)
 end
 
@@ -383,8 +360,8 @@ end
 function Terminal:__spawn()
   local cmd = self.cmd or config.get("shell")
   if type(cmd) == "function" then cmd = cmd() end
-  local command_sep = get_command_sep()
-  local comment_sep = get_comment_sep()
+  local command_sep = utils.get_command_sep()
+  local comment_sep = utils.get_comment_sep()
   cmd = table.concat({
     cmd,
     command_sep,
@@ -488,7 +465,7 @@ end
 --- @return Terminal
 function M.identify(name)
   name = name or vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
-  local comment_sep = get_comment_sep()
+  local comment_sep = utils.get_comment_sep()
   local parts = vim.split(name, comment_sep)
   local id = tonumber(parts[#parts])
   return terminals[id]
