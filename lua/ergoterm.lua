@@ -19,7 +19,7 @@ local M = {}
 function M.setup(user_prefs)
   local conf = config.set(user_prefs)
   commands.setup(conf)
-  autocommands.setup(conf)
+  autocommands.setup()
   return nil
 end
 
