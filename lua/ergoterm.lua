@@ -3,10 +3,10 @@
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
----@module "ergoterm.commands"
-local commands = lazy.require("ergoterm.commands")
 ---@module "ergoterm.autocommands"
 local autocommands = lazy.require("ergoterm.autocommands")
+---@module "ergoterm.commands"
+local commands = lazy.require("ergoterm.commands")
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
 
