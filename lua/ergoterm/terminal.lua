@@ -23,8 +23,6 @@ local state = {
   last_focused_id = nil
 }
 
-local AUGROUP = vim.api.nvim_create_augroup("ToggleTermBuffer", { clear = true })
-
 ---@alias Mode "n" | "i" | "?"
 
 ---@class Picker
@@ -111,39 +109,10 @@ function M.set_last_focused(term)
   state.last_focused_id = term.id
 end
 
----@param id number terminal id
-local function on_vim_resized(id)
-  local term = M.get(id, true)
-  if not term or not ui.is_float() or not term:is_open() then return end
-  ui.update_float(term)
-end
-
 --- Remove the in memory reference to the no longer open terminal
 --- @param num number
 local function delete(num)
   if terminals[num] then terminals[num] = nil end
-end
-
----Terminal buffer autocommands
----@param term Terminal
-local function setup_buffer_autocommands(term)
-  vim.api.nvim_create_autocmd("TermClose", {
-    buffer = term.bufnr,
-    group = AUGROUP,
-    callback = function() delete(term.id) end,
-  })
-  if ui.is_float() then
-    vim.api.nvim_create_autocmd("VimResized", {
-      buffer = term.bufnr,
-      group = AUGROUP,
-      callback = function() on_vim_resized(term.id) end,
-    })
-  end
-
-  if config.start_in_insert then
-    -- Avoid entering insert mode when spawning terminal in the background
-    if term.window == vim.api.nvim_get_current_win() then vim.cmd("startinsert") end
-  end
 end
 
 ---get the directory for the terminal parsing special arguments
@@ -415,7 +384,10 @@ function Terminal:spawn()
   else
     self:__spawn()
   end
-  setup_buffer_autocommands(self)
+  if config.start_in_insert then
+    -- Avoid entering insert mode when spawning terminal in the background
+    if self.window == vim.api.nvim_get_current_win() then vim.cmd("startinsert") end
+  end
   if self.on_create then self:on_create() end
 end
 

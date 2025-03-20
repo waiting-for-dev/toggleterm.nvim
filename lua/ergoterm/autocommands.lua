@@ -30,6 +30,14 @@ function M.on_filetype(ev)
   vim.api.nvim_buf_set_option(bufnr, "foldtext", "foldtext()")
 end
 
+function M.on_term_close(term)
+  terms.delete(term.id)
+end
+
+function M.on_vim_resized_if_float(term)
+  ui.update_float(term)
+end
+
 -- Setup autocommands for the plugin.
 function M.setup()
   vim.api.nvim_create_augroup(constants.AUGROUP, { clear = true })
@@ -53,6 +61,24 @@ function M.setup()
     pattern = ergoterm_pattern,
     callback = M.on_filetype
   })
+end
+
+function M.setup_term_buffer(term)
+  vim.api.nvim_create_augroup(constants.BUFFER_AUGROUP, { clear = true })
+
+  vim.api.nvim_create_autocmd("TermClose", {
+    buffer = term.bufnr,
+    group = constants.BUFFER_AUGROUP,
+    callback = function() M.on_term_close(term) end
+  })
+
+  if ui.is_float() then
+    vim.api.nvim_create_autocmd("VimResized", {
+      buffer = term.bufnr,
+      group = constants.BUFFER_AUGROUP,
+      callback = function() terms.on_vim_resized_if_float(term) end
+    })
+  end
 end
 
 return M
