@@ -7,23 +7,18 @@ local lazy = require("ergoterm.lazy")
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.constants"
 local constants = lazy.require("ergoterm.constants")
+---@module "ergoterm.mode"
+local mode = lazy.require("ergoterm.mode")
 ---@module "ergoterm.ui"
 local ui = lazy.require("ergoterm.ui")
 ---@module "ergoterm.utils"
 local utils = lazy.require("ergoterm.utils")
-
-local mode = {
-  INSERT = "i",
-  NORMAL = "n",
-  UNSUPPORTED = "?",
-}
 
 local state = {
   ---Last focused terminal ID in the view.
   last_focused_id = nil
 }
 
----@alias Mode "n" | "i" | "?"
 
 ---@class Picker
 ---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
@@ -52,9 +47,11 @@ local terminals = {}
 --- @field on_create fun(term:Terminal)?
 --- @field on_open fun(term:Terminal)?
 --- @field on_close fun(term:Terminal)?
+--- @field start_in_insert boolean?
 
 --- @class Terminal
 --- @field newline_chr string
+--- @field start_in_insert boolean?
 --- @field cmd string
 --- @field id number
 --- @field bufnr number
@@ -77,7 +74,7 @@ local terminals = {}
 --- @field on_open fun(term:Terminal)?
 --- @field on_close fun(term:Terminal)?
 --- @field _display_name fun(term: Terminal): string
---- @field __state TerminalState
+--- @field _state TerminalState
 local Terminal = {}
 
 --- Get the next available id based on the next number in the sequence that
@@ -161,7 +158,10 @@ function Terminal:new(term)
   term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout)
   term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
   term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
-  term.__state = { mode = "?" }
+  term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
+  term._state = {
+    mode = mode.get_initial_mode(term.start_in_insert),
+  }
   if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
   -- Add the newly created terminal to the list of all terminals
   ---@diagnostic disable-next-line: return-type-mismatch
@@ -188,38 +188,21 @@ function Terminal:is_open()
   return win_open and vim.api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
-function Terminal:set_start_mode()
+function Terminal:set_initial_mode()
+  mode.set_initial_mode(self.start_in_insert)
+end
+
+function Terminal:set_enter_mode()
   if config.persist_mode then
     self:restore_mode()
-  elseif config.start_in_insert then
-    self:set_mode(mode.INSERT)
+  else
+    self:set_initial_mode()
   end
 end
 
-function Terminal:restore_mode() self:set_mode(self.__state.mode) end
+function Terminal:restore_mode() mode.set(self._state.mode) end
 
---- Set the terminal's mode
----@param m Mode
-function Terminal:set_mode(m)
-  if m == mode.INSERT then
-    vim.schedule(function() vim.cmd("startinsert") end)
-  elseif m == mode.NORMAL then
-    vim.schedule(function() vim.cmd("stopinsert") end)
-  elseif m == mode.UNSUPPORTED and config.get("start_in_insert") then
-    vim.schedule(function() vim.cmd("startinsert") end)
-  end
-end
-
-function Terminal:persist_mode()
-  local raw_mode = vim.api.nvim_get_mode().mode
-  local m = "?"
-  if raw_mode:match("nt") then    -- nt is normal mode in the terminal
-    m = mode.NORMAL
-  elseif raw_mode:match("t") then -- t is insert mode in the terminal
-    m = mode.INSERT
-  end
-  self.__state.mode = m
-end
+function Terminal:persist_mode() self._state.mode = mode.get() end
 
 ---@package
 function Terminal:_display_name() return self.display_name or vim.split(self.name, ";")[1] end
@@ -384,10 +367,7 @@ function Terminal:spawn()
   else
     self:__spawn()
   end
-  if config.start_in_insert then
-    -- Avoid entering insert mode when spawning terminal in the background
-    if self.window == vim.api.nvim_get_current_win() then vim.cmd("startinsert") end
-  end
+  if self.window == vim.api.nvim_get_current_win() then self:set_initial_mode() end
   if self.on_create then self:on_create() end
 end
 
