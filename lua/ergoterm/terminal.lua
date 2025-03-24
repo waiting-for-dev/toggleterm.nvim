@@ -83,7 +83,7 @@ local Terminal = {}
 --- be 3 then 4 then 7
 ---@return integer
 function M.next_id()
-  local all = M.get_all(true)
+  local all = M.get_all()
   for index, term in pairs(all) do
     if index ~= term.id then return index end
   end
@@ -100,7 +100,7 @@ function M.get_focused_id()
 end
 
 function M.get_last_focused()
-  return M.get(state.last_focused_id, true)
+  return M.get(state.last_focused_id)
 end
 
 function M.set_last_focused(term)
