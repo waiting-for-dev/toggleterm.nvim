@@ -23,7 +23,6 @@ local state = {
   terminals = {}
 }
 
-
 ---@class Picker
 ---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
 ---@field select_actions fun(): table<string, fun(term: Terminal)>
@@ -78,21 +77,24 @@ local state = {
 --- @field _state TerminalState
 local Terminal = {}
 
---- Get the next available id based on the next number in the sequence that
---- hasn't already been allocated e.g. in a list of {1,2,5,6} the next id should
---- be 3 then 4 then 7
+---Get the next available id
+---
+---It's based on the next number in the sequence that
+---hasn't already been allocated. E.g. in a list of {1,2,5,6} the next id should
+---be 3 then 4 then 7.
 ---@return integer
 function M.next_id()
-  local all = M.get_all()
-  for index, term in pairs(all) do
+  local terms = M.get_terminals()
+  for index, term in pairs(terms) do
     if index ~= term.id then return index end
   end
-  return #all + 1
+  return #terms + 1
 end
 
----Return currently focused terminal id.
+---Return currently focused terminal id
+---
 ---@return number?
-function M.get_focused_id()
+function M.get_focused_terminal_id()
   for _, term in pairs(state.terminals) do
     if term:is_focused() then return term.id end
   end
@@ -467,7 +469,7 @@ end
 
 ---Return the potentially non contiguous map of terminals as a sorted array
 ---@return Terminal[]
-function M.get_all()
+function M.get_terminals()
   local result = {}
   for _, v in pairs(state.terminals) do
     table.insert(result, v)
@@ -481,7 +483,7 @@ end
 -- @param prompt string the prompt to display
 -- @param callback fun the function to call with the selected terminal
 function M.select_terminal(picker, prompt, callbacks)
-  local terminals = state.terminals or M.get_all()
+  local terminals = state.terminals or M.get_terminals()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
   picker.select(terminals, prompt, callbacks)
 end
