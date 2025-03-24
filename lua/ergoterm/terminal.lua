@@ -14,9 +14,13 @@ local ui = lazy.require("ergoterm.ui")
 ---@module "ergoterm.utils"
 local utils = lazy.require("ergoterm.utils")
 
+---@class State
+---@field last_focused_id number?
+---@field terminals Terminal[]
 local state = {
   ---Last focused terminal ID in the view.
-  last_focused_id = nil
+  last_focused_id = nil,
+  terminals = {}
 }
 
 
@@ -26,9 +30,6 @@ local state = {
 
 --- @class TerminalState
 --- @field mode Mode
-
----@type Terminal[]
-local terminals = {}
 
 --- @class TermCreateArgs
 --- @field newline_chr? string user specified newline chararacter
@@ -92,7 +93,7 @@ end
 ---Return currently focused terminal id.
 ---@return number?
 function M.get_focused_id()
-  for _, term in pairs(terminals) do
+  for _, term in pairs(state.terminals) do
     if term:is_focused() then return term.id end
   end
   return nil
@@ -109,7 +110,7 @@ end
 --- Remove the in memory reference to the no longer open terminal
 --- @param num number
 local function delete(num)
-  if terminals[num] then terminals[num] = nil end
+  if state.terminals[num] then state.terminals[num] = nil end
 end
 
 ---get the directory for the terminal parsing special arguments
@@ -141,7 +142,7 @@ function Terminal:new(term)
   --- If we try to create a new terminal, but the id is already
   --- taken, return the terminal with the containing id
   local id = term.count or term.id
-  if id and terminals[id] then return terminals[id] end
+  if id and state.terminals[id] then return state.terminals[id] end
   local conf = config.get()
   self.__index = self
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
@@ -171,8 +172,8 @@ end
 ---@package
 ---Add a terminal to the list of terminals
 function Terminal:__add()
-  if terminals[self.id] and terminals[self.id] ~= self then self.id = M.next_id() end
-  if not terminals[self.id] then terminals[self.id] = self end
+  if state.terminals[self.id] and state.terminals[self.id] ~= self then self.id = M.next_id() end
+  if not state.terminals[self.id] then state.terminals[self.id] = self end
   return self
 end
 
@@ -420,7 +421,7 @@ function M.identify(name)
   local comment_sep = utils.get_comment_sep()
   local parts = vim.split(name, comment_sep)
   local id = tonumber(parts[#parts])
-  return terminals[id]
+  return state.terminals[id]
 end
 
 ---get existing terminal or create an empty term table
@@ -446,7 +447,7 @@ end
 ---@param id number?
 ---@return Terminal?
 function M.get(id)
-  local term = terminals[id]
+  local term = state.terminals[id]
   return term
 end
 
@@ -458,7 +459,7 @@ function M.find(predicate)
     utils.notify("terminal.find expects a function, got " .. type(predicate), "error")
     return
   end
-  for _, term in pairs(terminals) do
+  for _, term in pairs(state.terminals) do
     if predicate(term) then return term end
   end
   return nil
@@ -468,7 +469,7 @@ end
 ---@return Terminal[]
 function M.get_all()
   local result = {}
-  for _, v in pairs(terminals) do
+  for _, v in pairs(state.terminals) do
     table.insert(result, v)
   end
   table.sort(result, function(a, b) return a.id < b.id end)
@@ -480,14 +481,14 @@ end
 -- @param prompt string the prompt to display
 -- @param callback fun the function to call with the selected terminal
 function M.select_terminal(picker, prompt, callbacks)
-  local terminals = terminals or M.get_all()
+  local terminals = state.terminals or M.get_all()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
   picker.select(terminals, prompt, callbacks)
 end
 
 if _G.IS_TEST then
   function M.__reset()
-    for _, term in pairs(terminals) do
+    for _, term in pairs(state.terminals) do
       term:shutdown()
     end
   end
