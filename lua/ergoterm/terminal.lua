@@ -109,7 +109,7 @@ end
 
 --- Remove the in memory reference to the no longer open terminal
 --- @param num number
-local function delete(num)
+function M.delete(num)
   if state.terminals[num] then state.terminals[num] = nil end
 end
 
@@ -218,7 +218,7 @@ end
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   ui.delete_buf(self)
-  delete(self.id)
+  M.delete(self.id)
 end
 
 function Terminal:scroll_bottom()
