@@ -3,6 +3,8 @@ local M = {}
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
+---@module "ergoterm.autocommands"
+local autocommands = lazy.require("ergoterm.autocommands")
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.constants"
@@ -377,6 +379,7 @@ function Terminal:spawn()
   else
     self:__spawn()
   end
+  autocommands.setup_term_buffer(self)
   if self.window == vim.api.nvim_get_current_win() then self:set_initial_mode() end
   if self.on_create then self:on_create() end
 end
