@@ -15,11 +15,11 @@ local ui = lazy.require("ergoterm.ui")
 local utils = lazy.require("ergoterm.utils")
 
 ---@class State
----@field last_focused_id number?
+---@field last_focused Terminal?
 ---@field terminals Terminal[]
 local state = {
-  ---Last focused terminal ID in the view.
-  last_focused_id = nil,
+  ---Last focused terminal in the view.
+  last_focused = nil,
   terminals = {}
 }
 
@@ -91,22 +91,22 @@ function M.next_id()
   return #terms + 1
 end
 
----Return currently focused terminal id
+---Return currently focused terminal
 ---
----@return number?
-function M.get_focused_terminal_id()
+---@return Terminal?
+function M.get_focused_terminal()
   for _, term in pairs(state.terminals) do
-    if term:is_focused() then return term.id end
+    if term:is_focused() then return term end
   end
   return nil
 end
 
 function M.get_last_focused()
-  return M.get(state.last_focused_id)
+  return state.last_focused
 end
 
 function M.set_last_focused(term)
-  state.last_focused_id = term.id
+  state.last_focused = term
 end
 
 --- Remove the in memory reference to the no longer open terminal
