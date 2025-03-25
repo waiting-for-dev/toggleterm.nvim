@@ -152,4 +152,25 @@ function M.get_newline_chr()
   end
 end
 
+---get the directory for the terminal parsing special arguments
+---@param dir string?
+---@return string?
+function M.get_dir(dir)
+  local parsed_dir = nil
+  if dir == "git_dir" then
+    parsed_dir = M.git_dir()
+  elseif dir == nil then
+    parsed_dir = vim.loop.cwd()
+  else
+    parsed_dir = vim.fn.expand(dir)
+    if vim.fn.isdirectory(parsed_dir) == 0 then
+      vim.notify(
+        string.format("%s is not a directory", parsed_dir),
+        vim.log.levels.ERROR
+      )
+    end
+  end
+  return parsed_dir
+end
+
 return M

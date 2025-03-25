@@ -124,27 +124,6 @@ function M.delete(term)
   if state.terminals[term.id] then state.terminals[term.id] = nil end
 end
 
----get the directory for the terminal parsing special arguments
----@param dir string?
----@return string
-local function _get_dir(dir)
-  local parsed_dir = nil
-  if dir == "git_dir" then
-    parsed_dir = utils.git_dir()
-  elseif dir == nil then
-    parsed_dir = vim.loop.cwd()
-  else
-    parsed_dir = vim.fn.expand(dir)
-    if vim.fn.isdirectory(parsed_dir) == 0 then
-      vim.notify(
-        string.format("%s is not a directory", parsed_dir),
-        vim.log.levels.ERROR
-      )
-    end
-  end
-  return parsed_dir
-end
-
 ---Create a new terminal object
 ---@param term TermCreateArgs?
 ---@return Terminal
@@ -285,7 +264,7 @@ end
 ---Update the directory of an already opened terminal
 ---@param dir string
 function Terminal:change_dir(dir, mode)
-  dir = _get_dir(dir)
+  dir = utils.get_dir(dir)
   if self.dir == dir then return end
   self:send({ string.format("cd %s", dir), self:clear() }, mode)
   self.dir = dir
@@ -334,7 +313,7 @@ function Terminal:__spawn()
     comment_sep,
     self.id,
   })
-  local dir = _get_dir(self.dir)
+  local dir = utils.get_dir(self.dir)
   self.job_id = vim.fn.termopen(cmd, {
     detach = 1,
     cwd = dir,
@@ -388,7 +367,7 @@ end
 ---@param direction string?
 function Terminal:open(direction)
   local cwd = vim.fn.getcwd()
-  self.dir = _get_dir(config.autochdir and cwd or self.dir)
+  self.dir = utils.get_dir(config.autochdir and cwd or self.dir)
   ui.set_origin_window()
   if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then
     local ok, err = ui.open(direction, self)
