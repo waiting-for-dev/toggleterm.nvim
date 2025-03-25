@@ -101,18 +101,25 @@ function M.get_focused_terminal()
   return nil
 end
 
+---Return the last focused terminal
+---
+---@return Terminal?
 function M.get_last_focused()
   return state.last_focused
 end
 
+---Set the last focused terminal
+---
+---@param term Terminal
 function M.set_last_focused(term)
   state.last_focused = term
 end
 
---- Remove the in memory reference to the no longer open terminal
---- @param num number
-function M.delete(num)
-  if state.terminals[num] then state.terminals[num] = nil end
+---Delete a terminal from the list of terminals in the state
+---
+---@param term Terminal
+function M.delete(term)
+  if state.terminals[term.id] then state.terminals[term.id] = nil end
 end
 
 ---get the directory for the terminal parsing special arguments
@@ -220,7 +227,7 @@ end
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   ui.delete_buf(self)
-  M.delete(self.id)
+  M.delete(self)
 end
 
 function Terminal:scroll_bottom()
