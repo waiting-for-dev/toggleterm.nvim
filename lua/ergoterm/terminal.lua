@@ -29,56 +29,6 @@ local state = {
 ---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
 ---@field select_actions fun(): table<string, fun(term: Terminal)>
 
---- @class TerminalState
---- @field mode Mode
-
---- @class TermCreateArgs
---- @field newline_chr? string user specified newline chararacter
---- @field cmd? string a custom command to run
---- @field id number?
---- @field dir string? the directory for the terminal
---- @field count number? the count that triggers that specific terminal
---- @field display_name string?
---- @field hidden boolean? whether or not to include this terminal in the terminals list
---- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
---- @field auto_scroll boolean? whether or not to scroll down on terminal output
---- @field float_opts table<string, any>?
---- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
---- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
---- @field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
---- @field on_create fun(term:Terminal)?
---- @field on_open fun(term:Terminal)?
---- @field on_close fun(term:Terminal)?
---- @field start_in_insert boolean?
-
---- @class Terminal
---- @field newline_chr string
---- @field start_in_insert boolean?
---- @field cmd string
---- @field id number
---- @field bufnr number
---- @field window number
---- @field job_id number
---- @field dir string the directory for the terminal
---- @field name string the name of the terminal
---- @field count number the count that triggers that specific terminal
---- @field hidden boolean whether or not to include this terminal in the terminals list
---- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
---- @field auto_scroll boolean? whether or not to scroll down on terminal output
---- @field float_opts table<string, any>?
---- @field display_name string?
---- @field env table<string, string> environmental variables passed to jobstart()
---- @field clear_env boolean use clean job environment, passed to jobstart()
---- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
---- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
---- @field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
---- @field on_create fun(term:Terminal)?
---- @field on_open fun(term:Terminal)?
---- @field on_close fun(term:Terminal)?
---- @field _display_name fun(term: Terminal): string
---- @field _state TerminalState
-local Terminal = {}
-
 ---Get the next available id
 ---
 ---It's based on the next number in the sequence that
@@ -124,25 +74,51 @@ function M.delete(term)
   if state.terminals[term.id] then state.terminals[term.id] = nil end
 end
 
+--- @class TerminalState
+--- @field mode Mode
+
+--- @class TermCreateArgs
+--- @field newline_chr? string user specified newline chararacter
+--- @field cmd? string a custom command to run
+--- @field dir string? the directory for the terminal
+--- @field count number? the count that triggers that specific terminal
+--- @field name string?
+--- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
+--- @field auto_scroll boolean? whether or not to scroll down on terminal output
+--- @field float_opts table<string, any>?
+--- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
+--- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
+--- @field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
+--- @field on_create fun(term:Terminal)?
+--- @field on_open fun(term:Terminal)?
+--- @field on_close fun(term:Terminal)?
+--- @field start_in_insert boolean?
+--- @field env table<string, string> environmental variables passed to jobstart()
+--- @field clear_env boolean use clean job environment, passed to jobstart()
+
+--- @class Terminal : TermCreateArgs
+--- @field id number
+--- @field bufnr number
+--- @field window number
+--- @field job_id number
+--- @field auto_scroll boolean? whether or not to scroll down on terminal output
+--- @field float_opts table<string, any>?
+--- @field _state TerminalState
+local Terminal = {}
+
 ---Create a new terminal object
----@param term TermCreateArgs?
+---
+---@param args TermCreateArgs?
 ---@return Terminal
-function Terminal:new(term)
-  term = term or {}
-  --- If we try to create a new terminal, but the id is already
-  --- taken, return the terminal with the containing id
-  local id = term.count or term.id
-  if id and state.terminals[id] then return state.terminals[id] end
+function Terminal:new(args)
   local conf = config.get()
+  local term = args or {} ---@cast term Terminal
   self.__index = self
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
-  term.id = id or M.next_id()
-  term.display_name = term.display_name
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
   term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.env = vim.F.if_nil(term.env, conf.env)
-  term.hidden = vim.F.if_nil(term.hidden, false)
   term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
   term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
@@ -150,12 +126,11 @@ function Terminal:new(term)
   term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
   term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
+  if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
+  term.id = M.next_id()
   term._state = {
     mode = mode.get_initial_mode(term.start_in_insert),
   }
-  if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
-  -- Add the newly created terminal to the list of all terminals
-  ---@diagnostic disable-next-line: return-type-mismatch
   return setmetatable(term, self)
 end
 
@@ -194,9 +169,6 @@ end
 function Terminal:restore_mode() mode.set(self._state.mode) end
 
 function Terminal:persist_mode() self._state.mode = mode.get() end
-
----@package
-function Terminal:_display_name() return self.display_name or vim.split(self.name, ";")[1] end
 
 function Terminal:close()
   if self.on_close then self:on_close() end
@@ -421,14 +393,14 @@ end
 ---@param name string?
 ---@return Terminal
 ---@return boolean
-function M.get_or_create_term(num, dir, name)
+function M.get_or_create_term(dir, name)
   local term = M.get(num)
   if term then return term, false end
-  return Terminal:new({ id = num, dir = dir, display_name = name })
+  return Terminal:new({ dir = dir, name = name })
 end
 
 function M.create_term(dir, direction, name)
-  local term = Terminal:new({ id = M.next_id(), dir = dir, direction = direction, display_name = name })
+  local term = Terminal:new({ dir = dir, direction = direction, name = name })
   ui.update_origin_window(term.window)
   term:open(direction)
   return term

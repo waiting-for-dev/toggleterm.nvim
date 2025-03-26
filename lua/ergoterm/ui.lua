@@ -126,8 +126,8 @@ function M._get_float_config(term, opening)
     zindex = opts.zindex or nil,
   }
   if version.major > 0 or version.minor >= 9 then
-    float_config.title_pos = term.display_name and opts.title_pos or nil
-    float_config.title = term.display_name
+    float_config.title_pos = term.name and opts.title_pos or nil
+    float_config.title = term.name
   end
   return float_config
 end
