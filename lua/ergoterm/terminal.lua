@@ -78,13 +78,13 @@ end
 --- @field mode Mode
 
 --- @class TermCreateArgs
---- @field newline_chr? string user specified newline chararacter
+--- @field auto_scroll boolean? whether or not to scroll down on terminal output
 --- @field cmd? string a custom command to run
+--- @field newline_chr? string user specified newline chararacter
 --- @field dir string? the directory for the terminal
 --- @field count number? the count that triggers that specific terminal
 --- @field name string?
 --- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
---- @field auto_scroll boolean? whether or not to scroll down on terminal output
 --- @field float_opts table<string, any>?
 --- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
 --- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
@@ -114,10 +114,10 @@ function Terminal:new(args)
   local conf = config.get()
   local term = args or {} ---@cast term Terminal
   self.__index = self
+  term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
-  term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.env = vim.F.if_nil(term.env, conf.env)
   term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
@@ -126,6 +126,8 @@ function Terminal:new(args)
   term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
   term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
+  term.cmd = term.cmd or config.get("shell")
+  term.name = term.name or term.cmd
   if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
   term.id = M.next_id()
   term._state = {
@@ -273,7 +275,7 @@ end
 
 ---@private
 function Terminal:__spawn()
-  local cmd = self.cmd or config.get("shell")
+  local cmd = self.cmd
   if type(cmd) == "function" then cmd = cmd() end
   local command_sep = utils.get_command_sep()
   local comment_sep = utils.get_comment_sep()
@@ -295,7 +297,6 @@ function Terminal:__spawn()
     env = self.env,
     clear_env = self.clear_env,
   })
-  self.name = cmd
   self.dir = dir
 end
 
