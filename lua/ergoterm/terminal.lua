@@ -80,29 +80,26 @@ end
 --- @class TermCreateArgs
 --- @field auto_scroll boolean? whether or not to scroll down on terminal output
 --- @field cmd? string a custom command to run
---- @field newline_chr? string user specified newline chararacter
---- @field dir string? the directory for the terminal
---- @field count number? the count that triggers that specific terminal
---- @field name string?
---- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
---- @field float_opts table<string, any>?
---- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
---- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
---- @field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
---- @field on_create fun(term:Terminal)?
---- @field on_open fun(term:Terminal)?
---- @field on_close fun(term:Terminal)?
---- @field start_in_insert boolean?
---- @field env table<string, string> environmental variables passed to jobstart()
 --- @field clear_env boolean use clean job environment, passed to jobstart()
+--- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
+--- @field dir string? the directory for the terminal
+--- @field env table<string, string> environmental variables passed to jobstart()
+--- @field name string?
+--- @field newline_chr? string user specified newline chararacter
+--- @field float_opts table<string, any>?
+--- @field on_close fun(term:Terminal)?
+--- @field on_create fun(term:Terminal)?
+--- @field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
+--- @field on_open fun(term:Terminal)?
+--- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
+--- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
+--- @field start_in_insert boolean?
 
 --- @class Terminal : TermCreateArgs
---- @field id number
 --- @field bufnr number
---- @field window number
+--- @field id number
 --- @field job_id number
---- @field auto_scroll boolean? whether or not to scroll down on terminal output
---- @field float_opts table<string, any>?
+--- @field window number
 --- @field _state TerminalState
 local Terminal = {}
 
@@ -115,20 +112,20 @@ function Terminal:new(args)
   local term = args or {} ---@cast term Terminal
   self.__index = self
   term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
+  term.cmd = term.cmd or config.get("shell")
+  term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
+  if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
+  term.name = term.name or term.cmd or config.get("shell")
+  term.env = vim.F.if_nil(term.env, conf.env)
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
-  term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
-  term.env = vim.F.if_nil(term.env, conf.env)
-  term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
-  term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
-  term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
-  term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout)
-  term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
-  term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
-  term.cmd = term.cmd or config.get("shell")
-  term.name = term.name or term.cmd
-  if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
+  term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
+  term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
+  term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
+  term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
+  term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
+  term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout)
   term.id = M.next_id()
   term._state = {
     mode = mode.get_initial_mode(term.start_in_insert),
