@@ -79,8 +79,8 @@ end
 
 --- @class TermCreateArgs
 --- @field auto_scroll boolean? whether or not to scroll down on terminal output
---- @field cmd? string a custom command to run
---- @field clear_env boolean use clean job environment, passed to jobstart()
+--- @field cmd? string command to run in the terminal
+--- @field clear_env? boolean use clean job environment, passed to jobstart()
 --- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
 --- @field dir string? the directory for the terminal
 --- @field env table<string, string> environmental variables passed to jobstart()
@@ -114,7 +114,7 @@ function Terminal:new(args)
   term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.cmd = term.cmd or config.get("shell")
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
-  if term.close_on_exit == nil then term.close_on_exit = conf.close_on_exit end
+  term.close_on_exit = vim.F.if_nil(term.close_on_exit, conf.close_on_exit)
   term.name = term.name or term.cmd or config.get("shell")
   term.env = vim.F.if_nil(term.env, conf.env)
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
