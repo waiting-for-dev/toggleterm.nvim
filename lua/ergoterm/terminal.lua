@@ -133,16 +133,13 @@ function Terminal:new(args)
   return setmetatable(term, self)
 end
 
----@package
----Add a terminal to the list of terminals
-function Terminal:__add()
-  if state.terminals[self.id] and state.terminals[self.id] ~= self then self.id = M.next_id() end
-  if not state.terminals[self.id] then state.terminals[self.id] = self end
-  return self
-end
-
+---Update terminal options
+---
+---@param opts TermCreateArgs
 function Terminal:update(opts)
-  if opts.name then self.name = opts.name end
+  for k, v in pairs(opts) do
+    self[k] = v
+  end
 end
 
 function Terminal:is_open()
@@ -256,14 +253,6 @@ local function __handle_exit(term)
 end
 
 ---@private
-function Terminal:_build_output_handler(callback)
-  return function(...)
-    if self.auto_scroll then self:scroll_bottom() end
-    if callback then callback(self, ...) end
-  end
-end
-
----@private
 function Terminal:__spawn()
   local cmd = self.cmd
   if type(cmd) == "function" then cmd = cmd() end
@@ -315,7 +304,7 @@ end
 ---Spawn terminal background job in a buffer without a window
 function Terminal:spawn()
   if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then self.bufnr = ui.create_buf() end
-  self:__add()
+  self:_add_to_state()
   if vim.api.nvim_get_current_buf() ~= self.bufnr then
     vim.api.nvim_buf_call(self.bufnr, function() self:__spawn() end)
   else
@@ -438,6 +427,19 @@ function M.select_terminal(picker, prompt, callbacks)
   local terminals = state.terminals or M.get_terminals()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
   picker.select(terminals, prompt, callbacks)
+end
+
+---@private
+function Terminal:_add_to_state()
+  state.terminals[self.id] = self
+end
+
+---@private
+function Terminal:_build_output_handler(callback)
+  return function(...)
+    if self.auto_scroll then self:scroll_bottom() end
+    if callback then callback(self, ...) end
+  end
 end
 
 if _G.IS_TEST then
