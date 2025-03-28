@@ -256,17 +256,10 @@ local function __handle_exit(term)
 end
 
 ---@private
----Prepare callback for terminal output handling
----If `auto_scroll` is active, will create a handler that scrolls on terminal output
----If `handler` is present, will call it passing `self` as the first parameter
----If none of the above is applicable, will not return a handler
----@param handler function? a custom callback function for output handling
-function Terminal:__make_output_handler(handler)
-  if self.auto_scroll or handler then
-    return function(...)
-      if self.auto_scroll then self:scroll_bottom() end
-      if handler then handler(self, ...) end
-    end
+function Terminal:_build_output_handler(callback)
+  return function(...)
+    if self.auto_scroll then self:scroll_bottom() end
+    if callback then callback(self, ...) end
   end
 end
 
@@ -289,8 +282,8 @@ function Terminal:__spawn()
     detach = 1,
     cwd = dir,
     on_exit = __handle_exit(self),
-    on_stdout = self:__make_output_handler(self.on_stdout),
-    on_stderr = self:__make_output_handler(self.on_stderr),
+    on_stdout = self:_build_output_handler(self.on_stdout),
+    on_stderr = self:_build_output_handler(self.on_stderr),
     env = self.env,
     clear_env = self.clear_env,
   })
