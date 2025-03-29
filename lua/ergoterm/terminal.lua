@@ -128,27 +128,28 @@ function Terminal:new(args)
   term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
   term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout)
   term.id = M.next_id()
-  term._state = {
-    mode = mode.get_initial_mode(term.start_in_insert),
-  }
+  term:_reset_state()
   return term
 end
 
 ---Update terminal options
 ---
 ---@param opts TermCreateArgs
+---@return Terminal
 function Terminal:update(opts)
   for k, v in pairs(opts) do
     self[k] = v
   end
+  self:_reset_state()
+  return self
 end
 
+---Check if the terminal is currently open
+---
+---@return boolean
 function Terminal:is_open()
   if not self.window then return false end
-  local win_type = vim.fn.win_gettype(self.window)
-  -- empty string window type corresponds to a normal window
-  local win_open = win_type == "" or win_type == "popup"
-  return win_open and vim.api.nvim_win_get_buf(self.window) == self.bufnr
+  return vim.api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
 function Terminal:set_initial_mode()
@@ -441,6 +442,13 @@ function Terminal:_build_output_handler(callback)
     if self.auto_scroll then self:scroll_bottom() end
     if callback then callback(self, ...) end
   end
+end
+
+---@private
+function Terminal:_reset_state()
+  self._state = {
+    mode = mode.get_initial_mode(self.start_in_insert),
+  }
 end
 
 if _G.IS_TEST then
