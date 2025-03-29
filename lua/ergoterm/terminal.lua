@@ -152,8 +152,14 @@ function Terminal:is_open()
   return vim.api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
+---Set the initial mode of the terminal
+---
+---This is insert when `start_in_insert` is true and normal otherwise
+---
+---@return Terminal
 function Terminal:set_initial_mode()
   mode.set_initial_mode(self.start_in_insert)
+  return self
 end
 
 function Terminal:set_enter_mode()
