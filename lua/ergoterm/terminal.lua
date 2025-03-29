@@ -111,6 +111,7 @@ function Terminal:new(args)
   local conf = config.get()
   local term = args or {} ---@cast term Terminal
   self.__index = self
+  setmetatable(term, self)
   term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.cmd = term.cmd or config.get("shell")
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
@@ -130,7 +131,7 @@ function Terminal:new(args)
   term._state = {
     mode = mode.get_initial_mode(term.start_in_insert),
   }
-  return setmetatable(term, self)
+  return term
 end
 
 ---Update terminal options
