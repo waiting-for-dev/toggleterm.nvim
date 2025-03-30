@@ -102,6 +102,7 @@ end
 --- @field window number
 --- @field _state TerminalState
 local Terminal = {}
+Terminal.__index = Terminal
 
 ---Create a new terminal object
 ---
@@ -110,7 +111,6 @@ local Terminal = {}
 function Terminal:new(args)
   local conf = config.get()
   local term = args or {} ---@cast term Terminal
-  self.__index = self
   setmetatable(term, self)
   term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.cmd = term.cmd or config.get("shell")
