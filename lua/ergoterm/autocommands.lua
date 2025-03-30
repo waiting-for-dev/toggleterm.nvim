@@ -31,7 +31,7 @@ function M.on_filetype(ev)
 end
 
 function M.on_term_close(term)
-  terms.delete(term)
+  term:delete()
 end
 
 function M.on_vim_resized_if_float(term)

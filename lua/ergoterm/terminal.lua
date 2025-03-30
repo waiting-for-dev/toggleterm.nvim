@@ -67,13 +67,6 @@ function M.set_last_focused(term)
   state.last_focused = term
 end
 
----Delete a terminal from the list of terminals in the state
----
----@param term Terminal
-function M.delete(term)
-  if state.terminals[term.id] then state.terminals[term.id] = nil end
-end
-
 --- @class TerminalState
 --- @field mode Mode
 
@@ -150,6 +143,11 @@ end
 function Terminal:is_open()
   if not self.window then return false end
   return vim.api.nvim_win_get_buf(self.window) == self.bufnr
+end
+
+---Delete a terminal from the list of terminals in the state
+function Terminal:delete()
+  state.terminals[self.id] = nil
 end
 
 ---Set the initial mode of the terminal
