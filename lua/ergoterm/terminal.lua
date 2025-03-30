@@ -60,33 +60,34 @@ function M.get_last_focused()
   return state.last_focused
 end
 
---- @class TerminalState
---- @field mode Mode
+---@class TerminalState
+---@field mode Mode
 
---- @class TermCreateArgs
---- @field auto_scroll boolean? whether or not to scroll down on terminal output
---- @field cmd? string command to run in the terminal
---- @field clear_env? boolean use clean job environment, passed to jobstart()
---- @field close_on_exit boolean? whether or not to close the terminal window when the process exits
---- @field dir string? the directory for the terminal
---- @field env table<string, string> environmental variables passed to jobstart()
---- @field name string?
---- @field newline_chr? string user specified newline chararacter
---- @field float_opts table<string, any>?
---- @field on_close fun(term:Terminal)?
---- @field on_create fun(term:Terminal)?
---- @field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
---- @field on_open fun(term:Terminal)?
---- @field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
---- @field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
---- @field start_in_insert boolean?
+---@class TermCreateArgs
+---@field auto_scroll boolean? whether or not to scroll down on terminal output
+---@field cmd? string command to run in the terminal
+---@field clear_env? boolean use clean job environment, passed to jobstart()
+---@field close_on_exit boolean? whether or not to close the terminal window when the process exits
+---@field dir string? the directory for the terminal
+---@field env table<string, string> environmental variables passed to jobstart()
+---@field name string?
+---@field newline_chr? string user specified newline chararacter
+---@field float_opts table<string, any>?
+---@field on_close fun(term:Terminal)?
+---@field on_create fun(term:Terminal)?
+---@field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
+---@field on_open fun(term:Terminal)?
+---@field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
+---@field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
+---@field persist_mode boolean? whether or not to persist the mode of the terminal on return
+---@field start_in_insert boolean?
 
---- @class Terminal : TermCreateArgs
---- @field bufnr number
---- @field id number
---- @field job_id number
---- @field window number
---- @field _state TerminalState
+---@class Terminal : TermCreateArgs
+---@field bufnr number
+---@field id number
+---@field job_id number
+---@field window number
+---@field _state TerminalState
 local Terminal = {}
 Terminal.__index = Terminal
 
@@ -106,6 +107,7 @@ function Terminal:new(args)
   term.env = vim.F.if_nil(term.env, conf.env)
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
+  term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
   term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
   term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
@@ -162,18 +164,6 @@ function Terminal:set_initial_mode()
   mode.set_initial_mode(self.start_in_insert)
   return self
 end
-
-function Terminal:set_enter_mode()
-  if config.persist_mode then
-    self:restore_mode()
-  else
-    self:set_initial_mode()
-  end
-end
-
-function Terminal:restore_mode() mode.set(self._state.mode) end
-
-function Terminal:persist_mode() self._state.mode = mode.get() end
 
 function Terminal:close()
   if self.on_close then self:on_close() end
@@ -456,6 +446,28 @@ function Terminal:_reset_state()
   self._state = {
     mode = mode.get_initial_mode(self.start_in_insert),
   }
+end
+
+---@private
+function Terminal:set_return_mode()
+  if self.persist_mode then
+    self:restore_mode()
+  else
+    self:set_initial_mode()
+  end
+  return self
+end
+
+---@private
+function Terminal:restore_mode()
+  mode.set(self._state.mode)
+  return self
+end
+
+---@private
+function Terminal:persist_mode()
+  self._state.mode = mode.get()
+  return self
 end
 
 if _G.IS_TEST then

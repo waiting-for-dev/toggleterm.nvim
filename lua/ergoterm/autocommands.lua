@@ -15,7 +15,7 @@ local M = {}
 function M.on_buf_enter()
   local term = terms.identify()
   term:set_ft_options() -- reset by other plugins like telescope.nvim
-  term:set_enter_mode()
+  term:set_return_mode()
 end
 
 function M.on_win_leave()
