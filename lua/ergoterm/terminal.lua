@@ -60,13 +60,6 @@ function M.get_last_focused()
   return state.last_focused
 end
 
----Set the last focused terminal
----
----@param term Terminal
-function M.set_last_focused(term)
-  state.last_focused = term
-end
-
 --- @class TerminalState
 --- @field mode Mode
 
@@ -150,6 +143,14 @@ end
 ---Delete a terminal from the list of terminals in the state
 function Terminal:delete()
   state.terminals[self.id] = nil
+end
+
+---Set the last focused terminal
+---
+---@return Terminal
+function Terminal:set_last_focused()
+  state.last_focused = self
+  return self
 end
 
 ---Set the initial mode of the terminal
@@ -341,7 +342,7 @@ function Terminal:open(direction)
   end
   -- NOTE: it is important that this function is called at this point. i.e. the buffer has been correctly assigned
   if self.on_open then self:on_open() end
-  M.set_last_focused(self)
+  self:set_last_focused()
   return self
 end
 
