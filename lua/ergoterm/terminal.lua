@@ -185,7 +185,7 @@ end
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   ui.delete_buf(self)
-  M.delete(self)
+  self:delete()
 end
 
 function Terminal:scroll_bottom()
