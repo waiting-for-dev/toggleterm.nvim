@@ -142,7 +142,9 @@ end
 ---@return boolean
 function Terminal:is_open()
   if not self.window then return false end
-  return vim.api.nvim_win_get_buf(self.window) == self.bufnr
+  local win_type = vim.fn.win_gettype(self.window)
+  local win_open = win_type == "" or win_type == "popup"
+  return win_open and vim.api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
 ---Delete a terminal from the list of terminals in the state
