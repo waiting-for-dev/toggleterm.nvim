@@ -25,6 +25,8 @@ local state = {
   terminals = {}
 }
 
+local NULL_CALLBACK = function() end
+
 ---@class Picker
 ---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
 ---@field select_actions fun(): table<string, fun(term: Terminal)>
@@ -109,7 +111,7 @@ function Terminal:new(args)
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
-  term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
+  term.on_close = vim.F.if_nil(term.on_close, conf.on_close) or NULL_CALLBACK
   term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
   term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
@@ -165,8 +167,31 @@ function Terminal:set_initial_mode()
   return self
 end
 
+---Set the return mode of the terminal
+---
+---If `persist_mode` is true, the terminal will return to the mode to the mode when it was closed.
+---Otherwise, it will return to the initial mode
+---
+---@return Terminal
+function Terminal:set_return_mode()
+  if self.persist_mode then
+    self:_restore_mode()
+  else
+    self:set_initial_mode()
+  end
+  return self
+end
+
+---Persist the mode of the terminal
+---
+---@return Terminal
+function Terminal:persist_mode()
+  self._state.mode = mode.get()
+  return self
+end
+
 function Terminal:close()
-  if self.on_close then self:on_close() end
+  self:on_close()
   ui.close(self)
   ui.stopinsert()
   ui.update_origin_window(self.window)
@@ -449,24 +474,8 @@ function Terminal:_reset_state()
 end
 
 ---@private
-function Terminal:set_return_mode()
-  if self.persist_mode then
-    self:restore_mode()
-  else
-    self:set_initial_mode()
-  end
-  return self
-end
-
----@private
-function Terminal:restore_mode()
+function Terminal:_restore_mode()
   mode.set(self._state.mode)
-  return self
-end
-
----@private
-function Terminal:persist_mode()
-  self._state.mode = mode.get()
   return self
 end
 
