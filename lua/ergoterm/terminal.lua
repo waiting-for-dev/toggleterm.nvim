@@ -185,11 +185,15 @@ function Terminal:persist_mode()
   return self
 end
 
+---Close the terminal window
+---
+---It's going to run the configured callback
+---
+---@return Terminal
 function Terminal:close()
   self:on_close()
-  ui.close(self)
-  ui.stopinsert()
-  ui.update_origin_window(self.window)
+  vim.api.nvim_win_close(self.window, true)
+  return self
 end
 
 function Terminal:shutdown()

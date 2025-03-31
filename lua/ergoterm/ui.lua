@@ -10,8 +10,6 @@ local fn = vim.fn
 local fmt = string.format
 local api = vim.api
 
-local origin_window
-
 ---@alias SendSelection "single_line" | "visual_selection" | "visual_lines"
 --- @class TerminalWindow
 --- @field term_id number ID for the terminal in the window
@@ -39,15 +37,6 @@ function M.delete_buf(term)
   if term.bufnr and api.nvim_buf_is_valid(term.bufnr) then
     api.nvim_buf_delete(term.bufnr, { force = true })
   end
-end
-
-function M.set_origin_window() origin_window = api.nvim_get_current_win() end
-
-function M.get_origin_window() return origin_window end
-
-function M.update_origin_window(term_window)
-  local curr_win = api.nvim_get_current_win()
-  if term_window ~= curr_win then origin_window = curr_win end
 end
 
 function M.scroll_to_bottom()
@@ -179,17 +168,6 @@ end
 function M.update_float(term)
   if not vim.api.nvim_win_is_valid(term.window) then return end
   vim.api.nvim_win_set_config(term.window, M._get_float_config(term, false))
-end
-
----Close given terminal's ui
----@param term Terminal
-function M.close(term)
-  if origin_window and api.nvim_win_is_valid(origin_window) then
-    api.nvim_set_current_win(origin_window)
-  else
-    origin_window = nil
-  end
-  api.nvim_win_close(term.window, true)
 end
 
 ---Determine if a window is a float
