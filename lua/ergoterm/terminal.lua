@@ -346,7 +346,6 @@ end
 function Terminal:open(direction)
   local cwd = vim.fn.getcwd()
   self.dir = utils.get_dir(config.autochdir and cwd or self.dir)
-  ui.set_origin_window()
   if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then
     local ok, err = ui.open(direction, self)
     if not ok and err then return utils.notify(err, "error") end
@@ -407,7 +406,6 @@ end
 
 function M.create_term(dir, direction, name)
   local term = Terminal:new({ dir = dir, direction = direction, name = name })
-  ui.update_origin_window(term.window)
   term:open(direction)
   return term
 end
