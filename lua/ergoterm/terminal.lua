@@ -196,9 +196,12 @@ function Terminal:close()
   return self
 end
 
+---Shutdown the terminal
+---
+---Close window and remove buffer
 function Terminal:shutdown()
   if self:is_open() then self:close() end
-  ui.delete_buf(self)
+  vim.api.nvim_buf_delete(self.bufnr, { force = true })
   self:_delete_reference_from_state()
 end
 

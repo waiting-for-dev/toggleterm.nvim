@@ -33,12 +33,6 @@ end
 
 function M.create_buf() return api.nvim_create_buf(false, false) end
 
-function M.delete_buf(term)
-  if term.bufnr and api.nvim_buf_is_valid(term.bufnr) then
-    api.nvim_buf_delete(term.bufnr, { force = true })
-  end
-end
-
 function M.scroll_to_bottom()
   local info = vim.api.nvim_get_mode()
   if info and (info.mode == "n" or info.mode == "nt") then vim.cmd("normal! G") end
