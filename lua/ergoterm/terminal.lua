@@ -144,11 +144,6 @@ function Terminal:is_open()
   return win_open and vim.api.nvim_win_get_buf(self.window) == self.bufnr
 end
 
----Delete a terminal from the list of terminals in the state
-function Terminal:delete()
-  state.terminals[self.id] = nil
-end
-
 ---Set the last focused terminal
 ---
 ---@return Terminal
@@ -200,7 +195,7 @@ end
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   ui.delete_buf(self)
-  self:delete()
+  self:_delete_reference_from_state()
 end
 
 function Terminal:scroll_bottom()
@@ -464,6 +459,11 @@ function Terminal:_build_output_handler(callback)
     if self.auto_scroll then self:scroll_bottom() end
     if callback then callback(self, ...) end
   end
+end
+
+---@api private
+function Terminal:_delete_reference_from_state()
+  state.terminals[self.id] = nil
 end
 
 ---@private
