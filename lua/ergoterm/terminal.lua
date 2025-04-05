@@ -1,3 +1,5 @@
+---Main module giving access to the terminal API
+
 local M = {}
 
 ---@module "ergoterm.lazy"
@@ -25,30 +27,14 @@ local state = {
   terminals = {}
 }
 
-local NULL_CALLBACK = function(...) end
-
 ---@class Picker
 ---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
 ---@field select_actions fun(): table<string, fun(term: Terminal)>
 
----Get the next available id
----
----It's based on the next number in the sequence that
----hasn't already been allocated. E.g. in a list of {1,2,5,6} the next id should
----be 3 then 4 then 7.
----@return integer
-function M.next_id()
-  local terms = M.get_terminals()
-  for index, term in pairs(terms) do
-    if index ~= term.id then return index end
-  end
-  return #terms + 1
-end
-
 ---Return currently focused terminal
 ---
 ---@return Terminal?
-function M.get_focused_terminal()
+function M.get_focused()
   for _, term in pairs(state.terminals) do
     if term:is_focused() then return term end
   end
@@ -60,6 +46,60 @@ end
 ---@return Terminal?
 function M.get_last_focused()
   return state.last_focused
+end
+
+---Return all terminals sorted by id
+---
+---@return Terminal[]
+function M.get_all()
+  local result = {}
+  for _, v in pairs(state.terminals) do
+    table.insert(result, v)
+  end
+  table.sort(result, function(a, b) return a.id < b.id end)
+  return result
+end
+
+---Get a single terminal by id
+---
+---@param id number?
+---@return Terminal?
+function M.get(id)
+  local term = state.terminals[id]
+  return term
+end
+
+---Get a single terminal by name
+---
+---@param name string
+---@return Terminal?
+function M.get_by_name(name)
+  for _, term in pairs(state.terminals) do
+    if term.name == name then return term end
+  end
+  return nil
+end
+
+---Get the first terminal that matches a predicate
+---
+---@param predicate fun(term: Terminal): boolean
+---@return Terminal?
+function M.find(predicate)
+  for _, term in pairs(state.terminals) do
+    if predicate(term) then return term end
+  end
+  return nil
+end
+
+---Prompts to select an open terminal
+---
+---@param picker Picker the picker to use
+---@param prompt string the prompt to display
+---@param callbacks table<string, fun(term: Terminal)> a table of callbacks to run when the user selects a terminal
+function M.select(picker, prompt, callbacks)
+  local terminals = M.get_all()
+  if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
+  picker.select(terminals, prompt, callbacks)
 end
 
 ---@class TerminalState
@@ -74,19 +114,22 @@ end
 ---@field auto_scroll boolean? whether or not to scroll down on terminal output
 ---@field cmd? string command to run in the terminal
 ---@field clear_env? boolean use clean job environment, passed to jobstart()
----@field close_on_exit boolean? whether or not to close the terminal window when the process exits
+---@field close_on_job_exit boolean? whether or not to close the terminal window when the process exits
 ---@field dir string? the directory for the terminal
 ---@field direction string? the direction to open the terminal in the first time
 ---@field env table<string, string> environmental variables passed to jobstart()
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
 ---@field float_opts table<string, any>?
----@field on_close fun(term:Terminal)?
----@field on_create fun(term:Terminal)?
----@field on_exit fun(t: Terminal, job: number, exit_code: number?, name: string?)?
+---@field on_close fun(term:Terminal)? Callback to run when the terminal is closed. It takes the terminal as an argument.
+---@field on_create fun(term:Terminal)? Callback to run when the terminal is created. It takes the terminal as an argument.
+---@field on_focus fun(term:Terminal)? Callback to run when the terminal is focused. It takes the terminal as an argument.
+---@field on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)? Callback to run when the
+---@field on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)?
+---@field on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)?
 ---@field on_open fun(term:Terminal)?
----@field on_stderr fun(t: Terminal, job: number, data: string[], name: string)?
----@field on_stdout fun(t: Terminal, job: number, data: string[]?, name: string?)?
+---@field on_shutdown fun(term:Terminal)?
+---@field on_start fun(term:Terminal)?
 ---@field persist_mode boolean? whether or not to persist the mode of the terminal on return
 ---@field start_in_insert boolean?
 
@@ -111,7 +154,7 @@ function Terminal:new(args)
   term.auto_scroll = vim.F.if_nil(term.auto_scroll, conf.auto_scroll)
   term.cmd = term.cmd or config.get("shell")
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
-  term.close_on_exit = vim.F.if_nil(term.close_on_exit, conf.close_on_exit)
+  term.close_on_job_exit = vim.F.if_nil(term.close_on_job_exit, conf.close_on_job_exit)
   term.name = term.name or term.cmd or config.get("shell")
   term.direction = term.direction or conf.direction
   term.env = vim.F.if_nil(term.env, conf.env)
@@ -119,13 +162,15 @@ function Terminal:new(args)
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
-  term.on_close = vim.F.if_nil(term.on_close, conf.on_close) or NULL_CALLBACK
-  term.on_create = vim.F.if_nil(term.on_create, conf.on_create) or NULL_CALLBACK
-  term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit) or NULL_CALLBACK
-  term.on_open = vim.F.if_nil(term.on_open, conf.on_open) or NULL_CALLBACK
-  term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr) or NULL_CALLBACK
-  term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout) or NULL_CALLBACK
-  term.id = M.next_id()
+  term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
+  term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
+  term.on_focus = vim.F.if_nil(term.on_focus, conf.on_focus)
+  term.on_job_stnderr = vim.F.if_nil(term.on_job_stnderr, conf.on_job_stnderr)
+  term.on_job_stdout = vim.F.if_nil(term.on_job_stdout, conf.on_job_stdout)
+  term.on_job_exit = vim.F.if_nil(term.on_job_exit, conf.on_job_exit)
+  term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
+  term.on_shutdown = vim.F.if_nil(term.on_shutdown, conf.on_shutdown)
+  term.id = M._build_id()
   term:_reset_state()
   return term
 end
@@ -347,6 +392,8 @@ function Terminal:focus(direction)
     self:set_last_focused()
     self:set_initial_mode()
   end
+  self:on_focus()
+  return self
 end
 
 function Terminal:toggle(direction)
@@ -358,60 +405,13 @@ function Terminal:toggle(direction)
   return self
 end
 
---- get the toggle term number from
---- the name e.g. term://~/.dotfiles//3371887:/usr/bin/zsh;#ergoterm#1
---- the number in this case is 1
---- @param name string?
---- @return Terminal
-function M.identify(name)
-  name = name or vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())
-  local comment_sep = utils.get_comment_sep()
-  local parts = vim.split(name, comment_sep)
-  local id = tonumber(parts[#parts])
-  return state.terminals[id]
-end
-
----Get a single terminal by id
----@param id number?
----@return Terminal?
-function M.get(id)
-  local term = state.terminals[id]
-  return term
-end
-
----Get the first terminal that matches a predicate
----@param predicate fun(term: Terminal): boolean
----@return Terminal?
-function M.find(predicate)
-  if type(predicate) ~= "function" then
-    utils.notify("terminal.find expects a function, got " .. type(predicate), "error")
-    return
+---@private
+function M._build_id()
+  local terms = M.get_all()
+  for index, term in pairs(terms) do
+    if index ~= term.id then return index end
   end
-  for _, term in pairs(state.terminals) do
-    if predicate(term) then return term end
-  end
-  return nil
-end
-
----Return the potentially non contiguous map of terminals as a sorted array
----@return Terminal[]
-function M.get_terminals()
-  local result = {}
-  for _, v in pairs(state.terminals) do
-    table.insert(result, v)
-  end
-  table.sort(result, function(a, b) return a.id < b.id end)
-  return result
-end
-
--- Prompts to select an open terminal
---
--- @param prompt string the prompt to display
--- @param callback fun the function to call with the selected terminal
-function M.select_terminal(picker, prompt, callbacks)
-  local terminals = state.terminals or M.get_terminals()
-  if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
-  picker.select(terminals, prompt, callbacks)
+  return #terms + 1
 end
 
 ---@private
@@ -421,22 +421,22 @@ end
 
 ---@private
 function Terminal:_build_exit_handler(callback)
-  return function(...)
-    if self.close_on_exit then
+  return function(job, exit_code, event)
+    if self.close_on_job_exit then
       self:close()
       if vim.api.nvim_buf_is_loaded(self.bufnr) then
         vim.api.nvim_buf_delete(self.bufnr, { force = true })
       end
     end
-    callback(self, ...)
+    callback(self, job, exit_code, event)
   end
 end
 
 ---@private
 function Terminal:_build_output_handler(callback)
-  return function()
+  return function(channel_id, data, name)
     if self.auto_scroll then self:scroll_bottom() end
-    callback(self)
+    callback(self, channel_id, data, name)
   end
 end
 
@@ -503,9 +503,9 @@ function Terminal:_start_job()
   return vim.fn.termopen(self.cmd, {
     detach = 1,
     cwd = self.dir,
-    on_exit = self._state.on_exit,
-    on_stdout = self._state.on_stdout,
-    on_stderr = self._state.on_stderr,
+    on_exit = self._state.on_job_exit,
+    on_stdout = self._state.on_job_stdout,
+    on_stderr = self._state.on_job_stnderr,
     env = self.env,
     clear_env = self.clear_env,
   })
@@ -523,8 +523,6 @@ if _G.IS_TEST then
       term:shutdown()
     end
   end
-
-  M.__next_id = M.next_id
 end
 
 M.Terminal = Terminal

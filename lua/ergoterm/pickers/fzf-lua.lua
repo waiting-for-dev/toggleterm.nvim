@@ -1,5 +1,4 @@
 local terms = require("ergoterm.terminal")
-local constants = require("ergoterm.constants")
 
 local M = {}
 

@@ -5,6 +5,8 @@ local M = {}
 
 local fmt = string.format
 
+local NULL_CALLBACK = function(...) end
+
 --- @class Responsiveness
 --- @field horizontal_breakpoint number
 
@@ -17,7 +19,7 @@ local fmt = string.format
 --- @field terminal_mappings boolean
 --- @field start_in_insert boolean
 --- @field persist_mode boolean
---- @field close_on_exit boolean
+--- @field close_on_job_exit boolean
 --- @field clear_env boolean
 --- @field shading_factor number
 --- @field shading_ratio number
@@ -38,7 +40,7 @@ local config = {
   terminal_mappings = true,
   start_in_insert = true,
   persist_mode = false,
-  close_on_exit = true,
+  close_on_job_exit = true,
   clear_env = false,
   direction = "bottom",
   shading_factor = constants.shading_amount,
@@ -47,6 +49,15 @@ local config = {
   picker = nil,
   autochdir = false,
   auto_scroll = true,
+  on_close = NULL_CALLBACK,
+  on_create = NULL_CALLBACK,
+  on_focus = NULL_CALLBACK,
+  on_job_exit = NULL_CALLBACK,
+  on_open = NULL_CALLBACK,
+  on_shutdown = NULL_CALLBACK,
+  on_start = NULL_CALLBACK,
+  on_job_stnderr = NULL_CALLBACK,
+  on_job_stdout = NULL_CALLBACK,
   float_opts = {
     winblend = 0,
     title_pos = "left",
