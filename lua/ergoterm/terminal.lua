@@ -103,13 +103,17 @@ function M.select(picker, prompt, callbacks)
 end
 
 ---@class TerminalState
+---@field bufnr number?
 ---@field cmd string
 ---@field dir string
 ---@field direction string
 ---@field mode Mode
+---@field job_id number
 ---@field on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)
 ---@field on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
 ---@field on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
+---@field tabpage number?
+---@field window number?
 
 ---@class TermCreateArgs
 ---@field auto_scroll boolean? whether or not to scroll down on terminal output
@@ -135,11 +139,7 @@ end
 ---@field start_in_insert boolean?
 
 ---@class Terminal : TermCreateArgs
----@field bufnr number
 ---@field id number
----@field job_id number
----@field tabpage number
----@field window number
 ---@field _state TerminalState
 local Terminal = {}
 Terminal.__index = Terminal
@@ -172,6 +172,7 @@ function Terminal:new(args)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
   term.on_shutdown = vim.F.if_nil(term.on_shutdown, conf.on_shutdown)
   term.id = M._build_id()
+  term._state = {}
   term:_reset_state()
   return term
 end
@@ -192,10 +193,10 @@ end
 ---
 ---@return boolean
 function Terminal:is_open()
-  if not self.window then return false end
-  local win_type = vim.fn.win_gettype(self.window)
+  if not self._state.window then return false end
+  local win_type = vim.fn.win_gettype(self._state.window)
   local win_open = win_type == "" or win_type == "popup"
-  return win_open and vim.api.nvim_win_get_buf(self.window) == self.bufnr
+  return win_open and vim.api.nvim_win_get_buf(self._state.window) == self._state.bufnr
 end
 
 ---Set the last focused terminal
@@ -247,7 +248,7 @@ end
 function Terminal:close()
   if self:is_open() then
     self:on_close()
-    vim.api.nvim_win_close(self.window, true)
+    vim.api.nvim_win_close(self._state.window, true)
   end
   return self
 end
@@ -257,17 +258,17 @@ end
 ---Close window and remove buffer
 function Terminal:shutdown()
   if self:is_open() then self:close() end
-  vim.api.nvim_buf_delete(self.bufnr, { force = true })
   self:on_shutdown()
+  vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
   self:_delete_reference_from_state()
 end
 
 function Terminal:scroll_bottom()
-  if not vim.api.nvim_buf_is_loaded(self.bufnr) or not vim.api.nvim_buf_is_valid(self.bufnr) then return end
-  if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self.bufnr, ui.scroll_to_bottom) end
+  if not vim.api.nvim_buf_is_loaded(self._state.bufnr) or not vim.api.nvim_buf_is_valid(self._state.bufnr) then return end
+  if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self._state.bufnr, ui.scroll_to_bottom) end
 end
 
-function Terminal:is_focused() return self.window == vim.api.nvim_get_current_win() end
+function Terminal:is_focused() return self._state.window == vim.api.nvim_get_current_win() end
 
 ---Send a command to a running terminal
 ---@param cmd string|string[] Command(s) to send to the terminal
@@ -288,7 +289,7 @@ function Terminal:send(input, mode, trim, new_line)
       input[i] = line:gsub("^%s+", ""):gsub("%s+$", "")
     end
   end
-  vim.fn.chansend(self.job_id, input)
+  vim.fn.chansend(self._state.job_id, input)
   self:scroll_bottom()
   if mode ~= "silent" and not self:is_open() then
     self:open()
@@ -318,7 +319,7 @@ function Terminal:change_dir(dir, mode)
 end
 
 function Terminal:set_ft_options()
-  local buf = vim.bo[self.bufnr]
+  local buf = vim.bo[self._state.bufnr]
   buf.filetype = constants.FILETYPE
   buf.buflisted = false
 end
@@ -326,27 +327,27 @@ end
 ---@package
 function Terminal:__set_win_options()
   if config.hide_numbers then
-    utils.wo_setlocal(self.window, "number", false)
-    utils.wo_setlocal(self.window, "relativenumber", false)
+    utils.wo_setlocal(self._state.window, "number", false)
+    utils.wo_setlocal(self._state.window, "relativenumber", false)
   end
 end
 
 function Terminal:set_options()
   self:set_ft_options()
   self:__set_win_options()
-  vim.b[self.bufnr].toggle_number = self.id
+  vim.b[self._state.bufnr].toggle_number = self.id
 end
 
 function Terminal:is_started()
-  return self.bufnr ~= nil
+  return self._state.bufnr ~= nil
 end
 
 function Terminal:start()
   if not self:is_started() then
-    self.bufnr = vim.api.nvim_create_buf(false, false)
+    self._state.bufnr = vim.api.nvim_create_buf(false, false)
     self:_add_to_state()
-    vim.api.nvim_buf_call(self.bufnr, function()
-      self.job_id = self:_start_job()
+    vim.api.nvim_buf_call(self._state.bufnr, function()
+      self._state.job_id = self:_start_job()
     end)
     autocommands.setup_term_buffer(self)
     self:on_create()
@@ -358,7 +359,7 @@ function Terminal:open(direction)
   if not self:is_started() then self:start() end
   if not self:is_open() then
     local current_win = vim.api.nvim_get_current_win()
-    local direction = direction or self.direction
+    local direction = direction or self._state.direction
     if direction == "top" then
       vim.cmd("split")
     elseif direction == "bottom" then
@@ -373,11 +374,11 @@ function Terminal:open(direction)
     elseif direction == "float" then
       ui.open_float(self)
     end
-    self.direction = direction
-    self.bufr = vim.api.nvim_create_buf(false, false)
-    self.window = vim.api.nvim_get_current_win()
-    self.tabpage = vim.api.nvim_get_current_tabpage()
-    vim.api.nvim_win_set_buf(self.window, self.bufnr)
+    self._state.direction = direction
+    self._state.bufr = vim.api.nvim_create_buf(false, false)
+    self._state.window = vim.api.nvim_get_current_win()
+    self._state.tabpage = vim.api.nvim_get_current_tabpage()
+    vim.api.nvim_win_set_buf(self._state.window, self._state.bufnr)
     self:set_options()
     self:on_open()
     vim.api.nvim_set_current_win(current_win)
@@ -390,8 +391,8 @@ function Terminal:focus(direction)
   if not self:is_started() then self:start() end
   if not self:is_open() then self:open(direction) end
   if not self:is_focused() then
-    vim.api.nvim_set_current_tabpage(self.tabpage)
-    vim.api.nvim_set_current_win(self.window)
+    vim.api.nvim_set_current_tabpage(self._state.tabpage)
+    vim.api.nvim_set_current_win(self._state.window)
     self:set_last_focused()
     self:set_initial_mode()
   end
@@ -427,8 +428,8 @@ function Terminal:_build_exit_handler(callback)
   return function(job, exit_code, event)
     if self.close_on_job_exit then
       self:close()
-      if vim.api.nvim_buf_is_loaded(self.bufnr) then
-        vim.api.nvim_buf_delete(self.bufnr, { force = true })
+      if vim.api.nvim_buf_is_loaded(self._state.bufnr) then
+        vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
       end
     end
     callback(self, job, exit_code, event)
@@ -450,14 +451,13 @@ end
 
 ---@private
 function Terminal:_reset_state()
-  self._state = {
-    mode = mode.get_initial_mode(self.start_in_insert),
-    cmd = self:_build_command(),
-    dir = self:_build_dir(),
-    on_exit = self:_build_exit_handler(self.on_exit),
-    on_stdout = self:_build_output_handler(self.on_stdout),
-    on_stderr = self:_build_output_handler(self.on_stderr)
-  }
+  self._state.cmd = self:_build_command()
+  self._state.mode = mode.get_initial_mode(self.start_in_insert)
+  self._state.dir = self:_build_dir()
+  self._state.direction = self.direction
+  self._state.on_job_exit = self:_build_exit_handler(self.on_job_exit)
+  self._state.on_job_stdout = self:_build_output_handler(self.on_job_stdout)
+  self._state.on_job_stnderr = self:_build_output_handler(self.on_job_stnderr)
 end
 
 ---@private

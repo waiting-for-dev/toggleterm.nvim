@@ -20,7 +20,7 @@ end
 function M.previewer:parse_entry(entry_str)
   local term_id = M.get_term_id_from_selected(entry_str)
   local term = terms.get(term_id)
-  local bufnr = term.bufnr
+  local bufnr = term._state.bufnr
   local name = term.name
 
   return {

@@ -61,11 +61,11 @@ end
 ---@param term Terminal
 function M.open_float(term)
   local opts = term.float_opts or {}
-  local valid_buf = term.bufnr and api.nvim_buf_is_valid(term.bufnr)
-  local buf = valid_buf and term.bufnr or api.nvim_create_buf(false, false)
+  local valid_buf = term._state.bufnr and api.nvim_buf_is_valid(term._state.bufnr)
+  local buf = valid_buf and term._state.bufnr or api.nvim_create_buf(false, false)
   local win = api.nvim_open_win(buf, true, M._get_float_config(term, true))
 
-  term.window, term.bufnr = win, buf
+  term._state.window, term._state.bufnr = win, buf
   -- partial fix for #391
   utils.wo_setlocal(win, "sidescrolloff", 0)
 
@@ -76,8 +76,8 @@ end
 ---Updates the floating terminal size
 ---@param term Terminal
 function M.update_float(term)
-  if not vim.api.nvim_win_is_valid(term.window) then return end
-  vim.api.nvim_win_set_config(term.window, M._get_float_config(term, false))
+  if not vim.api.nvim_win_is_valid(term._state.window) then return end
+  vim.api.nvim_win_set_config(term._state.window, M._get_float_config(term, false))
 end
 
 ---Determine if a window is a float
@@ -90,12 +90,12 @@ end
 ---@param term Terminal
 ---@return boolean
 function M.term_has_open_win(term)
-  if not term.window then return false end
+  if not term._state.window then return false end
   local wins = {}
   for _, tab in ipairs(api.nvim_list_tabpages()) do
     vim.list_extend(wins, api.nvim_tabpage_list_wins(tab))
   end
-  return vim.tbl_contains(wins, term.window)
+  return vim.tbl_contains(wins, term._state.window)
 end
 
 function M.select_text(selection_type)
