@@ -4,7 +4,7 @@ local M = {}
 
 function M.select_actions()
   return {
-    default = function(term) terms.Terminal.new_focus() end
+    default = function(term) terms.Terminal.focus() end
   }
 end
 

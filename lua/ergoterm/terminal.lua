@@ -199,8 +199,10 @@ end
 ---
 ---@return Terminal
 function Terminal:close()
-  self:on_close()
-  vim.api.nvim_win_close(self.window, true)
+  if self:is_open() then
+    self:on_close()
+    vim.api.nvim_win_close(self.window, true)
+  end
   return self
 end
 
@@ -219,10 +221,6 @@ function Terminal:scroll_bottom()
 end
 
 function Terminal:is_focused() return self.window == vim.api.nvim_get_current_win() end
-
-function Terminal:focus()
-  if ui.term_has_open_win(self) then vim.api.nvim_set_current_win(self.window) end
-end
 
 ---Send a command to a running terminal
 ---@param cmd string|string[] Command(s) to send to the terminal
@@ -272,47 +270,6 @@ function Terminal:change_dir(dir, mode)
   self.dir = dir
 end
 
---- Handle when a terminal process exits
----@param term Terminal
-local function __build_exit_handler(term)
-  return function(...)
-    if term.on_exit then term:on_exit(...) end
-    if term.close_on_exit then
-      term:close()
-      if vim.api.nvim_buf_is_loaded(term.bufnr) then
-        vim.api.nvim_buf_delete(term.bufnr, { force = true })
-      end
-    end
-  end
-end
-
----@private
-function Terminal:__spawn()
-  local cmd = self.cmd
-  if type(cmd) == "function" then cmd = cmd() end
-  local command_sep = utils.get_command_sep()
-  local comment_sep = utils.get_comment_sep()
-  cmd = table.concat({
-    cmd,
-    command_sep,
-    comment_sep,
-    constants.FILETYPE,
-    comment_sep,
-    self.id,
-  })
-  local dir = utils.get_dir(self.dir)
-  self.job_id = vim.fn.termopen(cmd, {
-    detach = 1,
-    cwd = dir,
-    on_exit = __build_exit_handler(self),
-    on_stdout = self:_build_output_handler(self.on_stdout),
-    on_stderr = self:_build_output_handler(self.on_stderr),
-    env = self.env,
-    clear_env = self.clear_env,
-  })
-  self.dir = dir
-end
-
 function Terminal:set_ft_options()
   local buf = vim.bo[self.bufnr]
   buf.filetype = constants.FILETYPE
@@ -333,22 +290,6 @@ function Terminal:set_options()
   vim.b[self.bufnr].toggle_number = self.id
 end
 
----Open a terminal in a type of window i.e. a split,full window or tab
----@param term table
----Spawn terminal background job in a buffer without a window
-function Terminal:spawn()
-  if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then self.bufnr = ui.create_buf() end
-  self:_add_to_state()
-  if vim.api.nvim_get_current_buf() ~= self.bufnr then
-    vim.api.nvim_buf_call(self.bufnr, function() self:__spawn() end)
-  else
-    self:__spawn()
-  end
-  autocommands.setup_term_buffer(self)
-  if self.window == vim.api.nvim_get_current_win() then self:set_initial_mode() end
-  if self.on_create then self:on_create() end
-end
-
 function Terminal:is_started()
   return self.bufnr ~= nil
 end
@@ -366,7 +307,7 @@ function Terminal:start()
   return self
 end
 
-function Terminal:new_open(direction)
+function Terminal:open(direction)
   if not self:is_started() then self:start() end
   if not self:is_open() then
     local current_win = vim.api.nvim_get_current_win()
@@ -397,9 +338,9 @@ function Terminal:new_open(direction)
   return self
 end
 
-function Terminal:new_focus(direction)
+function Terminal:focus(direction)
   if not self:is_started() then self:start() end
-  if not self:is_open() then self:new_open(direction) end
+  if not self:is_open() then self:open(direction) end
   if not self:is_focused() then
     vim.api.nvim_set_current_tabpage(self.tabpage)
     vim.api.nvim_set_current_win(self.window)
@@ -408,49 +349,11 @@ function Terminal:new_focus(direction)
   end
 end
 
----Open a terminal window
----@param direction string?
-function Terminal:open(direction)
-  local cwd = vim.fn.getcwd()
-  self.dir = utils.get_dir(config.autochdir and cwd or self.dir)
-  if not self.bufnr or not vim.api.nvim_buf_is_valid(self.bufnr) then
-    local ok, err = ui.open(direction, self)
-    if not ok and err then return utils.notify(err, "error") end
-    self:spawn()
-  else
-    local ok, err = ui.open(direction, self)
-    if not ok and err then return utils.notify(err, "error") end
-    -- ui.switch_buf(self.bufnr)
-    if config.autochdir and self.dir ~= cwd then self:change_dir(cwd) end
-  end
-  -- NOTE: it is important that this function is called at this point. i.e. the buffer has been correctly assigned
-  if self.on_open then self:on_open() end
-  self:set_last_focused()
-  return self
-end
-
-function Terminal:focus_or_open(direction)
-  if self:is_open() then
-    self:focus()
-  else
-    self:open(direction)
-  end
-end
-
 function Terminal:toggle(direction)
   if self:is_open() then
     self:close()
   else
-    self:open(direction)
-  end
-  return self
-end
-
-function Terminal:new_toggle(direction)
-  if self:is_open() then
-    self:close()
-  else
-    self:new_focus(direction)
+    self:focus(direction)
   end
   return self
 end
@@ -466,24 +369,6 @@ function M.identify(name)
   local parts = vim.split(name, comment_sep)
   local id = tonumber(parts[#parts])
   return state.terminals[id]
-end
-
----get existing terminal or create an empty term table
----@param num number?
----@param dir string?
----@param name string?
----@return Terminal
----@return boolean
-function M.get_or_create_term(dir, name)
-  local term = M.get(num)
-  if term then return term, false end
-  return Terminal:new({ dir = dir, name = name })
-end
-
-function M.create_term(dir, direction, name)
-  local term = Terminal:new({ dir = dir, direction = direction, name = name })
-  term:open(direction)
-  return term
 end
 
 ---Get a single terminal by id

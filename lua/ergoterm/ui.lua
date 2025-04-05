@@ -15,67 +15,9 @@ local api = vim.api
 --- @field term_id number ID for the terminal in the window
 --- @field window number window handle
 
----Create a terminal buffer with the correct buffer/window options
----then set it to current window
----@param term Terminal
-function M.create_term_buf_if_needed(term)
-  local valid_win = term.window and api.nvim_win_is_valid(term.window)
-  local window = valid_win and term.window or api.nvim_get_current_win()
-  -- If the buffer doesn't exist create a new one
-  local valid_buf = term.bufnr and api.nvim_buf_is_valid(term.bufnr)
-  local bufnr = valid_buf and term.bufnr or api.nvim_create_buf(false, false)
-  -- Assign buf to window to ensure window options are set correctly
-  api.nvim_win_set_buf(window, bufnr)
-  term.window, term.bufnr = window, bufnr
-  term:set_options()
-  api.nvim_set_current_buf(bufnr)
-end
-
-function M.create_buf() return api.nvim_create_buf(false, false) end
-
 function M.scroll_to_bottom()
   local info = vim.api.nvim_get_mode()
   if info and (info.mode == "n" or info.mode == "nt") then vim.cmd("normal! G") end
-end
-
-function M.goto_previous() vim.cmd("wincmd p") end
-
-function M.stopinsert() vim.cmd("stopinsert!") end
-
----@param buf integer
----@return boolean
-local function default_compare(buf)
-  return vim.bo[buf].filetype == constants.FILETYPE or vim.b[buf].toggle_number ~= nil
-end
-
---- Find the first open terminal window
---- by iterating all windows and matching the
---- containing buffers filetype with the passed in
---- comparator function or the default which matches
---- the filetype
---- @param comparator function?
---- @return boolean, TerminalWindow[]
-function M.find_open_windows(comparator)
-  comparator = comparator or default_compare
-  local term_wins, is_open = {}, false
-  for _, tab in ipairs(api.nvim_list_tabpages()) do
-    for _, win in pairs(api.nvim_tabpage_list_wins(tab)) do
-      local buf = api.nvim_win_get_buf(win)
-      if comparator(buf) then
-        is_open = true
-        table.insert(term_wins, { window = win, term_id = vim.b[buf].toggle_number })
-      end
-    end
-  end
-  return is_open, term_wins
-end
-
----Switch to the given buffer without changing the alternate
----@param buf number
-function M.switch_buf(buf)
-  -- don't change the alternate buffer so that <c-^><c-^> does nothing in the terminal split
-  local cur_buf = api.nvim_get_current_buf()
-  if cur_buf ~= buf then vim.cmd(fmt("keepalt buffer %d", buf)) end
 end
 
 --- @param term Terminal
@@ -115,32 +57,6 @@ function M._get_float_config(term, opening)
   return float_config
 end
 
----@param term Terminal
-function M.open(direction, term)
-  local direction = direction or "bottom"
-  if direction == "top" then
-    vim.cmd("split")
-    M.create_term_buf_if_needed(term)
-  elseif direction == "bottom" then
-    vim.cmd("botright split")
-    M.create_term_buf_if_needed(term)
-  elseif direction == "left" then
-    vim.cmd("vsplit")
-    M.create_term_buf_if_needed(term)
-  elseif direction == "right" then
-    vim.cmd("botright vsplit")
-    M.create_term_buf_if_needed(term)
-  elseif direction == "tab" then
-    vim.cmd("tabnew")
-    vim.bo.bufhidden = "wipe"
-    M.create_term_buf_if_needed(term)
-  elseif direction == "buffer" then
-    M.create_term_buf_if_needed(term)
-  elseif direction == "float" then
-    M.open_float(term)
-  end
-end
-
 ---Open a floating window
 ---@param term Terminal
 function M.open_float(term)
@@ -169,9 +85,6 @@ function M.is_float()
   local window = api.nvim_get_current_win()
   return fn.win_gettype(window) == "popup"
 end
-
---- @param bufnr number
-function M.find_windows_by_bufnr(bufnr) return fn.win_findbuf(bufnr) end
 
 ---Return whether or not the terminal passed in has an open window
 ---@param term Terminal
