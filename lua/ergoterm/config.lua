@@ -40,6 +40,7 @@ local config = {
   persist_mode = false,
   close_on_exit = true,
   clear_env = false,
+  direction = "bottom",
   shading_factor = constants.shading_amount,
   shading_ratio = constants.shading_ratio,
   shell = vim.o.shell,

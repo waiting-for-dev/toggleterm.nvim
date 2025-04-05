@@ -73,10 +73,11 @@ end
 
 function M.select_actions()
   return {
-    default = function(term) term:focus_or_open("buffer") end,
-    ["ctrl-b"] = function(term) term:focus_or_open("bottom") end,
-    ["ctrl-r"] = function(term) term:focus_or_open("right") end,
-    ["ctrl-t"] = function(term) term:focus_or_open("tab") end
+    default = function(term) term:new_focus() end,
+    ["ctrl-b"] = function(term) term:new_focus("buffer") end,
+    ["ctrl-d"] = function(term) term:new_focus("bottom") end,
+    ["ctrl-r"] = function(term) term:new_focus("right") end,
+    ["ctrl-t"] = function(term) term:new_focus("tab") end
   }
 end
 

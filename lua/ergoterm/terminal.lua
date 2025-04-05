@@ -25,7 +25,7 @@ local state = {
   terminals = {}
 }
 
-local NULL_CALLBACK = function() end
+local NULL_CALLBACK = function(...) end
 
 ---@class Picker
 ---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
@@ -64,6 +64,11 @@ end
 
 ---@class TerminalState
 ---@field mode Mode
+---@field cmd string
+---@field dir string
+---@field on_exit fun()
+---@field on_stdout fun()
+---@field on_stderr fun()
 
 ---@class TermCreateArgs
 ---@field auto_scroll boolean? whether or not to scroll down on terminal output
@@ -71,6 +76,7 @@ end
 ---@field clear_env? boolean use clean job environment, passed to jobstart()
 ---@field close_on_exit boolean? whether or not to close the terminal window when the process exits
 ---@field dir string? the directory for the terminal
+---@field direction string? the direction to open the terminal in the first time
 ---@field env table<string, string> environmental variables passed to jobstart()
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
@@ -88,6 +94,7 @@ end
 ---@field bufnr number
 ---@field id number
 ---@field job_id number
+---@field tabpage number
 ---@field window number
 ---@field _state TerminalState
 local Terminal = {}
@@ -106,17 +113,18 @@ function Terminal:new(args)
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
   term.close_on_exit = vim.F.if_nil(term.close_on_exit, conf.close_on_exit)
   term.name = term.name or term.cmd or config.get("shell")
+  term.direction = term.direction or conf.direction
   term.env = vim.F.if_nil(term.env, conf.env)
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
   term.on_close = vim.F.if_nil(term.on_close, conf.on_close) or NULL_CALLBACK
-  term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
-  term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit)
-  term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
-  term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr)
-  term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout)
+  term.on_create = vim.F.if_nil(term.on_create, conf.on_create) or NULL_CALLBACK
+  term.on_exit = vim.F.if_nil(term.on_exit, conf.on_exit) or NULL_CALLBACK
+  term.on_open = vim.F.if_nil(term.on_open, conf.on_open) or NULL_CALLBACK
+  term.on_stderr = vim.F.if_nil(term.on_stderr, conf.on_stderr) or NULL_CALLBACK
+  term.on_stdout = vim.F.if_nil(term.on_stdout, conf.on_stdout) or NULL_CALLBACK
   term.id = M.next_id()
   term:_reset_state()
   return term
@@ -266,7 +274,7 @@ end
 
 --- Handle when a terminal process exits
 ---@param term Terminal
-local function __handle_exit(term)
+local function __build_exit_handler(term)
   return function(...)
     if term.on_exit then term:on_exit(...) end
     if term.close_on_exit then
@@ -296,7 +304,7 @@ function Terminal:__spawn()
   self.job_id = vim.fn.termopen(cmd, {
     detach = 1,
     cwd = dir,
-    on_exit = __handle_exit(self),
+    on_exit = __build_exit_handler(self),
     on_stdout = self:_build_output_handler(self.on_stdout),
     on_stderr = self:_build_output_handler(self.on_stderr),
     env = self.env,
@@ -341,6 +349,65 @@ function Terminal:spawn()
   if self.on_create then self:on_create() end
 end
 
+function Terminal:is_started()
+  return self.bufnr ~= nil
+end
+
+function Terminal:start()
+  if not self:is_started() then
+    self.bufnr = vim.api.nvim_create_buf(false, false)
+    self:_add_to_state()
+    vim.api.nvim_buf_call(self.bufnr, function()
+      self.job_id = self:_start_job()
+    end)
+    autocommands.setup_term_buffer(self)
+    self:on_create()
+  end
+  return self
+end
+
+function Terminal:new_open(direction)
+  if not self:is_started() then self:start() end
+  if not self:is_open() then
+    local current_win = vim.api.nvim_get_current_win()
+    local direction = direction or self.direction
+    if direction == "top" then
+      vim.cmd("split")
+    elseif direction == "bottom" then
+      vim.cmd("botright split")
+    elseif direction == "left" then
+      vim.cmd("vsplit")
+    elseif direction == "right" then
+      vim.cmd("botright vsplit")
+    elseif direction == "tab" then
+      vim.cmd("tabnew")
+      vim.bo.bufhidden = "wipe"
+    elseif direction == "float" then
+      ui.open_float(self)
+    end
+    self.direction = direction
+    self.bufr = vim.api.nvim_create_buf(false, false)
+    self.window = vim.api.nvim_get_current_win()
+    self.tabpage = vim.api.nvim_get_current_tabpage()
+    vim.api.nvim_win_set_buf(self.window, self.bufnr)
+    self:set_options()
+    self:on_open()
+    vim.api.nvim_set_current_win(current_win)
+  end
+  return self
+end
+
+function Terminal:new_focus(direction)
+  if not self:is_started() then self:start() end
+  if not self:is_open() then self:new_open(direction) end
+  if not self:is_focused() then
+    vim.api.nvim_set_current_tabpage(self.tabpage)
+    vim.api.nvim_set_current_win(self.window)
+    self:set_last_focused()
+    self:set_initial_mode()
+  end
+end
+
 ---Open a terminal window
 ---@param direction string?
 function Terminal:open(direction)
@@ -375,6 +442,15 @@ function Terminal:toggle(direction)
     self:close()
   else
     self:open(direction)
+  end
+  return self
+end
+
+function Terminal:new_toggle(direction)
+  if self:is_open() then
+    self:close()
+  else
+    self:new_focus(direction)
   end
   return self
 end
@@ -459,10 +535,23 @@ function Terminal:_add_to_state()
 end
 
 ---@private
-function Terminal:_build_output_handler(callback)
+function Terminal:_build_exit_handler(callback)
   return function(...)
+    if self.close_on_exit then
+      self:close()
+      if vim.api.nvim_buf_is_loaded(self.bufnr) then
+        vim.api.nvim_buf_delete(self.bufnr, { force = true })
+      end
+    end
+    callback(self, ...)
+  end
+end
+
+---@private
+function Terminal:_build_output_handler(callback)
+  return function()
     if self.auto_scroll then self:scroll_bottom() end
-    if callback then callback(self, ...) end
+    callback(self)
   end
 end
 
@@ -475,7 +564,66 @@ end
 function Terminal:_reset_state()
   self._state = {
     mode = mode.get_initial_mode(self.start_in_insert),
+    cmd = self:_build_command(),
+    dir = self:_build_dir(),
+    on_exit = self:_build_exit_handler(self.on_exit),
+    on_stdout = self:_build_output_handler(self.on_stdout),
+    on_stderr = self:_build_output_handler(self.on_stderr)
   }
+end
+
+---@private
+---
+---@return string
+function Terminal:_build_command()
+  local cmd = nil
+  if type(self.cmd) == "function" then cmd = self.cmd() else cmd = self.cmd end
+  local command_sep = utils.get_command_sep()
+  local comment_sep = utils.get_comment_sep()
+  cmd = table.concat({
+    cmd,
+    command_sep,
+    comment_sep,
+    constants.FILETYPE,
+    comment_sep,
+    self.id,
+  })
+  return cmd
+end
+
+---@private
+---
+---@return string?
+function Terminal:_build_dir()
+  local dir = nil
+  if self.dir == "git_dir" then
+    dir = utils.git_dir()
+  elseif dir == nil then
+    dir = vim.loop.cwd()
+  else
+    dir = vim.fn.expand(self.dir)
+    if vim.fn.isdirectory(dir) == 0 then
+      vim.notify(
+        string.format("%s is not a directory", dir),
+        vim.log.levels.ERROR
+      )
+    end
+    return dir
+  end
+  return dir
+end
+
+---@private
+function Terminal:_start_job()
+  return vim.fn.termopen(self.cmd, {
+    detach = 1,
+    cwd = self.dir,
+    on_exit = self._state.on_exit,
+    on_stdout = self._state.on_stdout,
+    on_stderr = self._state.on_stderr,
+    env = self.env,
+    clear_env = self.clear_env,
+  })
 end
 
 ---@private
