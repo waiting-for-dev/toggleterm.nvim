@@ -103,12 +103,13 @@ function M.select(picker, prompt, callbacks)
 end
 
 ---@class TerminalState
----@field mode Mode
 ---@field cmd string
 ---@field dir string
----@field on_exit fun()
----@field on_stdout fun()
----@field on_stderr fun()
+---@field direction string
+---@field mode Mode
+---@field on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)
+---@field on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
+---@field on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
 
 ---@class TermCreateArgs
 ---@field auto_scroll boolean? whether or not to scroll down on terminal output
@@ -257,6 +258,7 @@ end
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   vim.api.nvim_buf_delete(self.bufnr, { force = true })
+  self:on_shutdown()
   self:_delete_reference_from_state()
 end
 
@@ -383,6 +385,7 @@ function Terminal:open(direction)
   return self
 end
 
+---@param direction string?
 function Terminal:focus(direction)
   if not self:is_started() then self:start() end
   if not self:is_open() then self:open(direction) end
