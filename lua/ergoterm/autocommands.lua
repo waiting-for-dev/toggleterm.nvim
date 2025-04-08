@@ -14,14 +14,12 @@ local M = {}
 
 function M.on_buf_enter()
   local term = terms.identify()
-  term:set_ft_options() -- reset by other plugins like telescope.nvim
-  term:set_return_mode()
+  term:on_buf_enter()
 end
 
 function M.on_win_leave()
   local term = terms.identify()
-  if config.persist_mode then term:persist_mode() end
-  if ui.is_float() then term:close() end
+  term:on_win_leave()
 end
 
 function M.on_filetype(ev)
@@ -31,7 +29,7 @@ function M.on_filetype(ev)
 end
 
 function M.on_term_close(term)
-  term:_delete_reference_from_state()
+  term:on_term_close()
 end
 
 function M.on_vim_resized_if_float(term)

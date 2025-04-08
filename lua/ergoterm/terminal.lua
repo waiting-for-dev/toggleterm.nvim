@@ -19,10 +19,9 @@ local ui = lazy.require("ergoterm.ui")
 local utils = lazy.require("ergoterm.utils")
 
 ---@class State
----@field last_focused Terminal?
----@field terminals Terminal[]
-local state = {
-  ---Last focused terminal in the view.
+---@field last_focused Terminal? Last focused terminal
+---@field terminals Terminal[] All terminals
+M._state = {
   last_focused = nil,
   terminals = {}
 }
@@ -35,7 +34,7 @@ local state = {
 ---
 ---@return Terminal?
 function M.get_focused()
-  for _, term in pairs(state.terminals) do
+  for _, term in pairs(M._state.terminals) do
     if term:is_focused() then return term end
   end
   return nil
@@ -45,7 +44,7 @@ end
 ---
 ---@return Terminal?
 function M.get_last_focused()
-  return state.last_focused
+  return M._state.last_focused
 end
 
 ---Return all terminals sorted by id
@@ -53,7 +52,7 @@ end
 ---@return Terminal[]
 function M.get_all()
   local result = {}
-  for _, v in pairs(state.terminals) do
+  for _, v in pairs(M._state.terminals) do
     table.insert(result, v)
   end
   table.sort(result, function(a, b) return a.id < b.id end)
@@ -65,7 +64,7 @@ end
 ---@param id number?
 ---@return Terminal?
 function M.get(id)
-  local term = state.terminals[id]
+  local term = M._state.terminals[id]
   return term
 end
 
@@ -74,7 +73,7 @@ end
 ---@param name string
 ---@return Terminal?
 function M.get_by_name(name)
-  for _, term in pairs(state.terminals) do
+  for _, term in pairs(M._state.terminals) do
     if term.name == name then return term end
   end
   return nil
@@ -85,7 +84,7 @@ end
 ---@param predicate fun(term: Terminal): boolean
 ---@return Terminal?
 function M.find(predicate)
-  for _, term in pairs(state.terminals) do
+  for _, term in pairs(M._state.terminals) do
     if predicate(term) then return term end
   end
   return nil
@@ -105,10 +104,10 @@ end
 ---@class TerminalState
 ---@field bufnr number?
 ---@field cmd string
----@field dir string
+---@field dir? string
 ---@field direction string
 ---@field mode Mode
----@field job_id number
+---@field job_id? number
 ---@field on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)
 ---@field on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
 ---@field on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
@@ -172,8 +171,7 @@ function Terminal:new(args)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
   term.on_shutdown = vim.F.if_nil(term.on_shutdown, conf.on_shutdown)
   term.id = M._build_id()
-  term._state = {}
-  term:_reset_state()
+  term:_initialize_state()
   return term
 end
 
@@ -185,7 +183,32 @@ function Terminal:update(opts)
   for k, v in pairs(opts) do
     self[k] = v
   end
-  self:_reset_state()
+  self:_recompute_state()
+  return self
+end
+
+---Returns whether the terminal is started
+---
+---@return boolean
+function Terminal:is_started()
+  return self._state.bufnr ~= nil
+end
+
+---Start the job in the terminal
+---
+---It does not open the terminal window
+---
+---@return self
+function Terminal:start()
+  if not self:is_started() then
+    self._state.bufnr = vim.api.nvim_create_buf(false, false)
+    self:_add_to_state()
+    vim.api.nvim_buf_call(self._state.bufnr, function()
+      self._state.job_id = self:_start_job()
+    end)
+    autocommands.setup_term_buffer(self)
+    self:on_create()
+  end
   return self
 end
 
@@ -197,47 +220,6 @@ function Terminal:is_open()
   local win_type = vim.fn.win_gettype(self._state.window)
   local win_open = win_type == "" or win_type == "popup"
   return win_open and vim.api.nvim_win_get_buf(self._state.window) == self._state.bufnr
-end
-
----Set the last focused terminal
----
----@return Terminal
-function Terminal:set_last_focused()
-  state.last_focused = self
-  return self
-end
-
----Set the initial mode of the terminal
----
----This is insert when `start_in_insert` is true and normal otherwise
----
----@return Terminal
-function Terminal:set_initial_mode()
-  mode.set_initial_mode(self.start_in_insert)
-  return self
-end
-
----Set the return mode of the terminal
----
----If `persist_mode` is true, the terminal will return to the mode to the mode when it was closed.
----Otherwise, it will return to the initial mode
----
----@return Terminal
-function Terminal:set_return_mode()
-  if self.persist_mode then
-    self:_restore_mode()
-  else
-    self:set_initial_mode()
-  end
-  return self
-end
-
----Persist the mode of the terminal
----
----@return Terminal
-function Terminal:persist_mode()
-  self._state.mode = mode.get()
-  return self
 end
 
 ---Close the terminal window
@@ -253,6 +235,64 @@ function Terminal:close()
   return self
 end
 
+---Open the terminal window without focusing it
+---
+---@param direction string?
+---
+---@return self
+function Terminal:open(direction)
+  if not self:is_started() then self:start() end
+  if not self:is_open() then
+    local current_win = vim.api.nvim_get_current_win()
+    local computed_direction = direction or self._state.direction
+    if computed_direction == "top" then
+      vim.cmd("split")
+    elseif computed_direction == "bottom" then
+      vim.cmd("botright split")
+    elseif computed_direction == "left" then
+      vim.cmd("vsplit")
+    elseif computed_direction == "right" then
+      vim.cmd("botright vsplit")
+    elseif computed_direction == "tab" then
+      vim.cmd("tabnew")
+      vim.bo.bufhidden = "wipe"
+    elseif computed_direction == "float" then
+      ui.open_float(self)
+    end
+    self._state.direction = computed_direction
+    self._state.window = vim.api.nvim_get_current_win()
+    self._state.tabpage = vim.api.nvim_get_current_tabpage()
+    vim.api.nvim_win_set_buf(self._state.window, self._state.bufnr)
+    self:_set_options()
+    self:on_open()
+    vim.api.nvim_set_current_win(current_win)
+  end
+  return self
+end
+
+---Returns whether the terminal is focused
+---
+---@return boolean
+function Terminal:is_focused()
+  return self._state.window == vim.api.nvim_get_current_win()
+end
+
+---Focus the terminal window
+---
+---@param direction string?
+function Terminal:focus(direction)
+  if not self:is_started() then self:start() end
+  if not self:is_open() then self:open(direction) end
+  if not self:is_focused() then
+    vim.api.nvim_set_current_tabpage(self._state.tabpage)
+    vim.api.nvim_set_current_win(self._state.window)
+    self:_set_last_focused()
+    self:_set_initial_mode()
+  end
+  self:on_focus()
+  return self
+end
+
 ---Shutdown the terminal
 ---
 ---Close window and remove buffer
@@ -263,38 +303,50 @@ function Terminal:shutdown()
   self:_delete_reference_from_state()
 end
 
-function Terminal:scroll_bottom()
-  if not vim.api.nvim_buf_is_loaded(self._state.bufnr) or not vim.api.nvim_buf_is_valid(self._state.bufnr) then return end
-  if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self._state.bufnr, ui.scroll_to_bottom) end
+---Toggle the terminal window
+---
+---If the terminal is open, it will be closed. If it's closed, it will be focused
+---
+---@param direction string?
+---
+---@return Terminal
+function Terminal:toggle(direction)
+  if self:is_open() then
+    self:close()
+  else
+    self:focus(direction)
+  end
+  return self
 end
 
-function Terminal:is_focused() return self._state.window == vim.api.nvim_get_current_win() end
-
----Send a command to a running terminal
----@param cmd string|string[] Command(s) to send to the terminal
----@param mode? "interactive"|"visible"|"silent" How to handle the terminal:
+---Send text to the terminal
+---
+---@param input string[]
+---@param action? "interactive"|"visible"|"silent" How to handle the terminal:
 ---  - "interactive": Opens the terminal and focuses it (user can interact)
 ---  - "visible": Opens the terminal but keeps focus on original window (user can see output)
 ---  - "silent": Just sends the command without changing terminal visibility
-function Terminal:send(input, mode, trim, new_line)
-  local mode = mode or "interactive"
-  local trim = trim == nil or trim
-  local new_line = new_line == nil or new_line
+---@param trim? boolean Whether to trim leading and trailing whitespace from the input
+---@param new_line? boolean Whether to add a new line after the input
+function Terminal:send(input, action, trim, new_line)
+  local computed_action = action or "interactive"
+  local computed_trim = trim == nil or trim
+  local computed_new_line = new_line == nil or new_line
   local caller_window = vim.api.nvim_get_current_win()
-  if new_line then
+  if computed_new_line then
     table.insert(input, "")
   end
-  if trim then
+  if computed_trim then
     for i, line in ipairs(input) do
       input[i] = line:gsub("^%s+", ""):gsub("%s+$", "")
     end
   end
   vim.fn.chansend(self._state.job_id, input)
-  self:scroll_bottom()
-  if mode ~= "silent" and not self:is_open() then
+  self:_scroll_bottom()
+  if computed_action ~= "silent" and not self:is_open() then
     self:open()
   end
-  if mode == "interactive" then
+  if computed_action == "interactive" then
     self:focus()
   else
     vim.schedule(function()
@@ -303,110 +355,46 @@ function Terminal:send(input, mode, trim, new_line)
   end
 end
 
---check for os type and perform os specific clear command
+---Clear the terminal screen
 function Terminal:clear()
   local clear = utils.is_windows() and "cls" or "clear"
-  self:send(clear)
+  self:send({ clear })
 end
 
----Update the directory of an already opened terminal
----@param dir string
-function Terminal:change_dir(dir, mode)
-  dir = utils.get_dir(dir)
-  if self.dir == dir then return end
-  self:send({ string.format("cd %s", dir), self:clear() }, mode)
-  self.dir = dir
+function Terminal:on_buf_enter()
+  self:_set_ft_options()
+  self:_set_return_mode()
 end
 
-function Terminal:set_ft_options()
+function Terminal:on_term_close()
+  self:_delete_reference_from_state()
+end
+
+function Terminal:on_win_leave()
+  if self.persist_mode then self:_persist_mode() end
+  if ui.is_float() then self:close() end
+end
+
+---@private
+function Terminal:_set_ft_options()
   local buf = vim.bo[self._state.bufnr]
   buf.filetype = constants.FILETYPE
   buf.buflisted = false
 end
 
----@package
-function Terminal:__set_win_options()
+---@private
+function Terminal:_set_win_options()
   if config.hide_numbers then
     utils.wo_setlocal(self._state.window, "number", false)
     utils.wo_setlocal(self._state.window, "relativenumber", false)
   end
 end
 
-function Terminal:set_options()
-  self:set_ft_options()
-  self:__set_win_options()
+---@private
+function Terminal:_set_options()
+  self:_set_ft_options()
+  self:_set_win_options()
   vim.b[self._state.bufnr].toggle_number = self.id
-end
-
-function Terminal:is_started()
-  return self._state.bufnr ~= nil
-end
-
-function Terminal:start()
-  if not self:is_started() then
-    self._state.bufnr = vim.api.nvim_create_buf(false, false)
-    self:_add_to_state()
-    vim.api.nvim_buf_call(self._state.bufnr, function()
-      self._state.job_id = self:_start_job()
-    end)
-    autocommands.setup_term_buffer(self)
-    self:on_create()
-  end
-  return self
-end
-
-function Terminal:open(direction)
-  if not self:is_started() then self:start() end
-  if not self:is_open() then
-    local current_win = vim.api.nvim_get_current_win()
-    local direction = direction or self._state.direction
-    if direction == "top" then
-      vim.cmd("split")
-    elseif direction == "bottom" then
-      vim.cmd("botright split")
-    elseif direction == "left" then
-      vim.cmd("vsplit")
-    elseif direction == "right" then
-      vim.cmd("botright vsplit")
-    elseif direction == "tab" then
-      vim.cmd("tabnew")
-      vim.bo.bufhidden = "wipe"
-    elseif direction == "float" then
-      ui.open_float(self)
-    end
-    self._state.direction = direction
-    self._state.bufr = vim.api.nvim_create_buf(false, false)
-    self._state.window = vim.api.nvim_get_current_win()
-    self._state.tabpage = vim.api.nvim_get_current_tabpage()
-    vim.api.nvim_win_set_buf(self._state.window, self._state.bufnr)
-    self:set_options()
-    self:on_open()
-    vim.api.nvim_set_current_win(current_win)
-  end
-  return self
-end
-
----@param direction string?
-function Terminal:focus(direction)
-  if not self:is_started() then self:start() end
-  if not self:is_open() then self:open(direction) end
-  if not self:is_focused() then
-    vim.api.nvim_set_current_tabpage(self._state.tabpage)
-    vim.api.nvim_set_current_win(self._state.window)
-    self:set_last_focused()
-    self:set_initial_mode()
-  end
-  self:on_focus()
-  return self
-end
-
-function Terminal:toggle(direction)
-  if self:is_open() then
-    self:close()
-  else
-    self:focus(direction)
-  end
-  return self
 end
 
 ---@private
@@ -420,7 +408,7 @@ end
 
 ---@private
 function Terminal:_add_to_state()
-  state.terminals[self.id] = self
+  M._state.terminals[self.id] = self
 end
 
 ---@private
@@ -439,18 +427,35 @@ end
 ---@private
 function Terminal:_build_output_handler(callback)
   return function(channel_id, data, name)
-    if self.auto_scroll then self:scroll_bottom() end
+    if self.auto_scroll then self:_scroll_bottom() end
     callback(self, channel_id, data, name)
   end
 end
 
 ---@api private
 function Terminal:_delete_reference_from_state()
-  state.terminals[self.id] = nil
+  M._state.terminals[self.id] = nil
 end
 
 ---@private
-function Terminal:_reset_state()
+function Terminal:_initialize_state()
+  self._state = {
+    cmd = self:_build_command(),
+    mode = mode.get_initial_mode(self.start_in_insert),
+    dir = self:_build_dir(),
+    direction = self.direction,
+    on_job_exit = self:_build_exit_handler(self.on_job_exit),
+    on_job_stdout = self:_build_output_handler(self.on_job_stdout),
+    on_job_stnderr = self:_build_output_handler(self.on_job_stnderr),
+    bufnr = nil,
+    job_id = nil,
+    window = nil,
+    tabpage = nil
+  }
+end
+
+---@private
+function Terminal:_recompute_state()
   self._state.cmd = self:_build_command()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
   self._state.dir = self:_build_dir()
@@ -496,7 +501,6 @@ function Terminal:_build_dir()
         vim.log.levels.ERROR
       )
     end
-    return dir
   end
   return dir
 end
@@ -520,9 +524,43 @@ function Terminal:_restore_mode()
   return self
 end
 
+---@private
+function Terminal:_set_last_focused()
+  M._state.last_focused = self
+  return self
+end
+
+---@private
+function Terminal:_set_return_mode()
+  if self.persist_mode then
+    self:_restore_mode()
+  else
+    self:_set_initial_mode()
+  end
+  return self
+end
+
+---@private
+function Terminal:_persist_mode()
+  self._state.mode = mode.get()
+  return self
+end
+
+---@private
+function Terminal:_set_initial_mode()
+  mode.set_initial_mode(self.start_in_insert)
+  return self
+end
+
+---@private
+function Terminal:_scroll_bottom()
+  if not vim.api.nvim_buf_is_loaded(self._state.bufnr) or not vim.api.nvim_buf_is_valid(self._state.bufnr) then return end
+  if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self._state.bufnr, ui.scroll_to_bottom) end
+end
+
 if _G.IS_TEST then
   function M.__reset()
-    for _, term in pairs(state.terminals) do
+    for _, term in pairs(M._state.terminals) do
       term:shutdown()
     end
   end

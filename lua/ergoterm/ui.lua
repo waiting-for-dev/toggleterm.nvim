@@ -70,7 +70,7 @@ function M.open_float(term)
   utils.wo_setlocal(win, "sidescrolloff", 0)
 
   if opts.winblend then utils.wo_setlocal(win, "winblend", opts.winblend) end
-  term:set_options()
+  term:_set_options()
 end
 
 ---Updates the floating terminal size
