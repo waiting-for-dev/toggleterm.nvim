@@ -6,16 +6,16 @@ local M = {}
 
 local fn, api, opt = vim.fn, vim.api, vim.opt
 local fmt = string.format
-local levels = vim.log.levels
 
 ---@alias error_types 'error' | 'info' | 'warn'
+---
 ---Inform a user about something
+---
 ---@param msg string
 ---@param level error_types
 function M.notify(msg, level)
-  local err = level:upper()
-  level = level and levels[err] or levels.INFO
-  vim.schedule(function() vim.notify(msg, level, { title = "Ergoterm" }) end)
+  local computed_level = level:upper()
+  vim.schedule(function() vim.notify(msg, vim.log.levels[computed_level], { title = "Ergoterm" }) end)
 end
 
 ---@private
@@ -164,9 +164,9 @@ function M.get_dir(dir)
   else
     parsed_dir = vim.fn.expand(dir)
     if vim.fn.isdirectory(parsed_dir) == 0 then
-      vim.notify(
+      M.notify(
         string.format("%s is not a directory", parsed_dir),
-        vim.log.levels.ERROR
+        "error"
       )
     end
   end

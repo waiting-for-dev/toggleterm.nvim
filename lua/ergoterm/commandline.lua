@@ -1,5 +1,5 @@
 local fn = vim.fn
-local u = require("ergoterm.utils")
+local utils = require("ergoterm.utils")
 
 local M = {}
 
@@ -14,7 +14,7 @@ local function toboolean(value)
   elseif value == "false" then
     return false
   else
-    vim.notify("Invalid value for boolean option, expected 'true' or 'false'", vim.log.levels.ERROR)
+    utils.notify("Invalid value for boolean option, expected 'true' or 'false'", "error")
   end
 end
 
@@ -46,7 +46,7 @@ function M.parse(args)
         -- Check if the current OS is Windows so we can determine if +shellslash
         -- exists and if it exists, then determine if it is enabled. In that way,
         -- we can determine if we should match the value with single or double quotes.
-        if u.is_windows() then
+        if utils.is_windows() then
           quotes = not vim.opt.shellslash:get() and quotes or p.single
         else
           quotes = p.single
@@ -120,7 +120,7 @@ local all_options = {
       local dir_cmds = vim.split(vim.fn.glob(glob_str), "\n")
 
       for _, cmd in ipairs(dir_cmds) do
-        if not u.str_is_empty(cmd) then table.insert(commands, vim.fn.fnamemodify(cmd, ":t")) end
+        if not utils.str_is_empty(cmd) then table.insert(commands, vim.fn.fnamemodify(cmd, ":t")) end
       end
     end
 
@@ -138,7 +138,7 @@ local all_options = {
       function(entry) return vim.fn.isdirectory(safe_path .. "/" .. entry) end
     )
 
-    if not u.str_is_empty(search_term) then
+    if not utils.str_is_empty(search_term) then
       paths = vim.tbl_filter(
         function(path) return path:match("^" .. search_term .. "*") ~= nil end,
         paths
@@ -146,7 +146,7 @@ local all_options = {
     end
 
     return vim.tbl_map(
-      function(path) return u.concat_without_empty({ base_path, path }, "/") end,
+      function(path) return utils.concat_without_empty({ base_path, path }, "/") end,
       paths
     )
   end,
@@ -162,7 +162,7 @@ local all_options = {
       "tab",
       "buffer",
     }
-    if u.str_is_empty(typed_direction) then return directions end
+    if utils.str_is_empty(typed_direction) then return directions end
     return vim.tbl_filter(
       function(direction) return direction:match("^" .. typed_direction .. "*") ~= nil end,
       directions
@@ -181,7 +181,7 @@ local all_options = {
       "silent",
       "visible"
     }
-    if u.str_is_empty(typed_action) then return actions end
+    if utils.str_is_empty(typed_action) then return actions end
     return vim.tbl_filter(
       function(action) return action:match("^" .. typed_action .. "*") ~= nil end,
       actions

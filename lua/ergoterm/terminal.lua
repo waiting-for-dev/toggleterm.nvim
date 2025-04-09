@@ -496,9 +496,9 @@ function Terminal:_build_dir()
   else
     dir = vim.fn.expand(self.dir)
     if vim.fn.isdirectory(dir) == 0 then
-      vim.notify(
+      utils.notify(
         string.format("%s is not a directory", dir),
-        vim.log.levels.ERROR
+        "error"
       )
     end
   end
