@@ -146,7 +146,7 @@ local all_options = {
     end
 
     return vim.tbl_map(
-      function(path) return utils.concat_without_empty({ base_path, path }, "/") end,
+      function(path) return table.concat(utils.tbl_filter_empty({ base_path, path }), "/") end,
       paths
     )
   end,

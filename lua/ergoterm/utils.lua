@@ -31,24 +31,24 @@ function M.git_dir()
   end
 end
 
----@param str string|nil
+---Whether a string is empty or not
+---
+---@param str string?
 ---@return boolean
-function M.str_is_empty(str) return str == nil or str == "" end
+function M.str_is_empty(str)
+  return str == nil or str == ""
+end
 
+---Filters a table for empty strings
+---
 ---@param tbl table
 ---@return table
 function M.tbl_filter_empty(tbl)
   return vim.tbl_filter(
-  ---@param str string|nil
     function(str) return not M.str_is_empty(str) end,
     tbl
   )
 end
-
---- Concats a table ignoring empty entries
----@param tbl table
----@param sep string
-function M.concat_without_empty(tbl, sep) return table.concat(M.tbl_filter_empty(tbl), sep) end
 
 ---@param mode "visual" | "motion"
 ---@return table
@@ -95,7 +95,7 @@ function M.get_visual_selection(res, motion)
 
   -- block-visual
   -- return the lines encompassed by the selection, each truncated by the start and end columns
-  if mode == "\x16" then
+  if mode == string.char(22) then
     local _, start_col = unpack(res.start_pos)
     local _, end_col = unpack(res.end_pos)
     -- exclude the last col of the block if "selection" is set to "exclusive"
