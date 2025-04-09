@@ -1,11 +1,12 @@
+---Utility functions to avoid some repetition
+---
+---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
+
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
 
 local M = {}
-
-local fn, api, opt = vim.fn, vim.api, vim.opt
-local fmt = string.format
 
 ---@alias error_types 'error' | 'info' | 'warn'
 ---
@@ -22,8 +23,8 @@ end
 ---
 ---@return string?
 function M.git_dir()
-  local gitdir = fn.system(fmt("git -C %s rev-parse --show-toplevel", fn.expand("%:p:h")))
-  local isgitdir = fn.matchstr(gitdir, "^fatal:.*") == ""
+  local gitdir = vim.fn.system(string.format("git -C %s rev-parse --show-toplevel", vim.fn.expand("%:p:h")))
+  local isgitdir = vim.fn.matchstr(gitdir, "^fatal:.*") == ""
   if isgitdir then
     return vim.trim(gitdir)
   else
@@ -56,33 +57,54 @@ end
 ---@param option string
 ---@param value any
 function M.wo_setlocal(win, option, value)
-  api.nvim_set_option_value(option, value, { scope = "local", win = win })
+  vim.api.nvim_set_option_value(option, value, { scope = "local", win = win })
 end
 
+---Check if the current shell is a Windows shell
+---
+---@return boolean
 function M.is_windows()
-  return fn.has("win32") == 1
+  return vim.fn.has("win32") == 1
 end
 
+---Check if the current shell is a WSL shell
+---
+---@return boolean
 function M.is_cmd(shell)
   return shell:find("cmd")
 end
 
+---Check if the current shell is a Powershell shell
+---
+---@param shell string
 function M.is_pwsh(shell)
   return shell:find("pwsh") or shell:find("powershell")
 end
 
+---Check if the current shell is a Nushell shell
+---
+---@param shell string
 function M.is_nushell(shell)
   return shell:find("nu")
 end
 
+---Return the shell command separator
+---
+---@return string
 function M.get_command_sep()
   return M.is_windows() and M.is_cmd(vim.o.shell) and "&" or ";"
 end
 
+---Return the shell command separator for comments
+---
+---@return string
 function M.get_comment_sep()
   return M.is_windows() and M.is_cmd(vim.o.shell) and "::" or "#"
 end
 
+---Return the newline character for the current shell
+---
+---@return string
 function M.get_newline_chr()
   local shell = config.get("shell")
   if type(shell) == "function" then shell = shell() end
@@ -95,7 +117,8 @@ function M.get_newline_chr()
   end
 end
 
----get the directory for the terminal parsing special arguments
+---Get the directory to use for the terminal
+---
 ---@param dir string?
 ---@return string?
 function M.get_dir(dir)
