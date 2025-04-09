@@ -18,14 +18,17 @@ function M.notify(msg, level)
   vim.schedule(function() vim.notify(msg, vim.log.levels[computed_level], { title = "Ergoterm" }) end)
 end
 
----@private
 ---Helper function to derive the current git directory path
----@return string|nil
+---
+---@return string?
 function M.git_dir()
   local gitdir = fn.system(fmt("git -C %s rev-parse --show-toplevel", fn.expand("%:p:h")))
   local isgitdir = fn.matchstr(gitdir, "^fatal:.*") == ""
-  if not isgitdir then return end
-  return vim.trim(gitdir)
+  if isgitdir then
+    return vim.trim(gitdir)
+  else
+    M.notify("Not a valid git directory", "error")
+  end
 end
 
 ---@param str string|nil
