@@ -1,14 +1,13 @@
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
----@module "ergoterm.config"
-local config = lazy.require("ergoterm.config")
----@module "ergoterm.constants"
-local constants = lazy.require("ergoterm.constants")
 ---@module "ergoterm.ui"
 local ui = lazy.require("ergoterm.ui")
 ---@module "ergoterm.terminal"
 local terms = lazy.require("ergoterm.terminal")
+
+local AUGROUP = "ErgoTermAutoCommands"
+local BUFFER_AUGROUP = "ErgoTermBufferAutoCommands"
 
 local M = {}
 
@@ -38,42 +37,42 @@ end
 
 -- Setup autocommands for the plugin.
 function M.setup()
-  vim.api.nvim_create_augroup(constants.AUGROUP, { clear = true })
+  vim.api.nvim_create_augroup(AUGROUP, { clear = true })
   local ergoterm_pattern = { "term://*#ergoterm#*", "term://*::ergoterm::*" }
 
   vim.api.nvim_create_autocmd("BufEnter", {
-    group = constants.AUGROUP,
+    group = AUGROUP,
     pattern = ergoterm_pattern,
     nested = true, -- this is necessary in case the buffer is the last
     callback = M.on_buf_enter
   })
 
   vim.api.nvim_create_autocmd("WinLeave", {
-    group = constants.AUGROUP,
+    group = AUGROUP,
     pattern = ergoterm_pattern,
     callback = M.on_win_leave
   })
 
   vim.api.nvim_create_autocmd("FileType", {
-    group = constants.AUGROUP,
+    group = AUGROUP,
     pattern = ergoterm_pattern,
     callback = M.on_filetype
   })
 end
 
 function M.setup_term_buffer(term)
-  vim.api.nvim_create_augroup(constants.BUFFER_AUGROUP, { clear = true })
+  vim.api.nvim_create_augroup(BUFFER_AUGROUP, { clear = true })
 
   vim.api.nvim_create_autocmd("TermClose", {
     buffer = term._state.bufnr,
-    group = constants.BUFFER_AUGROUP,
+    group = BUFFER_AUGROUP,
     callback = function() M.on_term_close(term) end
   })
 
   if ui.is_float() then
     vim.api.nvim_create_autocmd("VimResized", {
       buffer = term._state.bufnr,
-      group = constants.BUFFER_AUGROUP,
+      group = BUFFER_AUGROUP,
       callback = function() terms.on_vim_resized_if_float(term) end
     })
   end

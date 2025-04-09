@@ -1,9 +1,4 @@
-local constants = require("ergoterm.constants")
-local utils = require("ergoterm.utils")
-
 local M = {}
-
-local fmt = string.format
 
 local NULL_CALLBACK = function(...) end
 
@@ -43,8 +38,6 @@ local config = {
   close_on_job_exit = true,
   clear_env = false,
   direction = "bottom",
-  shading_factor = constants.shading_amount,
-  shading_ratio = constants.shading_ratio,
   shell = vim.o.shell,
   picker = nil,
   autochdir = false,

@@ -1,5 +1,7 @@
 ---Main module giving access to the terminal API
 
+local FILETYPE = "ErgoTerm"
+
 local M = {}
 
 ---@module "ergoterm.lazy"
@@ -9,8 +11,6 @@ local lazy = require("ergoterm.lazy")
 local autocommands = lazy.require("ergoterm.autocommands")
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
----@module "ergoterm.constants"
-local constants = lazy.require("ergoterm.constants")
 ---@module "ergoterm.mode"
 local mode = lazy.require("ergoterm.mode")
 ---@module "ergoterm.ui"
@@ -378,7 +378,7 @@ end
 ---@private
 function Terminal:_set_ft_options()
   local buf = vim.bo[self._state.bufnr]
-  buf.filetype = constants.FILETYPE
+  buf.filetype = FILETYPE
   buf.buflisted = false
 end
 
@@ -477,7 +477,7 @@ function Terminal:_build_command()
     cmd,
     command_sep,
     comment_sep,
-    constants.FILETYPE,
+    FILETYPE,
     comment_sep,
     self.id,
   })
