@@ -79,7 +79,7 @@ end
 
 function M._detect_picker()
   if require("fzf-lua") then
-    return require("ergoterm.pickers.fzf-lua")
+    return require("ergoterm.pickers.fzf_lua")
   else
     return require("ergoterm.pickers.vim-ui-select")
   end
