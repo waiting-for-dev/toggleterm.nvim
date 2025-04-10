@@ -5,6 +5,8 @@ local lazy = require("ergoterm.lazy")
 
 ---@module "ergoterm.commandline"
 local commandline = lazy.require("ergoterm.commandline")
+---@module "ergoterm.config"
+local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.terminal"
 local terms = lazy.require("ergoterm.terminal")
 ---@module "ergoterm.ui"
@@ -32,9 +34,8 @@ end
 ---
 ---Actions are defined in the picker configuration.
 ---
----@param conf ErgoTermConfig
-function M.select(conf)
-  local picker = conf.resolved_picker
+---@param picker Picker
+function M.select(picker)
   terms.select(picker, "Please select a terminal to open (or focus): ",
     picker.select_actions())
 end
@@ -62,8 +63,8 @@ end
 ---@param args string
 ---@param range number
 ---@param bang boolean
----@param conf ErgoTermConfig
-function M.send(args, range, bang, conf)
+---@param picker Picker
+function M.send(args, range, bang, picker)
   local parsed = commandline.parse(args)
   vim.validate({
     cmd = { parsed.cmd, "string", true },
@@ -80,7 +81,7 @@ function M.send(args, range, bang, conf)
   if bang then
     send_to_terminal(terms.get_last_focused())
   else
-    terms.select(conf.resolved_picker, "Please select a terminal to send text: ",
+    terms.select(picker, "Please select a terminal to send text: ",
       { default = send_to_terminal })
   end
 end
@@ -93,8 +94,8 @@ end
 ---
 ---@param args string
 ---@param bang boolean
----@param conf ErgoTermConfig
-function M.update(args, bang, conf)
+---@param picker Picker
+function M.update(args, bang, picker)
   local parsed = commandline.parse(args)
   vim.validate({
     size = { parsed.size, "number", true },
@@ -108,7 +109,7 @@ function M.update(args, bang, conf)
   if bang then
     update_terminal(terms.get_last_focused())
   else
-    terms.select(conf.resolved_picker, "Please select a terminal to update: ",
+    terms.select(picker, "Please select a terminal to update: ",
       { default = update_terminal })
   end
 end
@@ -118,21 +119,22 @@ end
 ---@param conf ErgoTermConfig
 function M.setup(conf)
   local command = vim.api.nvim_create_user_command
+  local picker = config.build_picker(conf)
 
   command("TermNew", function(opts)
     M.new(opts.args)
   end, { complete = commandline.term_new_complete, nargs = "*" })
 
   command("TermSelect", function()
-    M.select(conf)
+    M.select(picker)
   end, { nargs = 0 })
 
   command("TermSend", function(opts)
-    M.send(opts.args, opts.range, opts.bang, conf)
+    M.send(opts.args, opts.range, opts.bang, picker)
   end, { nargs = "?", complete = commandline.term_send_complete, range = true, bang = true })
 
   command("TermUpdate", function(opts)
-    M.update(opts.args, opts.bang, conf)
+    M.update(opts.args, opts.bang, picker)
   end, { nargs = 1, complete = commandline.term_update_complete, bang = true })
 end
 

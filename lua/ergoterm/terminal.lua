@@ -26,10 +26,6 @@ M._state = {
   terminals = {}
 }
 
----@class Picker
----@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
----@field select_actions fun(): table<string, fun(term: Terminal)>
-
 ---Return currently focused terminal
 ---
 ---@return Terminal?
@@ -108,9 +104,9 @@ end
 ---@field direction string
 ---@field mode Mode
 ---@field job_id? number
----@field on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)
----@field on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
----@field on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
+---@field on_job_exit on_job_exit
+---@field on_job_stdout on_job_stdout
+---@field on_job_stnderr on_job_stnderr
 ---@field tabpage number?
 ---@field window number?
 
@@ -125,15 +121,15 @@ end
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
 ---@field float_opts table<string, any>?
----@field on_close fun(term:Terminal)? Callback to run when the terminal is closed. It takes the terminal as an argument.
----@field on_create fun(term:Terminal)? Callback to run when the terminal is created. It takes the terminal as an argument.
----@field on_focus fun(term:Terminal)? Callback to run when the terminal is focused. It takes the terminal as an argument.
----@field on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)? Callback to run when the
----@field on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)?
----@field on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)?
----@field on_open fun(term:Terminal)?
----@field on_shutdown fun(term:Terminal)?
----@field on_start fun(term:Terminal)?
+---@field on_close on_close? Callback to run when the terminal is closed. It takes the terminal as an argument.
+---@field on_create on_create? Callback to run when the terminal is created. It takes the terminal as an argument.
+---@field on_focus on_focus? Callback to run when the terminal is focused. It takes the terminal as an argument.
+---@field on_job_exit on_job_exit? Callback to run when the
+---@field on_job_stnderr on_job_stnderr?
+---@field on_job_stdout on_job_stdout?
+---@field on_open on_open?
+---@field on_shutdown on_shutdown?
+---@field on_start on_start?
 ---@field persist_mode boolean? whether or not to persist the mode of the terminal on return
 ---@field start_in_insert boolean?
 
@@ -155,7 +151,6 @@ function Terminal:new(args)
   term.cmd = term.cmd or config.get("shell")
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
   term.close_on_job_exit = vim.F.if_nil(term.close_on_job_exit, conf.close_on_job_exit)
-  term.name = term.name or term.cmd or config.get("shell")
   term.direction = term.direction or conf.direction
   term.env = vim.F.if_nil(term.env, conf.env)
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
@@ -172,6 +167,7 @@ function Terminal:new(args)
   term.on_shutdown = vim.F.if_nil(term.on_shutdown, conf.on_shutdown)
   term.id = M._build_id()
   term:_initialize_state()
+  term.name = term.name or term.cmd or term._state.cmd
   return term
 end
 
@@ -440,17 +436,17 @@ end
 ---@private
 function Terminal:_initialize_state()
   self._state = {
+    bufnr = nil,
     cmd = self:_build_command(),
-    mode = mode.get_initial_mode(self.start_in_insert),
     dir = self:_build_dir(),
     direction = self.direction,
+    job_id = nil,
+    mode = mode.get_initial_mode(self.start_in_insert),
     on_job_exit = self:_build_exit_handler(self.on_job_exit),
     on_job_stdout = self:_build_output_handler(self.on_job_stdout),
     on_job_stnderr = self:_build_output_handler(self.on_job_stnderr),
-    bufnr = nil,
-    job_id = nil,
-    window = nil,
-    tabpage = nil
+    tabpage = nil,
+    window = nil
   }
 end
 
@@ -485,8 +481,6 @@ function Terminal:_build_command()
 end
 
 ---@private
----
----@return string?
 function Terminal:_build_dir()
   local dir = nil
   if self.dir == "git_dir" then

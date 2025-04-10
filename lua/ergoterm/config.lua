@@ -1,47 +1,54 @@
+---Configuration
+
+---@class Picker
+---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
+---@field select_actions fun(): table<string, fun(term: Terminal)>
+
 local M = {}
 
 local NULL_CALLBACK = function(...) end
 
---- @class Responsiveness
---- @field horizontal_breakpoint number
+---@alias on_close fun(term: Terminal)
+---@alias on_create fun(term: Terminal)
+---@alias on_focus fun(term: Terminal)
+---@alias on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)
+---@alias on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
+---@alias on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
+---@alias on_open fun(term: Terminal)
+---@alias on_shutdown fun(term: Terminal)
+---@alias on_start fun(term: Terminal)
 
---- @class ErgoTermConfig
---- @field shade_filetypes string[]
---- @field hide_numbers boolean
---- @field open_mapping string | string[]
---- @field shade_terminals boolean
---- @field insert_mappings boolean
---- @field terminal_mappings boolean
---- @field start_in_insert boolean
---- @field persist_mode boolean
---- @field close_on_job_exit boolean
---- @field clear_env boolean
---- @field shading_factor number
---- @field shading_ratio number
---- @field shell string|fun():string
---- @field auto_scroll boolean
---- @field float_opts table<string, any>
---- @field autochdir boolean
---- @field title_pos '"left"' | '"center"' | '"right"'
---- @field responsiveness Responsiveness
---- @field resolved_picker Picker
+---@class ErgoTermConfig
+---@field auto_scroll boolean
+---@field clear_env boolean
+---@field close_on_job_exit boolean
+---@field direction string?
+---@field float_opts table<string, any>
+---@field on_close on_close
+---@field on_create on_create
+---@field on_focus on_focus
+---@field on_job_exit on_job_exit
+---@field on_job_stdout on_job_stdout
+---@field on_job_stnderr on_job_stnderr
+---@field on_open on_open
+---@field on_shutdown on_shutdown
+---@field on_start on_start
+---@field persist_mode boolean
+---@field shell string|fun():string
+---@field start_in_insert boolean
+---@field picker Picker?
 
 ---@type ErgoTermConfig
 local config = {
-  shade_filetypes = {},
-  hide_numbers = true,
-  shade_terminals = true,
-  insert_mappings = true,
-  terminal_mappings = true,
-  start_in_insert = true,
-  persist_mode = false,
-  close_on_job_exit = true,
-  clear_env = false,
-  direction = "bottom",
-  shell = vim.o.shell,
-  picker = nil,
-  autochdir = false,
   auto_scroll = true,
+  clear_env = false,
+  close_on_job_exit = true,
+  direction = "bottom",
+  float_opts = {
+    winblend = 0,
+    title_pos = "left",
+  },
+  persist_mode = false,
   on_close = NULL_CALLBACK,
   on_create = NULL_CALLBACK,
   on_focus = NULL_CALLBACK,
@@ -51,26 +58,26 @@ local config = {
   on_start = NULL_CALLBACK,
   on_job_stnderr = NULL_CALLBACK,
   on_job_stdout = NULL_CALLBACK,
-  float_opts = {
-    winblend = 0,
-    title_pos = "left",
-  },
-  responsiveness = {
-    horizontal_breakpoint = 0,
-  },
+  picker = nil,
+  shell = vim.o.shell,
+  start_in_insert = true,
 }
 
-local function detect_picker()
-  if require("fzf-lua") then
-    return "fzf-lua"
+---Get the picker to select terminals
+---
+---@param conf ErgoTermConfig
+---
+---@return Picker
+function M.build_picker(conf)
+  if conf.picker == nil then
+    return M._detect_picker()
   else
-    return "vim-ui-select"
+    return conf.picker
   end
 end
 
-local function get_picker(conf)
-  local user_picker = conf.picker or detect_picker()
-  if user_picker == "fzf-lua" then
+function M._detect_picker()
+  if require("fzf-lua") then
     return require("ergoterm.pickers.fzf-lua")
   else
     return require("ergoterm.pickers.vim-ui-select")
@@ -90,7 +97,6 @@ end
 function M.set(user_conf)
   user_conf = user_conf or {}
   config = vim.tbl_deep_extend("force", config, user_conf)
-  config.resolved_picker = get_picker(config)
   return config
 end
 
