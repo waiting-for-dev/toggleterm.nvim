@@ -117,7 +117,7 @@ end
 ---@field close_on_job_exit boolean? whether or not to close the terminal window when the process exits
 ---@field dir string? the directory for the terminal
 ---@field direction string? the direction to open the terminal in the first time
----@field env table<string, string> environmental variables passed to jobstart()
+---@field env? table<string, string> environmental variables passed to jobstart()
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
 ---@field float_opts table<string, any>?
@@ -152,7 +152,7 @@ function Terminal:new(args)
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
   term.close_on_job_exit = vim.F.if_nil(term.close_on_job_exit, conf.close_on_job_exit)
   term.direction = term.direction or conf.direction
-  term.env = vim.F.if_nil(term.env, conf.env)
+  term.env = term.env
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)

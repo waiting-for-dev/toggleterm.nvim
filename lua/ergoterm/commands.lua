@@ -27,7 +27,7 @@ function M.new(args)
     name = { parsed.name, "string", true },
   })
   if parsed.size then parsed.size = tonumber(parsed.size) end
-  terms.Terminal:new({ size = parsed.size, dir = parsed.dir, direction = parsed.direction, name = parsed.name }):focus()
+  terms.Terminal:new({ dir = parsed.dir, direction = parsed.direction, name = parsed.name }):focus()
 end
 
 ---Selects a terminal and performs an action
