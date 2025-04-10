@@ -8,6 +8,7 @@ local M = {}
 
 local NULL_CALLBACK = function(...) end
 
+---@alias direction "buffer" | "bottom" | "left" | "right" | "tab" | "top" | "float"
 ---@alias on_close fun(term: Terminal)
 ---@alias on_create fun(term: Terminal)
 ---@alias on_focus fun(term: Terminal)
@@ -22,7 +23,7 @@ local NULL_CALLBACK = function(...) end
 ---@field auto_scroll boolean
 ---@field clear_env boolean
 ---@field close_on_job_exit boolean
----@field direction string?
+---@field direction direction
 ---@field float_opts table<string, any>
 ---@field on_close on_close
 ---@field on_create on_create

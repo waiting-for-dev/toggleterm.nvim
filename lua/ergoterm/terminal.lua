@@ -101,7 +101,7 @@ end
 ---@field bufnr number?
 ---@field cmd string
 ---@field dir? string
----@field direction string
+---@field direction direction
 ---@field mode Mode
 ---@field job_id? number
 ---@field on_job_exit on_job_exit
@@ -116,7 +116,7 @@ end
 ---@field clear_env? boolean use clean job environment, passed to jobstart()
 ---@field close_on_job_exit boolean? whether or not to close the terminal window when the process exits
 ---@field dir string? the directory for the terminal
----@field direction string? the direction to open the terminal in the first time
+---@field direction direction? the direction to open the terminal in the first time
 ---@field env? table<string, string> environmental variables passed to jobstart()
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
