@@ -102,6 +102,7 @@ end
 ---@field cmd string
 ---@field dir? string
 ---@field direction direction
+---@field float_opts table<string, any>
 ---@field mode Mode
 ---@field job_id? number
 ---@field on_job_exit on_job_exit
@@ -166,8 +167,8 @@ function Terminal:new(args)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
   term.on_shutdown = vim.F.if_nil(term.on_shutdown, conf.on_shutdown)
   term.id = M._build_id()
+  term.name = term.name or term.cmd
   term:_initialize_state()
-  term.name = term.name or term.cmd or term._state.cmd
   return term
 end
 
@@ -253,10 +254,13 @@ function Terminal:open(direction)
       vim.cmd("tabnew")
       vim.bo.bufhidden = "wipe"
     elseif computed_direction == "float" then
-      ui.open_float(self)
+      vim.api.nvim_open_win(self._state.bufnr, true, self._state.float_opts)
     end
     self._state.direction = computed_direction
     self._state.window = vim.api.nvim_get_current_win()
+    if computed_direction == "float" then
+      self:_set_float_options()
+    end
     self._state.tabpage = vim.api.nvim_get_current_tabpage()
     vim.api.nvim_win_set_buf(self._state.window, self._state.bufnr)
     self:_set_options()
@@ -440,6 +444,7 @@ function Terminal:_initialize_state()
     cmd = self:_build_command(),
     dir = self:_build_dir(),
     direction = self.direction,
+    float_opts = self:_build_float_opts(),
     job_id = nil,
     mode = mode.get_initial_mode(self.start_in_insert),
     on_job_exit = self:_build_exit_handler(self.on_job_exit),
@@ -456,6 +461,7 @@ function Terminal:_recompute_state()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
   self._state.dir = self:_build_dir()
   self._state.direction = self.direction
+  self._state.float_opts = self:_build_float_opts()
   self._state.on_job_exit = self:_build_exit_handler(self.on_job_exit)
   self._state.on_job_stdout = self:_build_output_handler(self.on_job_stdout)
   self._state.on_job_stnderr = self:_build_output_handler(self.on_job_stnderr)
@@ -497,6 +503,15 @@ function Terminal:_build_dir()
     end
   end
   return dir
+end
+
+---@private
+function Terminal:_build_float_opts()
+  local float_opts = self.float_opts
+  float_opts.title = self.name
+  float_opts.row = math.ceil(vim.o.lines - float_opts.height) * 0.5 - 1
+  float_opts.col = math.ceil(vim.o.columns - float_opts.width) * 0.5 - 1
+  return float_opts
 end
 
 ---@private
@@ -544,6 +559,13 @@ end
 function Terminal:_set_initial_mode()
   mode.set_initial_mode(self.start_in_insert)
   return self
+end
+
+---Sets the floating terminal options
+function Terminal:_set_float_options()
+  utils.wo_setlocal(self._state.window, "sidescrolloff", 0)
+  utils.wo_setlocal(self._state.window, "winblend", 30)
+  self:_set_options()
 end
 
 ---@private

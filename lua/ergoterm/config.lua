@@ -46,8 +46,12 @@ local config = {
   close_on_job_exit = true,
   direction = "bottom",
   float_opts = {
-    winblend = 0,
     title_pos = "left",
+    width = math.ceil(math.min(vim.o.columns, math.max(80, vim.o.columns - 20))),
+    height = math.ceil(math.min(vim.o.lines, math.max(20, vim.o.lines - 10))),
+    relative = "editor",
+    border = "single",
+    zindex = 50
   },
   persist_mode = false,
   on_close = NULL_CALLBACK,
