@@ -25,6 +25,7 @@ local NULL_CALLBACK = function(...) end
 ---@field close_on_job_exit boolean
 ---@field direction direction
 ---@field float_opts table<string, any>
+---@field float_winblend number
 ---@field on_close on_close
 ---@field on_create on_create
 ---@field on_focus on_focus
@@ -53,6 +54,7 @@ local config = {
     border = "single",
     zindex = 50
   },
+  float_winblend = 10,
   persist_mode = false,
   on_close = NULL_CALLBACK,
   on_create = NULL_CALLBACK,

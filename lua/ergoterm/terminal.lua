@@ -122,6 +122,7 @@ end
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
 ---@field float_opts table<string, any>?
+---@field float_winblend number
 ---@field on_close on_close? Callback to run when the terminal is closed. It takes the terminal as an argument.
 ---@field on_create on_create? Callback to run when the terminal is created. It takes the terminal as an argument.
 ---@field on_focus on_focus? Callback to run when the terminal is focused. It takes the terminal as an argument.
@@ -156,6 +157,7 @@ function Terminal:new(args)
   term.env = term.env
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
+  term.float_winblend = term.float_winblend or conf.float_winblend
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
   term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
@@ -258,9 +260,9 @@ function Terminal:open(direction)
     end
     self._state.direction = computed_direction
     self._state.window = vim.api.nvim_get_current_win()
-    if computed_direction == "float" then
-      self:_set_float_options()
-    end
+    -- if computed_direction == "float" then
+    --   self:_set_float_options()
+    -- end
     self._state.tabpage = vim.api.nvim_get_current_tabpage()
     vim.api.nvim_win_set_buf(self._state.window, self._state.bufnr)
     self:_set_options()
@@ -387,6 +389,9 @@ function Terminal:_set_win_options()
   utils.wo_setlocal(self._state.window, "number", false)
   utils.wo_setlocal(self._state.window, "signcolumn", "no")
   utils.wo_setlocal(self._state.window, "relativenumber", false)
+  if self.direction == "float" then
+    self:_set_float_options()
+  end
 end
 
 ---@private
@@ -563,8 +568,7 @@ end
 ---Sets the floating terminal options
 function Terminal:_set_float_options()
   utils.wo_setlocal(self._state.window, "sidescrolloff", 0)
-  utils.wo_setlocal(self._state.window, "winblend", 30)
-  self:_set_options()
+  utils.wo_setlocal(self._state.window, "winblend", self.float_winblend)
 end
 
 ---@private

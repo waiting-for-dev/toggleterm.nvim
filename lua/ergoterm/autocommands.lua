@@ -70,11 +70,11 @@ function M.setup_term_buffer(term)
   })
 
   if ui.is_float() then
-    vim.api.nvim_create_autocmd("VimResized", {
-      buffer = term._state.bufnr,
-      group = BUFFER_AUGROUP,
-      callback = function() terms.on_vim_resized_if_float(term) end
-    })
+    -- vim.api.nvim_create_autocmd("VimResized", {
+    --   buffer = term._state.bufnr,
+    --   group = BUFFER_AUGROUP,
+    --   callback = function() terms.on_vim_resized_if_float(term) end
+    -- })
   end
 end
 
