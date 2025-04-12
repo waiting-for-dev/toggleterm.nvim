@@ -384,10 +384,9 @@ end
 
 ---@private
 function Terminal:_set_win_options()
-  if config.hide_numbers then
-    utils.wo_setlocal(self._state.window, "number", false)
-    utils.wo_setlocal(self._state.window, "relativenumber", false)
-  end
+  utils.wo_setlocal(self._state.window, "number", false)
+  utils.wo_setlocal(self._state.window, "signcolumn", "no")
+  utils.wo_setlocal(self._state.window, "relativenumber", false)
 end
 
 ---@private
