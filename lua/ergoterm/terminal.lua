@@ -377,6 +377,10 @@ function Terminal:on_win_leave()
   if self._state.layout == "float" then self:close() end
 end
 
+function Terminal:bufnr()
+  return self._state.bufnr
+end
+
 ---@private
 function Terminal:_set_ft_options()
   local buf = vim.bo[self._state.bufnr]
