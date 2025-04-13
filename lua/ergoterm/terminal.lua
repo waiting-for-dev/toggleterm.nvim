@@ -45,7 +45,7 @@ function M.get_last_focused()
   return M._state.last_focused
 end
 
----Return all terminals sorted by id
+---Return all terminals
 ---
 ---@return Terminal[]
 function M.get_all()
@@ -53,7 +53,6 @@ function M.get_all()
   for _, v in pairs(M._state.terminals) do
     table.insert(result, v)
   end
-  table.sort(result, function(a, b) return a.id < b.id end)
   return result
 end
 
@@ -180,6 +179,7 @@ function Terminal:new(args)
   term.id = M._build_id()
   term.name = term.name or term.cmd
   term:_initialize_state()
+  term:_add_to_state()
   return term
 end
 
@@ -210,7 +210,6 @@ end
 function Terminal:start()
   if not self:is_started() then
     self._state.bufnr = vim.api.nvim_create_buf(false, false)
-    self:_add_to_state()
     vim.api.nvim_buf_call(self._state.bufnr, function()
       self._state.job_id = self:_start_job()
     end)
@@ -309,7 +308,9 @@ end
 function Terminal:shutdown()
   if self:is_open() then self:close() end
   self:on_shutdown()
-  vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
+  if self._state.bufnr then
+    vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
+  end
   self:_delete_reference_from_state()
 end
 

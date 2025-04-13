@@ -60,3 +60,22 @@ describe("get_last_focused", function()
     )
   end)
 end)
+
+describe("get_all", function()
+  it("returns all terminals", function()
+    local term1 = terms.Terminal:new()
+    local term2 = terms.Terminal:new()
+
+    local result = terms.get_all()
+
+    assert.equal(2, #result)
+    assert.is_true(vim.tbl_contains(result, term1))
+    assert.is_true(vim.tbl_contains(result, term2))
+  end)
+
+  it("returns empty table when no terminals exist", function()
+    local result = terms.get_all()
+
+    assert.equal(0, #result)
+  end)
+end)
