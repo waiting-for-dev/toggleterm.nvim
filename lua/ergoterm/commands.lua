@@ -16,7 +16,7 @@ local M = {}
 
 ---Creates and opens a new terminal
 ---
----Direction, size, name and working directory can be provided as arguments.
+---Direction, name and working directory can be provided as arguments.
 ---
 ---@param args string
 function M.new(args)
@@ -26,7 +26,6 @@ function M.new(args)
     direction = { parsed.direction, "string", true },
     name = { parsed.name, "string", true },
   })
-  if parsed.size then parsed.size = tonumber(parsed.size) end
   terms.Terminal:new({ dir = parsed.dir, direction = parsed.direction, name = parsed.name }):focus()
 end
 
@@ -88,7 +87,7 @@ end
 
 ---Updates a terminal
 ---
----The following fields can be updated by providing the corresponding arguments: size, dir, direction and name.
+---The following fields can be updated by providing the corresponding arguments: dir, direction and name.
 ---
 ---In bang mode, the last focused terminal will be used. Otherwise, the user will be prompted to select a terminal.
 ---
@@ -98,7 +97,6 @@ end
 function M.update(args, bang, picker)
   local parsed = commandline.parse(args)
   vim.validate({
-    size = { parsed.size, "number", true },
     dir = { parsed.dir, "string", true },
     direction = { parsed.direction, "string", true },
     name = { parsed.name, "string", true },
