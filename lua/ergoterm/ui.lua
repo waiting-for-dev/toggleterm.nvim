@@ -12,12 +12,6 @@ local api = vim.api
 --- @field term_id number ID for the terminal in the window
 --- @field window number window handle
 
-function M.scroll_to_bottom()
-  local info = vim.api.nvim_get_mode()
-  if info and (info.mode == "n" or info.mode == "nt") then vim.cmd("normal! G") end
-end
-
----Updates the floating terminal size
 ---@param term Terminal
 function M.update_float(term)
   if not vim.api.nvim_win_is_valid(term._state.window) then return end
@@ -28,18 +22,6 @@ end
 function M.is_float()
   local window = api.nvim_get_current_win()
   return fn.win_gettype(window) == "popup"
-end
-
----Return whether or not the terminal passed in has an open window
----@param term Terminal
----@return boolean
-function M.term_has_open_win(term)
-  if not term._state.window then return false end
-  local wins = {}
-  for _, tab in ipairs(api.nvim_list_tabpages()) do
-    vim.list_extend(wins, api.nvim_tabpage_list_wins(tab))
-  end
-  return vim.tbl_contains(wins, term._state.window)
 end
 
 function M.select_text(selection_type)

@@ -216,9 +216,11 @@ end
 ---@return boolean
 function Terminal:is_open()
   if not self._state.window then return false end
-  local win_type = vim.fn.win_gettype(self._state.window)
-  local win_open = win_type == "" or win_type == "popup"
-  return win_open and vim.api.nvim_win_get_buf(self._state.window) == self._state.bufnr
+  local wins = {}
+  for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+    vim.list_extend(wins, vim.api.nvim_tabpage_list_wins(tab))
+  end
+  return vim.tbl_contains(wins, self._state.window)
 end
 
 ---Close the terminal window
@@ -573,8 +575,9 @@ end
 
 ---@private
 function Terminal:_scroll_bottom()
-  if not vim.api.nvim_buf_is_loaded(self._state.bufnr) then return end
-  if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self._state.bufnr, ui.scroll_to_bottom) end
+  if self:is_open() then
+    vim.api.nvim_buf_call(self._state.bufnr, function() vim.cmd("normal! G") end)
+  end
 end
 
 if _G.IS_TEST then
