@@ -19,12 +19,23 @@ local NULL_CALLBACK = function(...) end
 ---@alias on_shutdown fun(term: Terminal)
 ---@alias on_start fun(term: Terminal)
 
+---@class FloatOpts
+---@field title_pos? string
+---@field width number
+---@field height number
+---@field relative? string
+---@field border? string
+---@field zindex? number
+---@field title? string
+---@field row? number
+---@field col? number
+
 ---@class ErgoTermConfig
 ---@field auto_scroll boolean
 ---@field clear_env boolean
 ---@field close_on_job_exit boolean
 ---@field direction direction
----@field float_opts table<string, any>
+---@field float_opts FloatOpts
 ---@field float_winblend number
 ---@field on_close on_close
 ---@field on_create on_create

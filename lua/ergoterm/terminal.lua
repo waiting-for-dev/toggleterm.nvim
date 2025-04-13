@@ -100,7 +100,7 @@ end
 ---@field cmd string
 ---@field dir? string
 ---@field direction direction
----@field float_opts table<string, any>
+---@field float_opts FloatOpts
 ---@field mode Mode
 ---@field job_id? number
 ---@field on_job_exit on_job_exit
@@ -119,8 +119,8 @@ end
 ---@field env? table<string, string> environmental variables passed to jobstart()
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
----@field float_opts table<string, any>?
----@field float_winblend number
+---@field float_opts FloatOpts? options for the floating window
+---@field float_winblend? number
 ---@field on_close on_close? Callback to run when the terminal is closed. It takes the terminal as an argument.
 ---@field on_create on_create? Callback to run when the terminal is created. It takes the terminal as an argument.
 ---@field on_focus on_focus? Callback to run when the terminal is focused. It takes the terminal as an argument.
@@ -154,7 +154,7 @@ function Terminal:new(args)
   term.direction = term.direction or conf.direction
   term.env = term.env
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
-  term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts)
+  term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts) --@type FloatOpts
   term.float_winblend = term.float_winblend or conf.float_winblend
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
@@ -511,7 +511,7 @@ end
 
 ---@private
 function Terminal:_build_float_opts()
-  local float_opts = self.float_opts
+  local float_opts = self.float_opts or {}
   float_opts.title = self.name
   float_opts.row = math.ceil(vim.o.lines - float_opts.height) * 0.5 - 1
   float_opts.col = math.ceil(vim.o.columns - float_opts.width) * 0.5 - 1
