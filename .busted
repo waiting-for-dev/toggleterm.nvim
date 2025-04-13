@@ -4,5 +4,6 @@ return {
     verbose = true,
     output = "tap",
     lpath = "lua/?.lua",
+    shuffle = true,
   }
 }

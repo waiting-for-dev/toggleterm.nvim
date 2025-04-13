@@ -38,6 +38,8 @@ end
 
 ---Return the last focused terminal
 ---
+---If no terminal has been focused, return nil.
+---
 ---@return Terminal?
 function M.get_last_focused()
   return M._state.last_focused
@@ -448,6 +450,9 @@ end
 
 ---@api private
 function Terminal:_delete_reference_from_state()
+  if M._state.last_focused == self then
+    M._state.last_focused = nil
+  end
   M._state.terminals[self.id] = nil
 end
 
