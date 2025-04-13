@@ -1,6 +1,3 @@
----@module "ergoterm.lazy"
-local lazy = require("ergoterm.lazy")
-
 ---@alias Mode "n" | "i" | "?"
 
 local M = {}
