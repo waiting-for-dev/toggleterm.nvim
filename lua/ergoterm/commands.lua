@@ -9,8 +9,8 @@ local commandline = lazy.require("ergoterm.commandline")
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.terminal"
 local terms = lazy.require("ergoterm.terminal")
----@module "ergoterm.ui"
-local ui = lazy.require("ergoterm.ui")
+---@module "ergoterm.text_selector"
+local text_selector = lazy.require("ergoterm.text_selector")
 
 local M = {}
 
@@ -74,7 +74,7 @@ function M.send(args, range, bang, picker)
   })
   local selection = range == 0 and "single_line" or
       (vim.fn.visualmode() == "V" and "visual_lines" or "visual_selection")
-  local input = parsed.cmd and { parsed.cmd } or ui.select_text(selection)
+  local input = parsed.cmd and { parsed.cmd } or text_selector.select(selection)
   local send_to_terminal = function(t)
     t:send(input, parsed.action, parsed.trim, parsed.new_line)
   end

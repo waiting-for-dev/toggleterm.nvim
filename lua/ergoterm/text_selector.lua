@@ -1,24 +1,17 @@
 local M = {}
 
-local lazy = require("ergoterm.lazy")
+---@alias selection_type "single_line" | "visual_lines" | "visual_selection" | "line" | "char"
 
-local fn = vim.fn
-local api = vim.api
-
----@alias SendSelection "single_line" | "visual_selection" | "visual_lines"
---- @class TerminalWindow
---- @field term_id number ID for the terminal in the window
---- @field window number window handle
-
-function M.select_text(selection_type)
+---@param selection_type selection_type
+function M.select(selection_type)
   local lines = {}
   -- Beginning of the selection: line number, column number
   local start_line, start_col
   if selection_type == "single_line" then
-    start_line, start_col = unpack(api.nvim_win_get_cursor(0))
+    start_line, start_col = unpack(vim.api.nvim_win_get_cursor(0))
     -- nvim_win_get_cursor uses 0-based indexing for columns, while we use 1-based indexing
     start_col = start_col + 1
-    table.insert(lines, fn.getline(start_line))
+    table.insert(lines, vim.fn.getline(start_line))
   else
     local res = nil
     if string.match(selection_type, "visual") then
@@ -46,7 +39,7 @@ end
 ---@private
 function M._get_visual_selection(res, motion)
   motion = motion or false
-  local mode = fn.visualmode()
+  local mode = vim.fn.visualmode()
   if motion then mode = "v" end
 
   -- line-visual
@@ -60,7 +53,7 @@ function M._get_visual_selection(res, motion)
     local end_line, end_col = unpack(res.end_pos)
     -- exclude the last char in text if "selection" is set to "exclusive"
     if vim.opt.selection:get() == "exclusive" then end_col = end_col - 1 end
-    return api.nvim_buf_get_text(0, start_line - 1, start_col - 1, end_line - 1, end_col, {})
+    return vim.api.nvim_buf_get_text(0, start_line - 1, start_col - 1, end_line - 1, end_col, {})
   end
 
   -- block-visual
@@ -93,9 +86,9 @@ function M._get_line_selection(mode)
   vim.cmd("normal! ")
 
   -- Get the start and the end of the selection
-  local start_line, start_col = unpack(fn.getpos(start_char), 2, 3)
-  local end_line, end_col = unpack(fn.getpos(end_char), 2, 3)
-  local selected_lines = api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  local start_line, start_col = unpack(vim.fn.getpos(start_char), 2, 3)
+  local end_line, end_col = unpack(vim.fn.getpos(end_char), 2, 3)
+  local selected_lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
   return {
     start_pos = { start_line, start_col },
     end_pos = { end_line, end_col },
