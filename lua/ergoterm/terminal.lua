@@ -573,7 +573,7 @@ end
 
 ---@private
 function Terminal:_scroll_bottom()
-  if not vim.api.nvim_buf_is_loaded(self._state.bufnr) or not vim.api.nvim_buf_is_valid(self._state.bufnr) then return end
+  if not vim.api.nvim_buf_is_loaded(self._state.bufnr) then return end
   if ui.term_has_open_win(self) then vim.api.nvim_buf_call(self._state.bufnr, ui.scroll_to_bottom) end
 end
 
