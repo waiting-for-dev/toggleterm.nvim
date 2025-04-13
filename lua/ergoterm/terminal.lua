@@ -578,7 +578,11 @@ end
 ---@private
 function Terminal:_scroll_bottom()
   if self:is_open() then
-    vim.api.nvim_buf_call(self._state.bufnr, function() vim.cmd("normal! G") end)
+    vim.api.nvim_buf_call(self._state.bufnr, function()
+      if mode.get() == mode.NORMAL then
+        vim.cmd("normal! G")
+      end
+    end)
   end
 end
 
