@@ -260,9 +260,6 @@ function Terminal:open(layout)
     end
     self._state.layout = computed_layout
     self._state.window = vim.api.nvim_get_current_win()
-    -- if computed_layout == "float" then
-    --   self:_set_float_options()
-    -- end
     self._state.tabpage = vim.api.nvim_get_current_tabpage()
     vim.api.nvim_win_set_buf(self._state.window, self._state.bufnr)
     self:_set_options()
