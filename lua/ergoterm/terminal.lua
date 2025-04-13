@@ -26,6 +26,8 @@ M._state = {
 
 ---Return currently focused terminal
 ---
+---If no terminal is focused, return nil.
+---
 ---@return Terminal?
 function M.get_focused()
   for _, term in pairs(M._state.terminals) do
@@ -93,6 +95,13 @@ function M.select(picker, prompt, callbacks)
   local terminals = M.get_all()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
   picker.select(terminals, prompt, callbacks)
+end
+
+function M.shutdown_all()
+  local terminals = M.get_all()
+  for _, term in ipairs(terminals) do
+    term:shutdown()
+  end
 end
 
 ---@class TerminalState
