@@ -16,17 +16,17 @@ local M = {}
 
 ---Creates and opens a new terminal
 ---
----Direction, name and working directory can be provided as arguments.
+---layout, name and working directory can be provided as arguments.
 ---
 ---@param args string
 function M.new(args)
   local parsed = commandline.parse(args)
   vim.validate({
     dir = { parsed.dir, "string", true },
-    direction = { parsed.direction, "string", true },
+    layout = { parsed.layout, "string", true },
     name = { parsed.name, "string", true },
   })
-  terms.Terminal:new({ dir = parsed.dir, direction = parsed.direction, name = parsed.name }):focus()
+  terms.Terminal:new({ dir = parsed.dir, layout = parsed.layout, name = parsed.name }):focus()
 end
 
 ---Selects a terminal and performs an action
@@ -87,7 +87,7 @@ end
 
 ---Updates a terminal
 ---
----The following fields can be updated by providing the corresponding arguments: dir, direction and name.
+---The following fields can be updated by providing the corresponding arguments: dir, layout and name.
 ---
 ---In bang mode, the last focused terminal will be used. Otherwise, the user will be prompted to select a terminal.
 ---
@@ -98,7 +98,7 @@ function M.update(args, bang, picker)
   local parsed = commandline.parse(args)
   vim.validate({
     dir = { parsed.dir, "string", true },
-    direction = { parsed.direction, "string", true },
+    layout = { parsed.layout, "string", true },
     name = { parsed.name, "string", true },
   })
   local update_terminal = function(t)

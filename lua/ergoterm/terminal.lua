@@ -99,7 +99,7 @@ end
 ---@field bufnr number?
 ---@field cmd string
 ---@field dir? string
----@field direction direction
+---@field layout layout
 ---@field float_opts FloatOpts
 ---@field mode Mode
 ---@field job_id? number
@@ -115,7 +115,7 @@ end
 ---@field clear_env? boolean use clean job environment, passed to jobstart()
 ---@field close_on_job_exit boolean? whether or not to close the terminal window when the process exits
 ---@field dir string? the directory for the terminal
----@field direction direction? the direction to open the terminal in the first time
+---@field layout layout? the layout to open the terminal in the first time
 ---@field env? table<string, string> environmental variables passed to jobstart()
 ---@field name string?
 ---@field newline_chr? string user specified newline chararacter
@@ -151,7 +151,7 @@ function Terminal:new(args)
   term.cmd = term.cmd or config.get("shell")
   term.clear_env = vim.F.if_nil(term.clear_env, conf.clear_env)
   term.close_on_job_exit = vim.F.if_nil(term.close_on_job_exit, conf.close_on_job_exit)
-  term.direction = term.direction or conf.direction
+  term.layout = term.layout or conf.layout
   term.env = term.env
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts) --@type FloatOpts
@@ -236,31 +236,31 @@ end
 
 ---Open the terminal window without focusing it
 ---
----@param direction string?
+---@param layout string?
 ---
 ---@return self
-function Terminal:open(direction)
+function Terminal:open(layout)
   if not self:is_started() then self:start() end
   if not self:is_open() then
     local current_win = vim.api.nvim_get_current_win()
-    local computed_direction = direction or self._state.direction
-    if computed_direction == "top" then
+    local computed_layout = layout or self._state.layout
+    if computed_layout == "top" then
       vim.cmd("split")
-    elseif computed_direction == "bottom" then
+    elseif computed_layout == "bottom" then
       vim.cmd("botright split")
-    elseif computed_direction == "left" then
+    elseif computed_layout == "left" then
       vim.cmd("vsplit")
-    elseif computed_direction == "right" then
+    elseif computed_layout == "right" then
       vim.cmd("botright vsplit")
-    elseif computed_direction == "tab" then
+    elseif computed_layout == "tab" then
       vim.cmd("tabnew")
       vim.bo.bufhidden = "wipe"
-    elseif computed_direction == "float" then
+    elseif computed_layout == "float" then
       vim.api.nvim_open_win(self._state.bufnr, true, self._state.float_opts)
     end
-    self._state.direction = computed_direction
+    self._state.layout = computed_layout
     self._state.window = vim.api.nvim_get_current_win()
-    -- if computed_direction == "float" then
+    -- if computed_layout == "float" then
     --   self:_set_float_options()
     -- end
     self._state.tabpage = vim.api.nvim_get_current_tabpage()
@@ -281,10 +281,10 @@ end
 
 ---Focus the terminal window
 ---
----@param direction string?
-function Terminal:focus(direction)
+---@param layout string?
+function Terminal:focus(layout)
   if not self:is_started() then self:start() end
-  if not self:is_open() then self:open(direction) end
+  if not self:is_open() then self:open(layout) end
   if not self:is_focused() then
     vim.api.nvim_set_current_tabpage(self._state.tabpage)
     vim.api.nvim_set_current_win(self._state.window)
@@ -309,14 +309,14 @@ end
 ---
 ---If the terminal is open, it will be closed. If it's closed, it will be focused
 ---
----@param direction string?
+---@param layout string?
 ---
 ---@return Terminal
-function Terminal:toggle(direction)
+function Terminal:toggle(layout)
   if self:is_open() then
     self:close()
   else
-    self:focus(direction)
+    self:focus(layout)
   end
   return self
 end
@@ -374,7 +374,7 @@ end
 
 function Terminal:on_win_leave()
   if self.persist_mode then self:_persist_mode() end
-  if self._state.direction == "float" then self:close() end
+  if self._state.layout == "float" then self:close() end
 end
 
 ---@private
@@ -389,7 +389,7 @@ function Terminal:_set_win_options()
   utils.wo_setlocal(self._state.window, "number", false)
   utils.wo_setlocal(self._state.window, "signcolumn", "no")
   utils.wo_setlocal(self._state.window, "relativenumber", false)
-  if self.direction == "float" then
+  if self.layout == "float" then
     self:_set_float_options()
   end
 end
@@ -447,7 +447,7 @@ function Terminal:_initialize_state()
     bufnr = nil,
     cmd = self:_build_command(),
     dir = self:_build_dir(),
-    direction = self.direction,
+    layout = self.layout,
     float_opts = self:_build_float_opts(),
     job_id = nil,
     mode = mode.get_initial_mode(self.start_in_insert),
@@ -464,7 +464,7 @@ function Terminal:_recompute_state()
   self._state.cmd = self:_build_command()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
   self._state.dir = self:_build_dir()
-  self._state.direction = self.direction
+  self._state.layout = self.layout
   self._state.float_opts = self:_build_float_opts()
   self._state.on_job_exit = self:_build_exit_handler(self.on_job_exit)
   self._state.on_job_stdout = self:_build_output_handler(self.on_job_stdout)

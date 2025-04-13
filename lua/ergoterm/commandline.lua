@@ -12,7 +12,7 @@ local p = {
 }
 
 ---@class ParsedArgs
----@field direction string?
+---@field layout string?
 ---@field cmd string?
 ---@field dir string?
 ---@field name string?
@@ -137,10 +137,10 @@ M._all_options = {
       paths
     )
   end,
-  --- Suggests directions for the term
-  ---@param typed_direction string
-  direction = function(typed_direction)
-    local directions = {
+  --- Suggests layouts for the term
+  ---@param typed_layout string
+  layout = function(typed_layout)
+    local layouts = {
       "float",
       "left",
       "right",
@@ -149,10 +149,10 @@ M._all_options = {
       "tab",
       "buffer",
     }
-    if utils.str_is_empty(typed_direction) then return directions end
+    if utils.str_is_empty(typed_layout) then return layouts end
     return vim.tbl_filter(
-      function(direction) return direction:match("^" .. typed_direction .. "*") ~= nil end,
-      directions
+      function(layout) return layout:match("^" .. typed_layout .. "*") ~= nil end,
+      layouts
     )
   end,
   --- The name param takes in arbitrary strings, we keep this function only to
@@ -179,12 +179,12 @@ M._all_options = {
 
 M._term_new_options = {
   dir = M._all_options.dir,
-  direction = M._all_options.direction,
+  layout = M._all_options.layout,
   name = M._all_options.name,
 }
 
 M._term_update_options = {
-  direction = M._all_options.direction,
+  layout = M._all_options.layout,
   name = M._all_options.name,
 }
 

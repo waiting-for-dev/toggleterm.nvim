@@ -8,7 +8,7 @@ local M = {}
 
 local NULL_CALLBACK = function(...) end
 
----@alias direction "buffer" | "bottom" | "left" | "right" | "tab" | "top" | "float"
+---@alias layout "buffer" | "bottom" | "left" | "right" | "tab" | "top" | "float"
 ---@alias on_close fun(term: Terminal)
 ---@alias on_create fun(term: Terminal)
 ---@alias on_focus fun(term: Terminal)
@@ -34,7 +34,7 @@ local NULL_CALLBACK = function(...) end
 ---@field auto_scroll boolean
 ---@field clear_env boolean
 ---@field close_on_job_exit boolean
----@field direction direction
+---@field layout layout
 ---@field float_opts FloatOpts
 ---@field float_winblend number
 ---@field on_close on_close
@@ -56,7 +56,7 @@ local config = {
   auto_scroll = true,
   clear_env = false,
   close_on_job_exit = true,
-  direction = "bottom",
+  layout = "bottom",
   float_opts = {
     title_pos = "left",
     width = math.ceil(math.min(vim.o.columns, math.max(80, vim.o.columns - 20))),
