@@ -1,0 +1,7 @@
+return {
+  _all = {
+    lua = "luajit",
+    verbose = true,
+    output = "utfTerminal",
+  }
+}
