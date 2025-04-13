@@ -583,15 +583,6 @@ function Terminal:_scroll_bottom()
   end
 end
 
-if _G.IS_TEST then
-  function M.__reset()
-    for _, term in pairs(M._state.terminals) do
-      term:shutdown()
-    end
-  end
-end
-
 M.Terminal = Terminal
-M.mode = mode
 
 return M
