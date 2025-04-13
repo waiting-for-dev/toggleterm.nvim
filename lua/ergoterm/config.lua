@@ -1,8 +1,12 @@
 ---Configuration
 
+---@class PickerCallbackDefinition
+---@field fn fun(term: Terminal) the function to run when the user selects a terminal
+---@field desc string the description of the action
+
 ---@class Picker
----@field select fun(term: Terminal[], prompt: string, callbacks: table<string, fun(term: Terminal)>)
----@field select_actions fun(): table<string, fun(term: Terminal)>
+---@field select fun(term: Terminal[], prompt: string, callbacks: table<string, PickerCallbackDefinition>)
+---@field select_actions fun(): table<string, PickerCallbackDefinition>
 
 local M = {}
 

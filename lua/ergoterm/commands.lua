@@ -81,7 +81,7 @@ function M.send(args, range, bang, picker)
     send_to_terminal(terms.get_last_focused())
   else
     terms.select(picker, "Please select a terminal to send text: ",
-      { default = send_to_terminal })
+      { default = { fn = send_to_terminal, desc = "send-text" } })
   end
 end
 
@@ -108,7 +108,7 @@ function M.update(args, bang, picker)
     update_terminal(terms.get_last_focused())
   else
     terms.select(picker, "Please select a terminal to update: ",
-      { default = update_terminal })
+      { default = { fn = update_terminal, desc = "update-terminal" } })
   end
 end
 

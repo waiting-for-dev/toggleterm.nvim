@@ -60,34 +60,37 @@ function M.get_options(terminals)
   return options
 end
 
-function M.get_actions(callbacks)
+function M.get_actions(definitions)
   local actions = {}
-  for key, callback in pairs(callbacks) do
-    actions[key] = function(selected)
-      local id = M.get_term_id_from_selected(selected[1])
-      local term = terms.get(id)
-      callback(term)
-    end
+  for key, definition in pairs(definitions) do
+    actions[key] = {
+      desc = definition.desc,
+      fn = function(selected)
+        local id = M.get_term_id_from_selected(selected[1])
+        local term = terms.get(id)
+        definition.fn(term)
+      end
+    }
   end
   return actions
 end
 
 function M.select_actions()
   return {
-    default = function(term) term:focus() end,
-    ["ctrl-b"] = function(term) term:focus("buffer") end,
-    ["ctrl-d"] = function(term) term:focus("bottom") end,
-    ["ctrl-r"] = function(term) term:focus("right") end,
-    ["ctrl-t"] = function(term) term:focus("tab") end
+    default = { fn = function(term) term:focus() end, desc = "open" },
+    ["ctrl-s"] = { fn = function(term) term:focus("bottom") end, desc = "open-in-horizontal-split" },
+    ["ctrl-v"] = { fn = function(term) term:focus("right") end, desc = "open-in-vertical-split" },
+    ["ctrl-t"] = { fn = function(term) term:focus("tab") end, desc = "open-in-tab" },
+    ["ctrl-f"] = { fn = function(term) term:focus("float") end, desc = "open-in-float-window" }
   }
 end
 
-function M.select(terminals, prompt, callbacks)
+function M.select(terminals, prompt, definitions)
   fzf_lua.fzf_exec(
     M.get_options(terminals),
     {
       prompt = prompt,
-      actions = M.get_actions(callbacks),
+      actions = M.get_actions(definitions),
       previewer = M.previewer
     }
   )

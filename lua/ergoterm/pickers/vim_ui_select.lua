@@ -2,7 +2,7 @@ local M = {}
 
 function M.select_actions()
   return {
-    default = function(term) term:focus() end
+    default = { fn = function(term) term:focus() end, desc = "" },
   }
 end
 

@@ -88,7 +88,7 @@ end
 ---
 ---@param picker Picker the picker to use
 ---@param prompt string the prompt to display
----@param callbacks table<string, fun(term: Terminal)> a table of callbacks to run when the user selects a terminal
+---@param callbacks table<string, PickerCallbackDefinition> a table of callbacks to run when the user selects a terminal
 function M.select(picker, prompt, callbacks)
   local terminals = M.get_all()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
