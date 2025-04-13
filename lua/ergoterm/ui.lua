@@ -1,8 +1,6 @@
 local M = {}
 
 local lazy = require("ergoterm.lazy")
----@module "ergoterm.utils"
-local utils = lazy.require("ergoterm.utils")
 
 local fn = vim.fn
 local api = vim.api
@@ -11,18 +9,6 @@ local api = vim.api
 --- @class TerminalWindow
 --- @field term_id number ID for the terminal in the window
 --- @field window number window handle
-
----@param term Terminal
-function M.update_float(term)
-  if not vim.api.nvim_win_is_valid(term._state.window) then return end
-  vim.api.nvim_win_set_config(term._state.window, M._get_float_config(term, false))
-end
-
----Determine if a window is a float
-function M.is_float()
-  local window = api.nvim_get_current_win()
-  return fn.win_gettype(window) == "popup"
-end
 
 function M.select_text(selection_type)
   local lines = {}

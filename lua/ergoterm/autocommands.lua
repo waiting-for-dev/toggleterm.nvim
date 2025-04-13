@@ -1,8 +1,6 @@
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
----@module "ergoterm.ui"
-local ui = lazy.require("ergoterm.ui")
 ---@module "ergoterm.terminal"
 local terms = lazy.require("ergoterm.terminal")
 
@@ -29,10 +27,6 @@ end
 
 function M.on_term_close(term)
   term:on_term_close()
-end
-
-function M.on_vim_resized_if_float(term)
-  ui.update_float(term)
 end
 
 -- Setup autocommands for the plugin.
@@ -68,14 +62,6 @@ function M.setup_term_buffer(term)
     group = BUFFER_AUGROUP,
     callback = function() M.on_term_close(term) end
   })
-
-  if ui.is_float() then
-    -- vim.api.nvim_create_autocmd("VimResized", {
-    --   buffer = term._state.bufnr,
-    --   group = BUFFER_AUGROUP,
-    --   callback = function() terms.on_vim_resized_if_float(term) end
-    -- })
-  end
 end
 
 return M

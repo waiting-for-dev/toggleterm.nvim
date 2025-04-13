@@ -13,8 +13,6 @@ local autocommands = lazy.require("ergoterm.autocommands")
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.mode"
 local mode = lazy.require("ergoterm.mode")
----@module "ergoterm.ui"
-local ui = lazy.require("ergoterm.ui")
 ---@module "ergoterm.utils"
 local utils = lazy.require("ergoterm.utils")
 
@@ -376,7 +374,7 @@ end
 
 function Terminal:on_win_leave()
   if self.persist_mode then self:_persist_mode() end
-  if ui.is_float() then self:close() end
+  if self._state.direction == "float" then self:close() end
 end
 
 ---@private
