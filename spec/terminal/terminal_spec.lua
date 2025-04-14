@@ -79,3 +79,21 @@ describe("get_all", function()
     assert.equal(0, #result)
   end)
 end)
+
+describe("get_started", function()
+  it("returns all started terminals", function()
+    local term1 = terms.Terminal:new():start()
+    local term2 = terms.Terminal:new()
+
+    local result = terms.get_started()
+
+    assert.equal(1, #result)
+    assert.is_true(vim.tbl_contains(result, term1))
+  end)
+
+  it("returns empty table when no terminals exist", function()
+    local result = terms.get_started()
+
+    assert.equal(0, #result)
+  end)
+end)

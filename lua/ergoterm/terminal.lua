@@ -56,6 +56,9 @@ function M.get_all()
   return result
 end
 
+---Return all terminals that are started
+---
+---@return Terminal[]
 function M.get_started()
   local result = {}
   for _, terminal in pairs(M.get_all()) do
