@@ -2,6 +2,19 @@
 
 local terms = require("ergoterm.terminal")
 
+local function mocking_vim_notify(callback)
+  local original_notify = vim.notify
+  vim.notify = function(msg, level, opts)
+    return {
+      msg = msg,
+      level = level,
+      opts = opts
+    }
+  end
+  callback()
+  vim.notify = original_notify
+end
+
 after_each(function()
   terms.shutdown_all()
 end)
@@ -126,5 +139,28 @@ describe("get_by_name", function()
 
   it("returns nil when terminal does not exist", function()
     assert.is_nil(terms.get_by_name("foo"))
+  end)
+end)
+
+describe("find", function()
+  it("returns terminal matching given predicate", function()
+    local term = terms.Terminal:new({ name = "test" })
+    terms.Terminal:new({ name = "foo" })
+
+    local result = terms.find(function(t)
+      return t.name == "test"
+    end)
+
+    assert.equal(result, term)
+  end)
+
+  it("returns nil when no terminal matches predicate", function()
+    terms.Terminal:new({ name = "foo" })
+
+    local result = terms.find(function(t)
+      return t.name == "bar"
+    end)
+
+    assert.is_nil(result)
   end)
 end)
