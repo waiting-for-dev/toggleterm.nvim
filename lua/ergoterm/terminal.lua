@@ -56,6 +56,16 @@ function M.get_all()
   return result
 end
 
+function M.get_started()
+  local result = {}
+  for _, terminal in pairs(M.get_all()) do
+    if terminal:is_started() then
+      table.insert(result, terminal)
+    end
+  end
+  return result
+end
+
 ---Get a single terminal by id
 ---
 ---@param id number?
@@ -93,7 +103,7 @@ end
 ---@param prompt string the prompt to display
 ---@param callbacks table<string, PickerCallbackDefinition> a table of callbacks to run when the user selects a terminal
 function M.select(picker, prompt, callbacks)
-  local terminals = M.get_all()
+  local terminals = M.get_started()
   if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
   picker.select(terminals, prompt, callbacks)
 end
