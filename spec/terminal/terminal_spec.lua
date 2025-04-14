@@ -89,11 +89,42 @@ describe("get_started", function()
 
     assert.equal(1, #result)
     assert.is_true(vim.tbl_contains(result, term1))
+    assert.is_false(vim.tbl_contains(result, term2))
   end)
 
   it("returns empty table when no terminals exist", function()
     local result = terms.get_started()
 
     assert.equal(0, #result)
+  end)
+end)
+
+describe("get", function()
+  it("returns terminal with given id", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(
+      term,
+      terms.get(term.id)
+    )
+  end)
+
+  it("returns nil when terminal does not exist", function()
+    assert.is_nil(terms.get(1))
+  end)
+end)
+
+describe("get_by_name", function()
+  it("returns terminal with given name", function()
+    local term = terms.Terminal:new({ name = "test" })
+
+    assert.equal(
+      term,
+      terms.get_by_name("test")
+    )
+  end)
+
+  it("returns nil when terminal does not exist", function()
+    assert.is_nil(terms.get_by_name("foo"))
   end)
 end)

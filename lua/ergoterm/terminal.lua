@@ -71,7 +71,7 @@ end
 
 ---Get a single terminal by id
 ---
----@param id number?
+---@param id number
 ---@return Terminal?
 function M.get(id)
   local term = M._state.terminals[id]
