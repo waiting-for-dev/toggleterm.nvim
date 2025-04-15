@@ -430,10 +430,12 @@ end
 ---@private
 function M._build_id()
   local terms = M.get_all()
-  for index, term in pairs(terms) do
-    if index ~= term.id then return index end
+  local last_term = terms[#terms]
+  if last_term then
+    return last_term.id + 1
+  else
+    return 1
   end
-  return #terms + 1
 end
 
 ---@private
