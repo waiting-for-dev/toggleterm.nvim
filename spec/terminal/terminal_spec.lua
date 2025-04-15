@@ -1,18 +1,21 @@
 ---@diagnostic disable: undefined-field
 
 local terms = require("ergoterm.terminal")
+local utils = require("ergoterm.utils")
 
-local function mocking_vim_notify(callback)
-  local original_notify = vim.notify
-  vim.notify = function(msg, level, opts)
-    return {
+local function mocking_notify(callback)
+  local result = nil
+  local original_notify = utils.notify
+  ---@diagnostic disable-next-line: duplicate-set-field
+  utils.notify = function(msg, level)
+    result = {
       msg = msg,
-      level = level,
-      opts = opts
+      level = level
     }
   end
   callback()
-  vim.notify = original_notify
+  utils.notify = original_notify
+  return result
 end
 
 after_each(function()
@@ -162,5 +165,43 @@ describe("find", function()
     end)
 
     assert.is_nil(result)
+  end)
+end)
+
+describe("select", function()
+  it("returns result of calling given picker with started terminal and given prompt and callbacks", function()
+    local picker = {
+      select = function(terminals, prompt, callbacks)
+        return { terminals, prompt, callbacks }
+      end
+    }
+    local term = terms.Terminal:new():start()
+    terms.Terminal:new()
+    local callbacks = {}
+
+    local result = terms.select(picker, "prompt", callbacks)
+
+    ---@diagnostic disable: need-check-nil
+    assert.equal(1, #result[1])
+    assert.is_true(vim.tbl_contains(result[1], term))
+    assert.equal("prompt", result[2])
+    assert.equal(callbacks, result[3])
+    ---@diagnostic enable: need-check-nil
+  end)
+
+  it("notifies when no terminals are started", function()
+    local picker = {
+      select = function()
+        return nil
+      end
+    }
+    local result = mocking_notify(function()
+      terms.select(picker, "prompt", {})
+    end)
+
+    ---@diagnostic disable: need-check-nil
+    assert.equal("No ergoterms have been started yet", result.msg)
+    assert.equal("info", result.level)
+    ---@diagnostic enable: need-check-nil
   end)
 end)

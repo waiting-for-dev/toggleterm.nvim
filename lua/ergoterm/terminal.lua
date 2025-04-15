@@ -100,15 +100,15 @@ function M.find(predicate)
   return nil
 end
 
----Prompts to select an open terminal
+---Calls given picker to prompt the user to select a terminal
 ---
----@param picker Picker the picker to use
----@param prompt string the prompt to display
+---@param picker Picker
+---@param prompt string
 ---@param callbacks table<string, PickerCallbackDefinition> a table of callbacks to run when the user selects a terminal
 function M.select(picker, prompt, callbacks)
   local terminals = M.get_started()
-  if #terminals == 0 then return utils.notify("No ergoterms are open yet", "info") end
-  picker.select(terminals, prompt, callbacks)
+  if #terminals == 0 then return utils.notify("No ergoterms have been started yet", "info") end
+  return picker.select(terminals, prompt, callbacks)
 end
 
 function M.shutdown_all()
