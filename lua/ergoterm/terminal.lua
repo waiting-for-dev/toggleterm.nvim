@@ -7,8 +7,6 @@ local M = {}
 ---@module "ergoterm.lazy"
 local lazy = require("ergoterm.lazy")
 
----@module "ergoterm.autocommands"
-local autocommands = lazy.require("ergoterm.autocommands")
 ---@module "ergoterm.config"
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.mode"
