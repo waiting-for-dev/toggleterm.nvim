@@ -1,6 +1,8 @@
 ---@diagnostic disable: undefined-field
 
 local terms = require("ergoterm.terminal")
+
+local config = require("ergoterm.config")
 local utils = require("ergoterm.utils")
 
 local function mocking_notify(callback)
@@ -22,7 +24,7 @@ after_each(function()
   terms.delete_all()
 end)
 
-describe("get_focused", function()
+describe(".get_focused", function()
   it("returns currently focused terminal", function()
     local term = terms.Terminal:new()
     term:focus()
@@ -49,7 +51,7 @@ describe("get_focused", function()
   end)
 end)
 
-describe("get_last_focused", function()
+describe(".get_last_focused", function()
   it("returns last focused terminal", function()
     local term = terms.Terminal:new()
     term:focus()
@@ -77,7 +79,7 @@ describe("get_last_focused", function()
   end)
 end)
 
-describe("get_all", function()
+describe(".get_all", function()
   it("returns all terminals", function()
     local term1 = terms.Terminal:new()
     local term2 = terms.Terminal:new()
@@ -96,7 +98,7 @@ describe("get_all", function()
   end)
 end)
 
-describe("get_started", function()
+describe(".get_started", function()
   it("returns all started terminals", function()
     local term1 = terms.Terminal:new():start()
     local term2 = terms.Terminal:new()
@@ -115,7 +117,7 @@ describe("get_started", function()
   end)
 end)
 
-describe("get", function()
+describe(".get", function()
   it("returns terminal with given id", function()
     local term = terms.Terminal:new()
 
@@ -130,7 +132,7 @@ describe("get", function()
   end)
 end)
 
-describe("get_by_name", function()
+describe(".get_by_name", function()
   it("returns terminal with given name", function()
     local term = terms.Terminal:new({ name = "test" })
 
@@ -145,7 +147,7 @@ describe("get_by_name", function()
   end)
 end)
 
-describe("find", function()
+describe(".find", function()
   it("returns terminal matching given predicate", function()
     local term = terms.Terminal:new({ name = "test" })
     terms.Terminal:new({ name = "foo" })
@@ -168,7 +170,7 @@ describe("find", function()
   end)
 end)
 
-describe("select", function()
+describe(".select", function()
   it("returns result of calling given picker with started terminal and given prompt and callbacks", function()
     local picker = {
       select = function(terminals, prompt, callbacks)
@@ -206,7 +208,7 @@ describe("select", function()
   end)
 end)
 
-describe("delete_all", function()
+describe(".delete_all", function()
   it("deletes all terminals", function()
     local term = terms.Terminal:new()
 
@@ -221,5 +223,294 @@ describe("delete_all", function()
     terms.delete_all()
 
     assert.is_nil(terms.get(term.id))
+  end)
+end)
+
+describe(":new", function()
+  it("takes auto_scroll option", function()
+    local term = terms.Terminal:new({ auto_scroll = false })
+
+    assert.is_false(term.auto_scroll)
+  end)
+
+  it("defaults to config's auto_scroll", function()
+    local term = terms.Terminal:new()
+
+    assert.is_true(term.auto_scroll)
+  end)
+
+  it("takes cmd option", function()
+    local term = terms.Terminal:new({ cmd = "echo hello" })
+
+    assert.equal("echo hello", term.cmd)
+  end)
+
+  it("defaults to config's shell if cmd is not provided", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(vim.o.shell, term.cmd)
+  end)
+
+  it("takes clear_env option", function()
+    local term = terms.Terminal:new({ clear_env = true })
+
+    assert.is_true(term.clear_env)
+  end)
+
+  it("defaults to config's clear_env", function()
+    local term = terms.Terminal:new()
+
+    assert.is_false(term.clear_env)
+  end)
+
+  it("takes close_on_job_exit option", function()
+    local term = terms.Terminal:new({ close_on_job_exit = false })
+
+    assert.is_false(term.close_on_job_exit)
+  end)
+
+  it("defaults to config's close_on_job_exit", function()
+    local term = terms.Terminal:new()
+
+    assert.is_true(term.close_on_job_exit)
+  end)
+
+  it("takes layout option", function()
+    local term = terms.Terminal:new({ layout = "right" })
+
+    assert.equal("right", term.layout)
+  end)
+
+  it("defaults to config's layout", function()
+    local term = terms.Terminal:new()
+
+    assert.equal("bottom", term.layout)
+  end)
+
+  it("takes env option", function()
+    local term = terms.Terminal:new({ env = { FOO = "bar" } })
+
+    assert.equal("bar", term.env.FOO)
+  end)
+
+  it("takes newline_chr option", function()
+    local term = terms.Terminal:new({ newline_chr = "<END>" })
+
+    assert.equal("<END>", term.newline_chr)
+  end)
+
+  it("defaults to config's newline_chr", function()
+    local term = terms.Terminal:new()
+
+    assert.equal("\n", term.newline_chr)
+  end)
+
+  it("takes float_opts option", function()
+    local term = terms.Terminal:new({ float_opts = { width = 100, height = 50 } })
+
+    assert.equal(100, term.float_opts.width)
+    assert.equal(50, term.float_opts.height)
+  end)
+
+  it("defaults to config's float_opts for non-given options", function()
+    local term = terms.Terminal:new({ float_opts = { width = 100, height = 20 } })
+
+    assert.equal("single", term.float_opts.border)
+  end)
+
+  it("defaults to config's float_opts", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(80, term.float_opts.width)
+    assert.equal(20, term.float_opts.height)
+  end)
+
+  it("takes float_winblend option", function()
+    local term = terms.Terminal:new({ float_winblend = 20 })
+
+    assert.equal(20, term.float_winblend)
+  end)
+
+  it("defaults to config's float_winblend", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(10, term.float_winblend)
+  end)
+
+  it("takes persist_mode option", function()
+    local term = terms.Terminal:new({ persist_mode = true })
+
+    assert.is_true(term.persist_mode)
+  end)
+
+  it("defaults to config's persist_mode", function()
+    local term = terms.Terminal:new()
+
+    assert.is_false(term.persist_mode)
+  end)
+
+  it("takes start_in_insert option", function()
+    local term = terms.Terminal:new({ start_in_insert = false })
+
+    assert.is_false(term.start_in_insert)
+  end)
+
+  it("defaults to config's start_in_insert", function()
+    local term = terms.Terminal:new()
+
+    assert.is_true(term.start_in_insert)
+  end)
+
+  it("takes on_close option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_close = function() foo = "foo" end })
+    term:on_close()
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_close", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_close)
+  end)
+
+  it("takes on_create option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_create = function() foo = "foo" end })
+    term:on_create()
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_create", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_create)
+  end)
+
+  it("takes on_focus option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_focus = function() foo = "foo" end })
+    term:on_focus()
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_focus", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_focus)
+  end)
+
+  it("takes on_job_exit option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_job_exit = function() foo = "foo" end })
+    term:on_job_exit(1, 2, "event")
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_job_exit", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_job_exit)
+  end)
+
+  it("takes on_job_stdout option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_job_stdout = function() foo = "foo" end })
+    term:on_job_stdout(1, { "data" }, "name")
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_job_stdout", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_job_stdout)
+  end)
+
+  it("takes on_job_stderr option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_job_stderr = function() foo = "foo" end })
+    term:on_job_stderr(1, { "data" }, "name")
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_job_stderr", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_job_stderr)
+  end)
+
+  it("takes on_open option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_open = function() foo = "foo" end })
+    term:on_open()
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_open", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_open)
+  end)
+
+  it("takes on_start option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_start = function() foo = "foo" end })
+    term:on_start()
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_start", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_start)
+  end)
+
+  it("takes on_stop option", function()
+    local foo = nil
+
+    local term = terms.Terminal:new({ on_stop = function() foo = "foo" end })
+    term:on_stop()
+
+    assert.equal("foo", foo)
+  end)
+
+  it("defaults to config's on_stop", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(config.NULL_CALLBACK, term.on_stop)
+  end)
+
+  it("build terminal id", function()
+    local term = terms.Terminal:new()
+
+    assert.equal(1, term.id)
+  end)
+
+  it("takes name option", function()
+    local term = terms.Terminal:new({ name = "test" })
+
+    assert.equal("test", term.name)
+  end)
+
+  it("defaults name to cmd option", function()
+    local term = terms.Terminal:new({ cmd = "echo hello" })
+
+    assert.equal("echo hello", term.name)
   end)
 end)

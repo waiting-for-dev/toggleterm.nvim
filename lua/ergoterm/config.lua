@@ -10,7 +10,7 @@
 
 local M = {}
 
-local NULL_CALLBACK = function(...) end
+M.NULL_CALLBACK = function(...) end
 
 ---@alias layout "buffer" | "bottom" | "left" | "right" | "tab" | "top" | "float"
 ---@alias on_close fun(term: Terminal)
@@ -18,7 +18,7 @@ local NULL_CALLBACK = function(...) end
 ---@alias on_focus fun(term: Terminal)
 ---@alias on_job_exit fun(t: Terminal, job: number, exit_code: number, event: string)
 ---@alias on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
----@alias on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
+---@alias on_job_stderr fun(t: Terminal, channel_id: number, data: string[], name: string)
 ---@alias on_open fun(term: Terminal)
 ---@alias on_stop fun(term: Terminal)
 ---@alias on_start fun(term: Terminal)
@@ -46,7 +46,7 @@ local NULL_CALLBACK = function(...) end
 ---@field on_focus on_focus
 ---@field on_job_exit on_job_exit
 ---@field on_job_stdout on_job_stdout
----@field on_job_stnderr on_job_stnderr
+---@field on_job_stderr on_job_stderr
 ---@field on_open on_open
 ---@field on_stop on_stop
 ---@field on_start on_start
@@ -71,15 +71,15 @@ local config = {
   },
   float_winblend = 10,
   persist_mode = false,
-  on_close = NULL_CALLBACK,
-  on_create = NULL_CALLBACK,
-  on_focus = NULL_CALLBACK,
-  on_job_exit = NULL_CALLBACK,
-  on_open = NULL_CALLBACK,
-  on_stop = NULL_CALLBACK,
-  on_start = NULL_CALLBACK,
-  on_job_stnderr = NULL_CALLBACK,
-  on_job_stdout = NULL_CALLBACK,
+  on_close = M.NULL_CALLBACK,
+  on_create = M.NULL_CALLBACK,
+  on_focus = M.NULL_CALLBACK,
+  on_job_exit = M.NULL_CALLBACK,
+  on_open = M.NULL_CALLBACK,
+  on_stop = M.NULL_CALLBACK,
+  on_start = M.NULL_CALLBACK,
+  on_job_stderr = M.NULL_CALLBACK,
+  on_job_stdout = M.NULL_CALLBACK,
   picker = nil,
   shell = vim.o.shell,
   start_in_insert = true,

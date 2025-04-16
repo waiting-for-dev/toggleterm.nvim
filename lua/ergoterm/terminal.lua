@@ -130,7 +130,7 @@ end
 ---@field job_id? number
 ---@field on_job_exit on_job_exit
 ---@field on_job_stdout on_job_stdout
----@field on_job_stnderr on_job_stnderr
+---@field on_job_stderr on_job_stderr
 ---@field tabpage number?
 ---@field window number?
 
@@ -150,7 +150,7 @@ end
 ---@field on_create on_create? Callback to run when the terminal is created. It takes the terminal as an argument.
 ---@field on_focus on_focus? Callback to run when the terminal is focused. It takes the terminal as an argument.
 ---@field on_job_exit on_job_exit? Callback to run when the
----@field on_job_stnderr on_job_stnderr?
+---@field on_job_stderr on_job_stderr?
 ---@field on_job_stdout on_job_stdout?
 ---@field on_open on_open?
 ---@field on_stop on_stop?
@@ -186,10 +186,11 @@ function Terminal:new(args)
   term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
   term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
   term.on_focus = vim.F.if_nil(term.on_focus, conf.on_focus)
-  term.on_job_stnderr = vim.F.if_nil(term.on_job_stnderr, conf.on_job_stnderr)
+  term.on_job_stderr = vim.F.if_nil(term.on_job_stderr, conf.on_job_stderr)
   term.on_job_stdout = vim.F.if_nil(term.on_job_stdout, conf.on_job_stdout)
   term.on_job_exit = vim.F.if_nil(term.on_job_exit, conf.on_job_exit)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
+  term.on_start = vim.F.if_nil(term.on_start, conf.on_start)
   term.on_stop = vim.F.if_nil(term.on_stop, conf.on_stop)
   term.id = M._build_id()
   term.name = term.name or term.cmd
@@ -488,7 +489,7 @@ function Terminal:_initialize_state()
     mode = mode.get_initial_mode(self.start_in_insert),
     on_job_exit = self:_build_exit_handler(self.on_job_exit),
     on_job_stdout = self:_build_output_handler(self.on_job_stdout),
-    on_job_stnderr = self:_build_output_handler(self.on_job_stnderr),
+    on_job_stderr = self:_build_output_handler(self.on_job_stderr),
     tabpage = nil,
     window = nil
   }
