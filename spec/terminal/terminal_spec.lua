@@ -22,6 +22,7 @@ end
 
 after_each(function()
   terms.delete_all()
+  terms.reset_ids()
 end)
 
 describe(".get_focused", function()
@@ -223,6 +224,18 @@ describe(".delete_all", function()
     terms.delete_all()
 
     assert.is_nil(terms.get(term.id))
+  end)
+end)
+
+describe(".reset_ids", function()
+  it("resets sequence of terminal ids", function()
+    local term1 = terms.Terminal:new()
+    term1:delete()
+
+    terms.reset_ids()
+    local term2 = terms.Terminal:new()
+
+    assert.equal(1, term2.id)
   end)
 end)
 
@@ -496,10 +509,20 @@ describe(":new", function()
     assert.equal(config.NULL_CALLBACK, term.on_stop)
   end)
 
-  it("build terminal id", function()
-    local term = terms.Terminal:new()
+  it("builds sequential ids", function()
+    local term1 = terms.Terminal:new()
+    local term2 = terms.Terminal:new()
 
-    assert.equal(1, term.id)
+    assert.equal(1, term1.id)
+    assert.equal(2, term2.id)
+  end)
+
+  it("doesn't build deleted terminal ids", function()
+    local term1 = terms.Terminal:new()
+    term1:delete()
+    local term2 = terms.Terminal:new()
+
+    assert.equal(2, term2.id)
   end)
 
   it("takes name option", function()

@@ -16,9 +16,11 @@ local utils = lazy.require("ergoterm.utils")
 
 ---@class State
 ---@field last_focused Terminal? Last focused terminal
+---@field ids number[] All session terminal ids, even when deleted
 ---@field terminals Terminal[] All terminals
 M._state = {
   last_focused = nil,
+  ids = {},
   terminals = {}
 }
 
@@ -118,6 +120,14 @@ function M.delete_all()
   for _, term in ipairs(terminals) do
     term:delete()
   end
+end
+
+---Deletes cache about used terminal ids
+---
+---Terminals are always created with sequential ids, and even when deleted, the ids are not reused.
+---This allows resetting the ids sequence.
+function M.reset_ids()
+  M._state.ids = {}
 end
 
 ---@class TerminalState
@@ -442,17 +452,12 @@ end
 
 ---@private
 function M._build_id()
-  local terms = M.get_all()
-  local last_term = terms[#terms]
-  if last_term then
-    return last_term.id + 1
-  else
-    return 1
-  end
+  return #M._state.ids + 1
 end
 
 ---@private
 function Terminal:_add_to_state()
+  table.insert(M._state.ids, self.id)
   M._state.terminals[self.id] = self
 end
 
