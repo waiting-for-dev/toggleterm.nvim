@@ -112,6 +112,9 @@ function M.select(picker, prompt, callbacks)
   return picker.select(terminals, prompt, callbacks)
 end
 
+---Deletes all terminals from memory
+---
+---It'll automatically close and stop all terminals
 function M.delete_all()
   local terminals = M.get_all()
   for _, term in ipairs(terminals) do

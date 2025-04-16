@@ -205,3 +205,21 @@ describe("select", function()
     ---@diagnostic enable: need-check-nil
   end)
 end)
+
+describe("delete_all", function()
+  it("deletes all terminals", function()
+    local term = terms.Terminal:new()
+
+    terms.delete_all()
+
+    assert.is_nil(terms.get(term.id))
+  end)
+
+  it("stops any running terminals", function()
+    local term = terms.Terminal:new():start()
+
+    terms.delete_all()
+
+    assert.is_nil(terms.get(term.id))
+  end)
+end)
