@@ -509,7 +509,7 @@ function Terminal:_recompute_state()
   self._state.float_opts = self:_build_float_opts()
   self._state.on_job_exit = self:_build_exit_handler(self.on_job_exit)
   self._state.on_job_stdout = self:_build_output_handler(self.on_job_stdout)
-  self._state.on_job_stnderr = self:_build_output_handler(self.on_job_stnderr)
+  self._state.on_job_stderr = self:_build_output_handler(self.on_job_stderr)
 end
 
 ---@private
@@ -566,7 +566,7 @@ function Terminal:_start_job()
     cwd = self.dir,
     on_exit = self._state.on_job_exit,
     on_stdout = self._state.on_job_stdout,
-    on_stderr = self._state.on_job_stnderr,
+    on_stderr = self._state.on_job_stderr,
     env = self.env,
     clear_env = self.clear_env,
   })
