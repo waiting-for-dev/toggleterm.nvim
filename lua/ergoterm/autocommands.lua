@@ -54,14 +54,4 @@ function M.setup()
   })
 end
 
-function M.setup_term_buffer(term)
-  vim.api.nvim_create_augroup(BUFFER_AUGROUP, { clear = true })
-
-  vim.api.nvim_create_autocmd("TermClose", {
-    buffer = term._state.bufnr,
-    group = BUFFER_AUGROUP,
-    callback = function() M.on_term_close(term) end
-  })
-end
-
 return M

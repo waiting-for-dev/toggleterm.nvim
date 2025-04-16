@@ -19,7 +19,7 @@ local function mocking_notify(callback)
 end
 
 after_each(function()
-  terms.shutdown_all()
+  terms.delete_all()
 end)
 
 describe("get_focused", function()

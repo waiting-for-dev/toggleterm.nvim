@@ -112,10 +112,10 @@ function M.select(picker, prompt, callbacks)
   return picker.select(terminals, prompt, callbacks)
 end
 
-function M.shutdown_all()
+function M.delete_all()
   local terminals = M.get_all()
   for _, term in ipairs(terminals) do
-    term:shutdown()
+    term:delete()
   end
 end
 
@@ -152,7 +152,7 @@ end
 ---@field on_job_stnderr on_job_stnderr?
 ---@field on_job_stdout on_job_stdout?
 ---@field on_open on_open?
----@field on_shutdown on_shutdown?
+---@field on_stop on_stop?
 ---@field on_start on_start?
 ---@field persist_mode boolean? whether or not to persist the mode of the terminal on return
 ---@field start_in_insert boolean?
@@ -189,7 +189,7 @@ function Terminal:new(args)
   term.on_job_stdout = vim.F.if_nil(term.on_job_stdout, conf.on_job_stdout)
   term.on_job_exit = vim.F.if_nil(term.on_job_exit, conf.on_job_exit)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
-  term.on_shutdown = vim.F.if_nil(term.on_shutdown, conf.on_shutdown)
+  term.on_stop = vim.F.if_nil(term.on_stop, conf.on_stop)
   term.id = M._build_id()
   term.name = term.name or term.cmd
   term:_initialize_state()
@@ -227,7 +227,6 @@ function Terminal:start()
     vim.api.nvim_buf_call(self._state.bufnr, function()
       self._state.job_id = self:_start_job()
     end)
-    autocommands.setup_term_buffer(self)
     self:on_create()
   end
   return self
@@ -316,16 +315,31 @@ function Terminal:focus(layout)
   return self
 end
 
----Shutdown the terminal
+function Terminal:is_stopped()
+  return self._state.job_id == nil
+end
+
+---Stop the terminal
 ---
 ---Close window and remove buffer
-function Terminal:shutdown()
+function Terminal:stop()
   if self:is_open() then self:close() end
-  self:on_shutdown()
+  self:on_stop()
+  vim.fn.jobstop(self._state.job_id)
+  self._state.job_id = nil
   if self._state.bufnr then
     vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
   end
-  self:_delete_reference_from_state()
+end
+
+function Terminal:delete()
+  if not self:is_stopped() then
+    self:stop()
+  end
+  if M._state.last_focused == self then
+    M._state.last_focused = nil
+  end
+  M._state.terminals[self.id] = nil
 end
 
 ---Toggle the terminal window
@@ -389,10 +403,6 @@ end
 function Terminal:on_buf_enter()
   self:_set_ft_options()
   self:_set_return_mode()
-end
-
-function Terminal:on_term_close()
-  self:_delete_reference_from_state()
 end
 
 function Terminal:on_win_leave()
@@ -463,14 +473,6 @@ function Terminal:_build_output_handler(callback)
     if self.auto_scroll then self:_scroll_bottom() end
     callback(self, channel_id, data, name)
   end
-end
-
----@api private
-function Terminal:_delete_reference_from_state()
-  if M._state.last_focused == self then
-    M._state.last_focused = nil
-  end
-  M._state.terminals[self.id] = nil
 end
 
 ---@private

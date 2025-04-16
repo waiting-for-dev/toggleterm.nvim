@@ -20,7 +20,7 @@ local NULL_CALLBACK = function(...) end
 ---@alias on_job_stdout fun(t: Terminal, channel_id: number, data: string[], name: string)
 ---@alias on_job_stnderr fun(t: Terminal, channel_id: number, data: string[], name: string)
 ---@alias on_open fun(term: Terminal)
----@alias on_shutdown fun(term: Terminal)
+---@alias on_stop fun(term: Terminal)
 ---@alias on_start fun(term: Terminal)
 
 ---@class FloatOpts
@@ -48,7 +48,7 @@ local NULL_CALLBACK = function(...) end
 ---@field on_job_stdout on_job_stdout
 ---@field on_job_stnderr on_job_stnderr
 ---@field on_open on_open
----@field on_shutdown on_shutdown
+---@field on_stop on_stop
 ---@field on_start on_start
 ---@field persist_mode boolean
 ---@field shell string|fun():string
@@ -76,7 +76,7 @@ local config = {
   on_focus = NULL_CALLBACK,
   on_job_exit = NULL_CALLBACK,
   on_open = NULL_CALLBACK,
-  on_shutdown = NULL_CALLBACK,
+  on_stop = NULL_CALLBACK,
   on_start = NULL_CALLBACK,
   on_job_stnderr = NULL_CALLBACK,
   on_job_stdout = NULL_CALLBACK,
