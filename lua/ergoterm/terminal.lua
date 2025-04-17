@@ -132,7 +132,6 @@ end
 
 ---@class TerminalState
 ---@field bufnr number?
----@field cmd string
 ---@field dir? string
 ---@field layout layout
 ---@field float_opts FloatOpts
@@ -188,6 +187,7 @@ function Terminal:new(args)
   term.close_on_job_exit = vim.F.if_nil(term.close_on_job_exit, conf.close_on_job_exit)
   term.layout = term.layout or conf.layout
   term.env = term.env
+  term.name = term.name or term.cmd
   term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts) --@type FloatOpts
   term.float_winblend = term.float_winblend or conf.float_winblend
@@ -203,7 +203,6 @@ function Terminal:new(args)
   term.on_start = vim.F.if_nil(term.on_start, conf.on_start)
   term.on_stop = vim.F.if_nil(term.on_stop, conf.on_stop)
   term.id = M._build_id()
-  term.name = term.name or term.cmd
   term:_initialize_state()
   term:_add_to_state()
   return term
@@ -492,7 +491,6 @@ end
 function Terminal:_initialize_state()
   self._state = {
     bufnr = nil,
-    cmd = self:_build_command(),
     dir = self:_build_dir(),
     layout = self.layout,
     float_opts = self:_build_float_opts(),
@@ -508,7 +506,6 @@ end
 
 ---@private
 function Terminal:_recompute_state()
-  self._state.cmd = self:_build_command()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
   self._state.dir = self:_build_dir()
   self._state.layout = self.layout
@@ -516,24 +513,6 @@ function Terminal:_recompute_state()
   self._state.on_job_exit = self:_build_exit_handler(self.on_job_exit)
   self._state.on_job_stdout = self:_build_output_handler(self.on_job_stdout)
   self._state.on_job_stderr = self:_build_output_handler(self.on_job_stderr)
-end
-
----@private
----
----@return string
-function Terminal:_build_command()
-  local cmd = self.cmd
-  local command_sep = utils.get_command_sep()
-  local comment_sep = utils.get_comment_sep()
-  cmd = table.concat({
-    cmd,
-    command_sep,
-    comment_sep,
-    FILETYPE,
-    comment_sep,
-    self.id,
-  })
-  return cmd
 end
 
 ---@private

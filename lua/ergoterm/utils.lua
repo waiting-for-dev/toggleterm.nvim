@@ -54,11 +54,6 @@ function M.is_windows()
   return vim.fn.has("win32") == 1
 end
 
----@return boolean
-function M.is_cmd(shell)
-  return shell:find("cmd")
-end
-
 ---@param shell string
 function M.is_pwsh(shell)
   return shell:find("pwsh") or shell:find("powershell")
@@ -67,16 +62,6 @@ end
 ---@param shell string
 function M.is_nushell(shell)
   return shell:find("nu")
-end
-
----@return string
-function M.get_command_sep()
-  return M.is_windows() and M.is_cmd(vim.o.shell) and "&" or ";"
-end
-
----@return string
-function M.get_comment_sep()
-  return M.is_windows() and M.is_cmd(vim.o.shell) and "::" or "#"
 end
 
 ---@return string
