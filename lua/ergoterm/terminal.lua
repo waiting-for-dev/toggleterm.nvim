@@ -215,6 +215,12 @@ end
 ---@return Terminal
 function Terminal:update(opts)
   for k, v in pairs(opts) do
+    if k == "cmd" then
+      utils.notify(
+        "cmd is not allowed to be updated. Please create a new terminal",
+        "error"
+      )
+    end
     self[k] = v
   end
   self:_recompute_state()
@@ -516,8 +522,7 @@ end
 ---
 ---@return string
 function Terminal:_build_command()
-  local cmd = nil
-  if type(self.cmd) == "function" then cmd = self.cmd() else cmd = self.cmd end
+  local cmd = self.cmd
   local command_sep = utils.get_command_sep()
   local comment_sep = utils.get_comment_sep()
   cmd = table.concat({
