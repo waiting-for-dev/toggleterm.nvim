@@ -306,6 +306,18 @@ describe(":new", function()
     assert.equal("bar", term.env.FOO)
   end)
 
+  it("takes name option", function()
+    local term = terms.Terminal:new({ name = "test" })
+
+    assert.equal("test", term.name)
+  end)
+
+  it("defaults name to cmd option", function()
+    local term = terms.Terminal:new({ cmd = "echo hello" })
+
+    assert.equal("echo hello", term.name)
+  end)
+
   it("takes newline_chr option", function()
     local term = terms.Terminal:new({ newline_chr = "<END>" })
 
@@ -525,15 +537,36 @@ describe(":new", function()
     assert.equal(2, term2.id)
   end)
 
-  it("takes name option", function()
-    local term = terms.Terminal:new({ name = "test" })
+  it("initializes directory as the current git directory if dir is given as 'git_dir'", function()
+    local term = terms.Terminal:new({ dir = "git_dir" })
 
-    assert.equal("test", term.name)
+    local expected_dir = vim.fn.getcwd()
+
+    assert.equal(expected_dir, term._state.dir)
   end)
 
-  it("defaults name to cmd option", function()
-    local term = terms.Terminal:new({ cmd = "echo hello" })
+  it("initializes directory as the current working directory if dir is nil", function()
+    local term = terms.Terminal:new({ dir = nil })
 
-    assert.equal("echo hello", term.name)
+    local expected_dir = vim.fn.getcwd()
+
+    assert.equal(expected_dir, term._state.dir)
+  end)
+
+  it("initializes directory as the given directory if dir is a string", function()
+    local term = terms.Terminal:new({ dir = "/tmp" })
+
+    assert.equal("/tmp", term._state.dir)
+  end)
+
+  it("errors if dir is not a valid directory", function()
+    local result = mocking_notify(function()
+      terms.Terminal:new({ dir = "/invalid" })
+    end)
+
+    ---@diagnostic disable: need-check-nil
+    assert.equal("/invalid is not a directory", result.msg)
+    assert.equal("error", result.level)
+    ---@diagnostic enable: need-check-nil
   end)
 end)

@@ -520,7 +520,7 @@ function Terminal:_build_dir()
   local dir = nil
   if self.dir == "git_dir" then
     dir = utils.git_dir()
-  elseif dir == nil then
+  elseif self.dir == nil then
     dir = vim.loop.cwd()
   else
     dir = vim.fn.expand(self.dir)
