@@ -575,4 +575,10 @@ describe(":new", function()
 
     assert.equal("right", term:get_state("layout"))
   end)
+
+  it("initializes float_opts title from name", function()
+    local term = terms.Terminal:new({ name = "test" })
+
+    assert.equal("test", term:get_state("float_opts").title)
+  end)
 end)
