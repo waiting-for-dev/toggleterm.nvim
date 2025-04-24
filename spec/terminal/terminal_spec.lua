@@ -542,7 +542,7 @@ describe(":new", function()
 
     local expected_dir = vim.fn.getcwd()
 
-    assert.equal(expected_dir, term._state.dir)
+    assert.equal(expected_dir, term:get_state("dir"))
   end)
 
   it("initializes directory as the current working directory if dir is nil", function()
@@ -550,13 +550,13 @@ describe(":new", function()
 
     local expected_dir = vim.fn.getcwd()
 
-    assert.equal(expected_dir, term._state.dir)
+    assert.equal(expected_dir, term:get_state("dir"))
   end)
 
   it("initializes directory as the given directory if dir is a string", function()
     local term = terms.Terminal:new({ dir = "/tmp" })
 
-    assert.equal("/tmp", term._state.dir)
+    assert.equal("/tmp", term:get_state("dir"))
   end)
 
   it("errors if dir is not a valid directory", function()
@@ -568,5 +568,11 @@ describe(":new", function()
     assert.equal("/invalid is not a directory", result.msg)
     assert.equal("error", result.level)
     ---@diagnostic enable: need-check-nil
+  end)
+
+  it("initializes layout from given layout", function()
+    local term = terms.Terminal:new({ layout = "right" })
+
+    assert.equal("right", term:get_state("layout"))
   end)
 end)
