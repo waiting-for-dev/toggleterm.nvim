@@ -581,4 +581,28 @@ describe(":new", function()
 
     assert.equal("test", term:get_state("float_opts").title)
   end)
+
+  it("initializes float_opts row", function()
+    local term = terms.Terminal:new()
+
+    assert.is_not_nil(term:get_state("float_opts").row)
+  end)
+
+  it("initializes float_opts col", function()
+    local term = terms.Terminal:new()
+
+    assert.is_not_nil(term:get_state("float_opts").col)
+  end)
+
+  it("initializes state to insert when start_in_insert is true", function()
+    local term = terms.Terminal:new({ start_in_insert = true })
+
+    assert.equal("i", term:get_state("mode"))
+  end)
+
+  it("initializes state to normal when start_in_insert is false", function()
+    local term = terms.Terminal:new({ start_in_insert = false })
+
+    assert.equal("n", term:get_state("mode"))
+  end)
 end)
