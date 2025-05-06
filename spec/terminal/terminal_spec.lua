@@ -576,33 +576,45 @@ describe(":new", function()
     assert.equal("right", term:get_state("layout"))
   end)
 
-  it("initializes float_opts title from name", function()
+  it("doesn't override float_opts defaults for non-given options", function()
+    local term = terms.Terminal:new({ float_opts = { width = 100, height = 20 } })
+
+    assert.equal("single", term.float_opts.border)
+  end)
+
+  it("initializes float_opts title from name when not given", function()
     local term = terms.Terminal:new({ name = "test" })
 
     assert.equal("test", term:get_state("float_opts").title)
   end)
 
-  it("initializes float_opts row", function()
-    local term = terms.Terminal:new()
+  it("doesn't override float_opts title when given", function()
+    local term = terms.Terminal:new({ float_opts = { title = "foo" } })
 
-    assert.is_not_nil(term:get_state("float_opts").row)
+    assert.equal("foo", term:get_state("float_opts").title)
   end)
 
-  it("initializes float_opts col", function()
-    local term = terms.Terminal:new()
+  it("initializes float_opts row from height when not given", function()
+    local term = terms.Terminal:new({ float_opts = { height = 20 } })
 
-    assert.is_not_nil(term:get_state("float_opts").col)
+    assert.equal(math.ceil((vim.o.lines - 20)) * 0.5 - 1, term:get_state("float_opts").row)
   end)
 
-  it("initializes state to insert when start_in_insert is true", function()
-    local term = terms.Terminal:new({ start_in_insert = true })
+  it("doesn't override float_opts row when given", function()
+    local term = terms.Terminal:new({ float_opts = { row = 10 } })
 
-    assert.equal("i", term:get_state("mode"))
+    assert.equal(10, term:get_state("float_opts").row)
   end)
 
-  it("initializes state to normal when start_in_insert is false", function()
-    local term = terms.Terminal:new({ start_in_insert = false })
+  it("initializes float_opts col from width when not given", function()
+    local term = terms.Terminal:new({ float_opts = { width = 100 } })
 
-    assert.equal("n", term:get_state("mode"))
+    assert.equal(math.ceil((vim.o.columns - 100)) * 0.5 - 1, term:get_state("float_opts").col)
+  end)
+
+  it("doesn't override float_opts col when given", function()
+    local term = terms.Terminal:new({ float_opts = { col = 10 } })
+
+    assert.equal(10, term:get_state("float_opts").col)
   end)
 end)

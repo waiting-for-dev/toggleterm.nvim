@@ -25,8 +25,8 @@ M.NULL_CALLBACK = function(...) end
 
 ---@class FloatOpts
 ---@field title_pos? string
----@field width number
----@field height number
+---@field width? number
+---@field height? number
 ---@field relative? string
 ---@field border? string
 ---@field zindex? number

@@ -202,7 +202,7 @@ function Terminal:new(args)
   term.on_open = vim.F.if_nil(term.on_open, conf.on_open)
   term.on_start = vim.F.if_nil(term.on_start, conf.on_start)
   term.on_stop = vim.F.if_nil(term.on_stop, conf.on_stop)
-  term.id = M._build_id()
+  term.id = M._initialize_id()
   term:_initialize_state()
   term:_add_to_state()
   return term
@@ -456,7 +456,7 @@ function Terminal:_set_options()
 end
 
 ---@private
-function M._build_id()
+function M._initialize_id()
   return #M._state.ids + 1
 end
 
@@ -467,7 +467,7 @@ function Terminal:_add_to_state()
 end
 
 ---@private
-function Terminal:_build_exit_handler(callback)
+function Terminal:_initialize_exit_handler(callback)
   return function(job, exit_code, event)
     if self.close_on_job_exit then
       self:close()
@@ -480,7 +480,7 @@ function Terminal:_build_exit_handler(callback)
 end
 
 ---@private
-function Terminal:_build_output_handler(callback)
+function Terminal:_initialize_output_handler(callback)
   return function(channel_id, data, name)
     if self.auto_scroll then self:_scroll_bottom() end
     callback(self, channel_id, data, name)
@@ -491,14 +491,14 @@ end
 function Terminal:_initialize_state()
   self._state = {
     bufnr = nil,
-    dir = self:_build_dir(),
+    dir = self:_initialize_dir(),
     layout = self.layout,
-    float_opts = self:_build_float_opts(),
+    float_opts = self:_initialize_float_opts(),
     job_id = nil,
     mode = mode.get_initial_mode(self.start_in_insert),
-    on_job_exit = self:_build_exit_handler(self.on_job_exit),
-    on_job_stdout = self:_build_output_handler(self.on_job_stdout),
-    on_job_stderr = self:_build_output_handler(self.on_job_stderr),
+    on_job_exit = self:_initialize_exit_handler(self.on_job_exit),
+    on_job_stdout = self:_initialize_output_handler(self.on_job_stdout),
+    on_job_stderr = self:_initialize_output_handler(self.on_job_stderr),
     tabpage = nil,
     window = nil
   }
@@ -507,16 +507,16 @@ end
 ---@private
 function Terminal:_recompute_state()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
-  self._state.dir = self:_build_dir()
+  self._state.dir = self:_initialize_dir()
   self._state.layout = self.layout
-  self._state.float_opts = self:_build_float_opts()
-  self._state.on_job_exit = self:_build_exit_handler(self.on_job_exit)
-  self._state.on_job_stdout = self:_build_output_handler(self.on_job_stdout)
-  self._state.on_job_stderr = self:_build_output_handler(self.on_job_stderr)
+  self._state.float_opts = self:_initialize_float_opts()
+  self._state.on_job_exit = self:_initialize_exit_handler(self.on_job_exit)
+  self._state.on_job_stdout = self:_initialize_output_handler(self.on_job_stdout)
+  self._state.on_job_stderr = self:_initialize_output_handler(self.on_job_stderr)
 end
 
 ---@private
-function Terminal:_build_dir()
+function Terminal:_initialize_dir()
   local dir = nil
   if self.dir == "git_dir" then
     dir = utils.git_dir()
@@ -535,11 +535,11 @@ function Terminal:_build_dir()
 end
 
 ---@private
-function Terminal:_build_float_opts()
+function Terminal:_initialize_float_opts()
   local float_opts = self.float_opts or {}
-  float_opts.title = self.name
-  float_opts.row = math.ceil(vim.o.lines - float_opts.height) * 0.5 - 1
-  float_opts.col = math.ceil(vim.o.columns - float_opts.width) * 0.5 - 1
+  float_opts.title = float_opts.title or self.name
+  float_opts.row = float_opts.row or math.ceil(vim.o.lines - float_opts.height) * 0.5 - 1
+  float_opts.col = float_opts.col or math.ceil(vim.o.columns - float_opts.width) * 0.5 - 1
   return float_opts
 end
 
