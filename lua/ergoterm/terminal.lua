@@ -122,6 +122,14 @@ function M.delete_all()
   end
 end
 
+---Gets value for a given key from the state
+---
+---@param key string
+---@return any
+function M.get_state(key)
+  return M._state[key]
+end
+
 ---Deletes cache about used terminal ids
 ---
 ---Terminals are always created with sequential ids, and even when deleted, the ids are not reused.
@@ -469,13 +477,13 @@ end
 ---@private
 function Terminal:_initialize_exit_handler(callback)
   return function(job, exit_code, event)
-    if self.close_on_job_exit then
+    callback(self, job, exit_code, event)
+    if self:is_open() and self.close_on_job_exit then
       self:close()
       if vim.api.nvim_buf_is_loaded(self._state.bufnr) then
         vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
       end
     end
-    callback(self, job, exit_code, event)
   end
 end
 

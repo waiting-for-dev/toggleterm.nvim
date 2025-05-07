@@ -227,6 +227,14 @@ describe(".delete_all", function()
   end)
 end)
 
+describe(".get_state", function()
+  it("returns value for a given key from the state", function()
+    local term = terms.Terminal:new({ foo = "bar" })
+
+    assert.is_true(vim.tbl_contains(terms.get_state("terminals"), term))
+  end)
+end)
+
 describe(".reset_ids", function()
   it("resets sequence of terminal ids", function()
     local term1 = terms.Terminal:new()
@@ -616,5 +624,35 @@ describe(":new", function()
     local term = terms.Terminal:new({ float_opts = { col = 10 } })
 
     assert.equal(10, term:get_state("float_opts").col)
+  end)
+
+  it("initializes on_job_exit so it calls provided on_job_exit", function()
+    local foo = nil
+    local term = terms.Terminal:new({ on_job_exit = function() foo = "foo" end })
+
+    term:get_state("on_job_exit")(1, 2, "event")
+    assert.equal("foo", foo)
+  end)
+
+  it("initializes on_job_stdout so it calls provided on_job_stdout", function()
+    local foo = nil
+    local term = terms.Terminal:new({ on_job_stdout = function() foo = "foo" end })
+
+    term:get_state("on_job_stdout")(1, { "data" }, "name")
+    assert.equal("foo", foo)
+  end)
+
+  it("initializes on_job_stderr so it calls provided on_job_stderr", function()
+    local foo = nil
+    local term = terms.Terminal:new({ on_job_stderr = function() foo = "foo" end })
+
+    term:get_state("on_job_stderr")(1, { "data" }, "name")
+    assert.equal("foo", foo)
+  end)
+
+  it("adds terminal to the list of terminals in the state", function()
+    local term = terms.Terminal:new()
+
+    assert.is_true(vim.tbl_contains(terms.get_state("terminals"), term))
   end)
 end)
