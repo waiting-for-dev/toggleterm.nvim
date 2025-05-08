@@ -656,3 +656,34 @@ describe(":new", function()
     assert.is_true(vim.tbl_contains(terms.get_state("terminals"), term))
   end)
 end)
+
+describe(":update", function()
+  it("updates passed properties", function()
+    local term = terms.Terminal:new({ name = "foo", layout = "bottom" })
+    term:update({ name = "bar", layout = "right" })
+
+    assert.equal("bar", term.name)
+    assert.equal("right", term.layout)
+  end)
+
+  it("recomputes mode", function()
+    local term = terms.Terminal:new({ start_in_insert = false })
+    term:update({ start_in_insert = true })
+
+    assert.equal("i", term:get_state("mode"))
+  end)
+
+  it("recomputes layout", function()
+    local term = terms.Terminal:new({ layout = "bottom" })
+    term:update({ layout = "right" })
+
+    assert.equal("right", term:get_state("layout"))
+  end)
+
+  it("doesn't override float_opts that are not-given options", function()
+    local term = terms.Terminal:new({ float_opts = { width = 100, height = 1 } })
+    term:update({ float_opts = { width = 200 } })
+
+    assert.equal(1, term:get_state("float_opts").height)
+  end)
+end)

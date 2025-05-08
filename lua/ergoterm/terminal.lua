@@ -221,6 +221,10 @@ end
 ---@param opts TermCreateArgs
 ---@return Terminal
 function Terminal:update(opts)
+  if opts.float_opts then
+    self.float_opts = vim.tbl_deep_extend("keep", opts.float_opts, self.float_opts)
+    opts.float_opts = nil
+  end
   for k, v in pairs(opts) do
     if k == "cmd" then
       utils.notify(
@@ -515,7 +519,6 @@ end
 ---@private
 function Terminal:_recompute_state()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
-  self._state.dir = self:_initialize_dir()
   self._state.layout = self.layout
   self._state.float_opts = self:_initialize_float_opts()
   self._state.on_job_exit = self:_initialize_exit_handler(self.on_job_exit)
