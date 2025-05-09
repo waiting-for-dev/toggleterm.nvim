@@ -686,4 +686,71 @@ describe(":update", function()
 
     assert.equal(1, term:get_state("float_opts").height)
   end)
+
+  it("recomputes on_job_exit", function()
+    local foo = nil
+    local term = terms.Terminal:new({ on_job_exit = function() foo = "foo" end })
+    term:update({ on_job_exit = function() foo = "bar" end })
+
+    term:get_state("on_job_exit")(1, 2, "event")
+    assert.equal("bar", foo)
+  end)
+
+  it("recomputes on_job_stdout", function()
+    local foo = nil
+    local term = terms.Terminal:new({ on_job_stdout = function() foo = "foo" end })
+    term:update({ on_job_stdout = function() foo = "bar" end })
+
+    term:get_state("on_job_stdout")(1, { "data" }, "name")
+    assert.equal("bar", foo)
+  end)
+
+  it("recomputes on_job_stderr", function()
+    local foo = nil
+    local term = terms.Terminal:new({ on_job_stderr = function() foo = "foo" end })
+    term:update({ on_job_stderr = function() foo = "bar" end })
+
+    term:get_state("on_job_stderr")(1, { "data" }, "name")
+    assert.equal("bar", foo)
+  end)
+
+  it("doesn't allow updating cmd", function()
+    local term = terms.Terminal:new({ cmd = "echo hello" })
+
+    local result = mocking_notify(function()
+      term:update({ cmd = "echo world" })
+    end)
+
+    ---@diagnostic disable: need-check-nil
+    assert.equal("Cannot change cmd after terminal creation", result.msg)
+    assert.equal("error", result.level)
+    ---@diagnostic enable: need-check-nil
+  end)
+
+  it("doesn't allow updating dir", function()
+    local term = terms.Terminal:new({ dir = "/tmp" })
+
+    local result = mocking_notify(function()
+      term:update({ dir = "/home" })
+    end)
+
+    ---@diagnostic disable: need-check-nil
+    assert.equal("Cannot change dir after terminal creation", result.msg)
+    assert.equal("error", result.level)
+    ---@diagnostic enable: need-check-nil
+  end)
+end)
+
+describe(":is_started", function()
+  it("returns true if terminal is started", function()
+    local term = terms.Terminal:new():start()
+
+    assert.is_true(term:is_started())
+  end)
+
+  it("returns false if terminal is not started", function()
+    local term = terms.Terminal:new()
+
+    assert.is_false(term:is_started())
+  end)
 end)

@@ -218,17 +218,20 @@ end
 
 ---Update terminal options
 ---
+---All options are allowed to be changed, except for cmd and dir.
+---Take into account that float_opts are merged with the current options and not replaced.
+---
 ---@param opts TermCreateArgs
----@return Terminal
+---@return Terminal?
 function Terminal:update(opts)
   if opts.float_opts then
     self.float_opts = vim.tbl_deep_extend("keep", opts.float_opts, self.float_opts)
     opts.float_opts = nil
   end
   for k, v in pairs(opts) do
-    if k == "cmd" then
+    if k == "cmd" or k == "dir" then
       utils.notify(
-        "cmd is not allowed to be updated. Please create a new terminal",
+        string.format("Cannot change %s after terminal creation", k),
         "error"
       )
     end
@@ -520,7 +523,6 @@ end
 function Terminal:_recompute_state()
   self._state.mode = mode.get_initial_mode(self.start_in_insert)
   self._state.layout = self.layout
-  self._state.float_opts = self:_initialize_float_opts()
   self._state.on_job_exit = self:_initialize_exit_handler(self.on_job_exit)
   self._state.on_job_stdout = self:_initialize_output_handler(self.on_job_stdout)
   self._state.on_job_stderr = self:_initialize_output_handler(self.on_job_stderr)
