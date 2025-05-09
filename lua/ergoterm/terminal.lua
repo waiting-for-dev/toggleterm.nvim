@@ -250,7 +250,8 @@ end
 
 ---Start the job in the terminal
 ---
----It does not open the terminal window
+---It does not open the terminal window.
+---Configured `on_create` callback is run.
 ---
 ---@return self
 function Terminal:start()

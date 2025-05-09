@@ -754,3 +754,56 @@ describe(":is_started", function()
     assert.is_false(term:is_started())
   end)
 end)
+
+describe(":start", function()
+  it("creates a new buffer", function()
+    local term = terms.Terminal:new()
+
+    term:start()
+
+    local bufnr = term:get_state("bufnr")
+    assert.is_not_nil(bufnr)
+    assert.is_true(vim.api.nvim_buf_is_valid(bufnr))
+  end)
+
+  it("opens term with the given command", function()
+    local term = terms.Terminal:new({ cmd = "echo hello" })
+    local spy_termopen = spy.on(vim.fn, "termopen")
+
+    term:start()
+
+    assert.spy(spy_termopen).was_called_with("echo hello", match.is_table())
+  end)
+
+  it("updates the state with the new job_id", function()
+    local term = terms.Terminal:new()
+
+    term:start()
+
+    local job_id = term:get_state("job_id")
+    assert.is_number(job_id)
+  end)
+
+  it("runs the on_create callback", function()
+    local called = false
+    local term = terms.Terminal:new({
+      on_create = function() called = true end,
+    })
+
+    term:start()
+
+    assert.is_true(called)
+  end)
+
+  it("does nothing if already started", function()
+    local term = terms.Terminal:new()
+    term:start()
+    local initial_bufnr = term:get_state("bufnr")
+    local initial_job_id = term:get_state("job_id")
+
+    term:start()
+
+    assert.equal(initial_bufnr, term:get_state("bufnr"))
+    assert.equal(initial_job_id, term:get_state("job_id"))
+  end)
+end)
