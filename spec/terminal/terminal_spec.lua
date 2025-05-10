@@ -829,3 +829,36 @@ describe(":is_open", function()
     assert.is_true(term:is_open())
   end)
 end)
+
+describe(":close", function()
+  it("closes the terminal window if open", function()
+    local term = terms.Terminal:new()
+    term:open()
+    local win_id = term:get_state("window")
+
+    term:close()
+
+    assert.is_false(vim.api.nvim_win_is_valid(win_id))
+    assert.is_false(term:is_open())
+  end)
+
+  it("runs the on_close() callback", function()
+    local called = false
+    local term = terms.Terminal:new({
+      on_close = function() called = true end,
+    })
+    term:open()
+
+    term:close()
+
+    assert.is_true(called)
+  end)
+
+  it("does nothing if the terminal is not open", function()
+    local term = terms.Terminal:new()
+
+    term:close()
+
+    assert.is_false(term:is_open())
+  end)
+end)
