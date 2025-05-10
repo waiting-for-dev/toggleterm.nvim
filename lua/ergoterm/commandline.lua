@@ -144,8 +144,8 @@ M._all_options = {
       "float",
       "left",
       "right",
-      "top",
-      "bottom",
+      "above",
+      "below",
       "tab",
       "buffer",
     }

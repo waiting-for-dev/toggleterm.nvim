@@ -78,7 +78,7 @@ end
 function M.select_actions()
   return {
     default = { fn = function(term) term:focus() end, desc = "open" },
-    ["ctrl-s"] = { fn = function(term) term:focus("bottom") end, desc = "open-in-horizontal-split" },
+    ["ctrl-s"] = { fn = function(term) term:focus("below") end, desc = "open-in-horizontal-split" },
     ["ctrl-v"] = { fn = function(term) term:focus("right") end, desc = "open-in-vertical-split" },
     ["ctrl-t"] = { fn = function(term) term:focus("tab") end, desc = "open-in-tab" },
     ["ctrl-f"] = { fn = function(term) term:focus("float") end, desc = "open-in-float-window" }

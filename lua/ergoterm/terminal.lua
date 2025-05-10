@@ -277,20 +277,21 @@ function Terminal:is_open()
   return vim.tbl_contains(wins, self._state.window)
 end
 
----Close the terminal window
----
----It's going to run the configured callback
----
----@return Terminal
-function Terminal:close()
-  if self:is_open() then
-    self:on_close()
-    vim.api.nvim_win_close(self._state.window, true)
-  end
-  return self
-end
-
 ---Open the terminal window without focusing it
+---
+---If `layout` is not given, the layout is taken from the current state. This one can be:
+---
+---- The layout given during initialization.
+---- The layout given in the previous invocation of this function.
+---
+---The layout can be:
+---
+---- "above": open the terminal above the current window
+---- "below": open the terminal below the current window
+---- "left": open the terminal to the left of the current window
+---- "right": open the terminal to the right of the current window
+---- "tab": open the terminal in a new tab
+---- "float": open the terminal in a floating window
 ---
 ---@param layout string?
 ---
@@ -300,9 +301,9 @@ function Terminal:open(layout)
   if not self:is_open() then
     local current_win = vim.api.nvim_get_current_win()
     local computed_layout = layout or self._state.layout
-    if computed_layout == "top" then
+    if computed_layout == "above" then
       vim.cmd("split")
-    elseif computed_layout == "bottom" then
+    elseif computed_layout == "below" then
       vim.cmd("botright split")
     elseif computed_layout == "left" then
       vim.cmd("vsplit")
@@ -321,6 +322,19 @@ function Terminal:open(layout)
     self:_set_options()
     self:on_open()
     vim.api.nvim_set_current_win(current_win)
+  end
+  return self
+end
+
+---Close the terminal window
+---
+---It's going to run the configured callback
+---
+---@return Terminal
+function Terminal:close()
+  if self:is_open() then
+    self:on_close()
+    vim.api.nvim_win_close(self._state.window, true)
   end
   return self
 end
@@ -459,7 +473,7 @@ function Terminal:_set_win_options()
   utils.wo_setlocal(self._state.window, "number", false)
   utils.wo_setlocal(self._state.window, "signcolumn", "no")
   utils.wo_setlocal(self._state.window, "relativenumber", false)
-  if self.layout == "float" then
+  if self._state.layout == "float" then
     self:_set_float_options()
   end
 end
@@ -468,7 +482,6 @@ end
 function Terminal:_set_options()
   self:_set_ft_options()
   self:_set_win_options()
-  vim.b[self._state.bufnr].toggle_number = self.id
 end
 
 ---@private

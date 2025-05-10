@@ -12,7 +12,7 @@ local M = {}
 
 M.NULL_CALLBACK = function(...) end
 
----@alias layout "buffer" | "bottom" | "left" | "right" | "tab" | "top" | "float"
+---@alias layout "buffer" | "below" | "left" | "right" | "tab" | "above" | "float"
 ---@alias on_close fun(term: Terminal)
 ---@alias on_create fun(term: Terminal)
 ---@alias on_focus fun(term: Terminal)
@@ -60,7 +60,7 @@ local config = {
   auto_scroll = true,
   clear_env = false,
   close_on_job_exit = true,
-  layout = "bottom",
+  layout = "below",
   float_opts = {
     title_pos = "left",
     width = math.ceil(math.min(vim.o.columns, math.max(80, vim.o.columns - 20))),

@@ -1,0 +1,477 @@
+# spec/terminal/terminal_spec.lua @ 29: .get_focused returns currently focused terminal
+ok 1 - .get_focused returns currently focused terminal
+# spec/terminal/terminal_spec.lua @ 38: .get_focused returns nil when there are terminals but none are focused
+ok 2 - .get_focused returns nil when there are terminals but none are focused
+# spec/terminal/terminal_spec.lua @ 48: .get_focused returns nil when no terminals exist
+ok 3 - .get_focused returns nil when no terminals exist
+# spec/terminal/terminal_spec.lua @ 56: .get_last_focused returns last focused terminal
+ok 4 - .get_last_focused returns last focused terminal
+# spec/terminal/terminal_spec.lua @ 67: .get_last_focused returns currently focused terminal
+ok 5 - .get_last_focused returns currently focused terminal
+# spec/terminal/terminal_spec.lua @ 76: .get_last_focused returns nil when no terminals exist
+ok 6 - .get_last_focused returns nil when no terminals exist
+# spec/terminal/terminal_spec.lua @ 84: .get_all returns all terminals
+ok 7 - .get_all returns all terminals
+# spec/terminal/terminal_spec.lua @ 95: .get_all returns empty table when no terminals exist
+ok 8 - .get_all returns empty table when no terminals exist
+# spec/terminal/terminal_spec.lua @ 103: .get_started returns all started terminals
+ok 9 - .get_started returns all started terminals
+# spec/terminal/terminal_spec.lua @ 114: .get_started returns empty table when no terminals exist
+ok 10 - .get_started returns empty table when no terminals exist
+# spec/terminal/terminal_spec.lua @ 122: .get returns terminal with given id
+ok 11 - .get returns terminal with given id
+# spec/terminal/terminal_spec.lua @ 131: .get returns nil when terminal does not exist
+ok 12 - .get returns nil when terminal does not exist
+# spec/terminal/terminal_spec.lua @ 137: .get_by_name returns terminal with given name
+ok 13 - .get_by_name returns terminal with given name
+# spec/terminal/terminal_spec.lua @ 146: .get_by_name returns nil when terminal does not exist
+ok 14 - .get_by_name returns nil when terminal does not exist
+# spec/terminal/terminal_spec.lua @ 152: .find returns terminal matching given predicate
+ok 15 - .find returns terminal matching given predicate
+# spec/terminal/terminal_spec.lua @ 163: .find returns nil when no terminal matches predicate
+ok 16 - .find returns nil when no terminal matches predicate
+# spec/terminal/terminal_spec.lua @ 175: .select returns result of calling given picker with started terminal and given prompt and callbacks
+ok 17 - .select returns result of calling given picker with started terminal and given prompt and callbacks
+# spec/terminal/terminal_spec.lua @ 195: .select notifies when no terminals are started
+ok 18 - .select notifies when no terminals are started
+# spec/terminal/terminal_spec.lua @ 213: .delete_all deletes all terminals
+ok 19 - .delete_all deletes all terminals
+# spec/terminal/terminal_spec.lua @ 221: .delete_all stops any running terminals
+ok 20 - .delete_all stops any running terminals
+# spec/terminal/terminal_spec.lua @ 231: .get_state returns value for a given key from the state
+ok 21 - .get_state returns value for a given key from the state
+# spec/terminal/terminal_spec.lua @ 239: .reset_ids resets sequence of terminal ids
+ok 22 - .reset_ids resets sequence of terminal ids
+# spec/terminal/terminal_spec.lua @ 251: :new takes auto_scroll option
+ok 23 - :new takes auto_scroll option
+# spec/terminal/terminal_spec.lua @ 257: :new defaults to config's auto_scroll
+ok 24 - :new defaults to config's auto_scroll
+# spec/terminal/terminal_spec.lua @ 263: :new takes cmd option
+ok 25 - :new takes cmd option
+# spec/terminal/terminal_spec.lua @ 269: :new defaults to config's shell if cmd is not provided
+ok 26 - :new defaults to config's shell if cmd is not provided
+# spec/terminal/terminal_spec.lua @ 275: :new takes clear_env option
+ok 27 - :new takes clear_env option
+# spec/terminal/terminal_spec.lua @ 281: :new defaults to config's clear_env
+ok 28 - :new defaults to config's clear_env
+# spec/terminal/terminal_spec.lua @ 287: :new takes close_on_job_exit option
+ok 29 - :new takes close_on_job_exit option
+# spec/terminal/terminal_spec.lua @ 293: :new defaults to config's close_on_job_exit
+ok 30 - :new defaults to config's close_on_job_exit
+# spec/terminal/terminal_spec.lua @ 299: :new takes layout option
+ok 31 - :new takes layout option
+# spec/terminal/terminal_spec.lua @ 305: :new defaults to config's layout
+not ok 32 - :new defaults to config's layout
+# spec/terminal/terminal_spec.lua @ 305
+# Failure message: spec/terminal/terminal_spec.lua:308: Expected objects to be equal.
+# Passed in:
+# (string) 'below'
+# Expected:
+# (string) 'bottom'
+# stack traceback:
+# 	spec/terminal/terminal_spec.lua:308: in function <spec/terminal/terminal_spec.lua:305>
+# 
+# spec/terminal/terminal_spec.lua @ 311: :new takes env option
+ok 33 - :new takes env option
+# spec/terminal/terminal_spec.lua @ 317: :new takes name option
+ok 34 - :new takes name option
+# spec/terminal/terminal_spec.lua @ 323: :new defaults name to cmd option
+ok 35 - :new defaults name to cmd option
+# spec/terminal/terminal_spec.lua @ 329: :new takes newline_chr option
+ok 36 - :new takes newline_chr option
+# spec/terminal/terminal_spec.lua @ 335: :new defaults to config's newline_chr
+ok 37 - :new defaults to config's newline_chr
+# spec/terminal/terminal_spec.lua @ 341: :new takes float_opts option
+ok 38 - :new takes float_opts option
+# spec/terminal/terminal_spec.lua @ 348: :new defaults to config's float_opts for non-given options
+ok 39 - :new defaults to config's float_opts for non-given options
+# spec/terminal/terminal_spec.lua @ 354: :new defaults to config's float_opts
+ok 40 - :new defaults to config's float_opts
+# spec/terminal/terminal_spec.lua @ 361: :new takes float_winblend option
+ok 41 - :new takes float_winblend option
+# spec/terminal/terminal_spec.lua @ 367: :new defaults to config's float_winblend
+ok 42 - :new defaults to config's float_winblend
+# spec/terminal/terminal_spec.lua @ 373: :new takes persist_mode option
+ok 43 - :new takes persist_mode option
+# spec/terminal/terminal_spec.lua @ 379: :new defaults to config's persist_mode
+ok 44 - :new defaults to config's persist_mode
+# spec/terminal/terminal_spec.lua @ 385: :new takes start_in_insert option
+ok 45 - :new takes start_in_insert option
+# spec/terminal/terminal_spec.lua @ 391: :new defaults to config's start_in_insert
+ok 46 - :new defaults to config's start_in_insert
+# spec/terminal/terminal_spec.lua @ 397: :new takes on_close option
+ok 47 - :new takes on_close option
+# spec/terminal/terminal_spec.lua @ 406: :new defaults to config's on_close
+ok 48 - :new defaults to config's on_close
+# spec/terminal/terminal_spec.lua @ 412: :new takes on_create option
+ok 49 - :new takes on_create option
+# spec/terminal/terminal_spec.lua @ 421: :new defaults to config's on_create
+ok 50 - :new defaults to config's on_create
+# spec/terminal/terminal_spec.lua @ 427: :new takes on_focus option
+ok 51 - :new takes on_focus option
+# spec/terminal/terminal_spec.lua @ 436: :new defaults to config's on_focus
+ok 52 - :new defaults to config's on_focus
+# spec/terminal/terminal_spec.lua @ 442: :new takes on_job_exit option
+ok 53 - :new takes on_job_exit option
+# spec/terminal/terminal_spec.lua @ 451: :new defaults to config's on_job_exit
+ok 54 - :new defaults to config's on_job_exit
+# spec/terminal/terminal_spec.lua @ 457: :new takes on_job_stdout option
+ok 55 - :new takes on_job_stdout option
+# spec/terminal/terminal_spec.lua @ 466: :new defaults to config's on_job_stdout
+ok 56 - :new defaults to config's on_job_stdout
+# spec/terminal/terminal_spec.lua @ 472: :new takes on_job_stderr option
+ok 57 - :new takes on_job_stderr option
+# spec/terminal/terminal_spec.lua @ 481: :new defaults to config's on_job_stderr
+ok 58 - :new defaults to config's on_job_stderr
+# spec/terminal/terminal_spec.lua @ 487: :new takes on_open option
+ok 59 - :new takes on_open option
+# spec/terminal/terminal_spec.lua @ 496: :new defaults to config's on_open
+ok 60 - :new defaults to config's on_open
+# spec/terminal/terminal_spec.lua @ 502: :new takes on_start option
+ok 61 - :new takes on_start option
+# spec/terminal/terminal_spec.lua @ 511: :new defaults to config's on_start
+ok 62 - :new defaults to config's on_start
+# spec/terminal/terminal_spec.lua @ 517: :new takes on_stop option
+ok 63 - :new takes on_stop option
+# spec/terminal/terminal_spec.lua @ 526: :new defaults to config's on_stop
+ok 64 - :new defaults to config's on_stop
+# spec/terminal/terminal_spec.lua @ 532: :new builds sequential ids
+ok 65 - :new builds sequential ids
+# spec/terminal/terminal_spec.lua @ 540: :new doesn't build deleted terminal ids
+ok 66 - :new doesn't build deleted terminal ids
+# spec/terminal/terminal_spec.lua @ 548: :new initializes directory as the current git directory if dir is given as 'git_dir'
+ok 67 - :new initializes directory as the current git directory if dir is given as 'git_dir'
+# spec/terminal/terminal_spec.lua @ 556: :new initializes directory as the current working directory if dir is nil
+ok 68 - :new initializes directory as the current working directory if dir is nil
+# spec/terminal/terminal_spec.lua @ 564: :new initializes directory as the given directory if dir is a string
+ok 69 - :new initializes directory as the given directory if dir is a string
+# spec/terminal/terminal_spec.lua @ 570: :new errors if dir is not a valid directory
+ok 70 - :new errors if dir is not a valid directory
+# spec/terminal/terminal_spec.lua @ 581: :new initializes layout from given layout
+ok 71 - :new initializes layout from given layout
+# spec/terminal/terminal_spec.lua @ 587: :new doesn't override float_opts defaults for non-given options
+ok 72 - :new doesn't override float_opts defaults for non-given options
+# spec/terminal/terminal_spec.lua @ 593: :new initializes float_opts title from name when not given
+ok 73 - :new initializes float_opts title from name when not given
+# spec/terminal/terminal_spec.lua @ 599: :new doesn't override float_opts title when given
+ok 74 - :new doesn't override float_opts title when given
+# spec/terminal/terminal_spec.lua @ 605: :new initializes float_opts row from height when not given
+ok 75 - :new initializes float_opts row from height when not given
+# spec/terminal/terminal_spec.lua @ 611: :new doesn't override float_opts row when given
+ok 76 - :new doesn't override float_opts row when given
+# spec/terminal/terminal_spec.lua @ 617: :new initializes float_opts col from width when not given
+ok 77 - :new initializes float_opts col from width when not given
+# spec/terminal/terminal_spec.lua @ 623: :new doesn't override float_opts col when given
+ok 78 - :new doesn't override float_opts col when given
+# spec/terminal/terminal_spec.lua @ 629: :new initializes on_job_exit so it calls provided on_job_exit
+ok 79 - :new initializes on_job_exit so it calls provided on_job_exit
+# spec/terminal/terminal_spec.lua @ 637: :new initializes on_job_stdout so it calls provided on_job_stdout
+ok 80 - :new initializes on_job_stdout so it calls provided on_job_stdout
+# spec/terminal/terminal_spec.lua @ 645: :new initializes on_job_stderr so it calls provided on_job_stderr
+ok 81 - :new initializes on_job_stderr so it calls provided on_job_stderr
+# spec/terminal/terminal_spec.lua @ 653: :new adds terminal to the list of terminals in the state
+ok 82 - :new adds terminal to the list of terminals in the state
+# spec/terminal/terminal_spec.lua @ 661: :update updates passed properties
+ok 83 - :update updates passed properties
+# spec/terminal/terminal_spec.lua @ 669: :update recomputes mode
+ok 84 - :update recomputes mode
+# spec/terminal/terminal_spec.lua @ 676: :update recomputes layout
+ok 85 - :update recomputes layout
+# spec/terminal/terminal_spec.lua @ 683: :update doesn't override float_opts that are not-given options
+ok 86 - :update doesn't override float_opts that are not-given options
+# spec/terminal/terminal_spec.lua @ 690: :update recomputes on_job_exit
+ok 87 - :update recomputes on_job_exit
+# spec/terminal/terminal_spec.lua @ 699: :update recomputes on_job_stdout
+ok 88 - :update recomputes on_job_stdout
+# spec/terminal/terminal_spec.lua @ 708: :update recomputes on_job_stderr
+ok 89 - :update recomputes on_job_stderr
+# spec/terminal/terminal_spec.lua @ 717: :update doesn't allow updating cmd
+ok 90 - :update doesn't allow updating cmd
+# spec/terminal/terminal_spec.lua @ 730: :update doesn't allow updating dir
+ok 91 - :update doesn't allow updating dir
+# spec/terminal/terminal_spec.lua @ 745: :is_started returns true if terminal is started
+ok 92 - :is_started returns true if terminal is started
+# spec/terminal/terminal_spec.lua @ 751: :is_started returns false if terminal is not started
+ok 93 - :is_started returns false if terminal is not started
+# spec/terminal/terminal_spec.lua @ 759: :start creates a new buffer
+ok 94 - :start creates a new buffer
+# spec/terminal/terminal_spec.lua @ 769: :start opens term with the given command
+ok 95 - :start opens term with the given command
+# spec/terminal/terminal_spec.lua @ 778: :start updates the state with the new job_id
+ok 96 - :start updates the state with the new job_id
+# spec/terminal/terminal_spec.lua @ 787: :start runs the on_create callback
+ok 97 - :start runs the on_create callback
+# spec/terminal/terminal_spec.lua @ 798: :start does nothing if already started
+ok 98 - :start does nothing if already started
+# spec/terminal/terminal_spec.lua @ 812: :is_open returns false if terminal is not open
+ok 99 - :is_open returns false if terminal is not open
+# spec/terminal/terminal_spec.lua @ 818: :is_open returns true if terminal is open
+ok 100 - :is_open returns true if terminal is open
+# spec/terminal/terminal_spec.lua @ 825: :is_open returns false if terminal is open in another tab
+ok 101 - :is_open returns false if terminal is open in another tab
+# spec/terminal/terminal_spec.lua @ 834: :close closes the terminal window if open
+ok 102 - :close closes the terminal window if open
+# spec/terminal/terminal_spec.lua @ 845: :close runs the on_close() callback
+ok 103 - :close runs the on_close() callback
+# spec/terminal/terminal_spec.lua @ 857: :close does nothing if the terminal is not open
+ok 104 - :close does nothing if the terminal is not open
+# spec/terminal/terminal_spec.lua @ 867: :open starts the terminal if it is not yet started
+ok 105 - :open starts the terminal if it is not yet started
+# spec/terminal/terminal_spec.lua @ 875: :open opens the terminal at the top if layout is top
+ok 106 - :open opens the terminal at the top if layout is top
+# spec/terminal/terminal_spec.lua @ 885: :open opens the terminal at the bottom if layout is bottom
+not ok 107 - :open opens the terminal at the bottom if layout is bottom
+# spec/terminal/terminal_spec.lua @ 885
+# Failure message: spec/terminal/terminal_spec.lua:892: Expected objects to be equal.
+# Passed in:
+# (string) 'left'
+# Expected:
+# (string) 'below'
+# stack traceback:
+# 	spec/terminal/terminal_spec.lua:892: in function <spec/terminal/terminal_spec.lua:885>
+# 
+not ok 108 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 895: :open opens the terminal at the left if layout is left
+ok 109 - :open opens the terminal at the left if layout is left
+not ok 110 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 905: :open opens the terminal at the right if layout is right
+ok 111 - :open opens the terminal at the right if layout is right
+not ok 112 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 915: :open opens the terminal in another tab if layout is tab
+ok 113 - :open opens the terminal in another tab if layout is tab
+not ok 114 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 926: :open opens the terminal in a float window if layout is float
+ok 115 - :open opens the terminal in a float window if layout is float
+not ok 116 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 936: :open uses the stored layout if not provided
+not ok 117 - :open uses the stored layout if not provided
+# spec/terminal/terminal_spec.lua @ 936
+# Failure message: spec/terminal/terminal_spec.lua:943: Expected objects to be equal.
+# Passed in:
+# (string) 'left'
+# Expected:
+# (string) 'below'
+# stack traceback:
+# 	spec/terminal/terminal_spec.lua:943: in function <spec/terminal/terminal_spec.lua:936>
+# 
+not ok 118 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 946: :open stores the layout in the state
+ok 119 - :open stores the layout in the state
+not ok 120 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 954: :open stores the window in the state
+ok 121 - :open stores the window in the state
+not ok 122 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 962: :open stores the tab in the state
+ok 123 - :open stores the tab in the state
+not ok 124 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 970: :open runs the on_open callback
+ok 125 - :open runs the on_open callback
+not ok 126 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 981: :open sets the buffer filetype as ErgoTerm
+ok 127 - :open sets the buffer filetype as ErgoTerm
+not ok 128 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 989: :open sets the buffer as not listed
+ok 129 - :open sets the buffer as not listed
+not ok 130 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 997: :open sets the window as no number
+ok 131 - :open sets the window as no number
+not ok 132 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 1005: :open sets the window as no sign column
+ok 133 - :open sets the window as no sign column
+not ok 134 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 1013: :open sets the window as no relative number
+ok 135 - :open sets the window as no relative number
+not ok 136 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 1021: :open sets the window as no side scroll if layout is float
+ok 137 - :open sets the window as no side scroll if layout is float
+not ok 138 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 1029: :open sets the window with float_windblend given in initialization if layout is float
+not ok 139 - :open sets the window with float_windblend given in initialization if layout is float
+# spec/terminal/terminal_spec.lua @ 1029
+# Failure message: spec/terminal/terminal_spec.lua:1034: Expected objects to be equal.
+# Passed in:
+# (number) 0
+# Expected:
+# (number) 20
+# stack traceback:
+# 	spec/terminal/terminal_spec.lua:1034: in function <spec/terminal/terminal_spec.lua:1029>
+# 
+not ok 140 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 1037: :open keeps focus on the original window
+ok 141 - :open keeps focus on the original window
+not ok 142 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+# spec/terminal/terminal_spec.lua @ 1046: :open does nothing if the terminal is already open
+ok 143 - :open does nothing if the terminal is already open
+not ok 144 - after_each
+# spec/terminal/terminal_spec.lua @ 23
+# Failure message: lua/ergoterm/terminal.lua:288: Vim:E444: Cannot close last window
+# stack traceback:
+# 	lua/ergoterm/terminal.lua:288: in function 'close'
+# 	lua/ergoterm/terminal.lua:359: in function 'stop'
+# 	lua/ergoterm/terminal.lua:370: in function 'delete'
+# 	lua/ergoterm/terminal.lua:121: in function 'delete_all'
+# 	spec/terminal/terminal_spec.lua:24: in function <spec/terminal/terminal_spec.lua:23>
+# 
+1..144
