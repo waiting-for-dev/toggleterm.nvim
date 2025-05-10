@@ -807,3 +807,25 @@ describe(":start", function()
     assert.equal(initial_job_id, term:get_state("job_id"))
   end)
 end)
+
+describe(":is_open", function()
+  it("returns false if terminal is not open", function()
+    local term = terms.Terminal:new()
+
+    assert.is_false(term:is_open())
+  end)
+
+  it("returns true if terminal is open", function()
+    local term = terms.Terminal:new()
+    term:open()
+
+    assert.is_true(term:is_open())
+  end)
+
+  it("returns false if terminal is open in another tab", function()
+    local term = terms.Terminal:new()
+    term:open("tab")
+
+    assert.is_true(term:is_open())
+  end)
+end)
