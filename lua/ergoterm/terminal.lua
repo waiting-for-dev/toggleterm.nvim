@@ -241,13 +241,6 @@ function Terminal:update(opts)
   return self
 end
 
----Returns whether the terminal is started
----
----@return boolean
-function Terminal:is_started()
-  return self._state.bufnr ~= nil
-end
-
 ---Start the job in the terminal
 ---
 ---It does not open the terminal window.
@@ -265,16 +258,11 @@ function Terminal:start()
   return self
 end
 
----Check if the terminal is currently open
+---Returns whether the terminal is started
 ---
 ---@return boolean
-function Terminal:is_open()
-  if not self._state.window then return false end
-  local wins = {}
-  for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
-    vim.list_extend(wins, vim.api.nvim_tabpage_list_wins(tab))
-  end
-  return vim.tbl_contains(wins, self._state.window)
+function Terminal:is_started()
+  return self._state.bufnr ~= nil
 end
 
 ---Open the terminal window without focusing it
@@ -326,6 +314,18 @@ function Terminal:open(layout)
   return self
 end
 
+---Check if the terminal is currently open
+---
+---@return boolean
+function Terminal:is_open()
+  if not self._state.window then return false end
+  local wins = {}
+  for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+    vim.list_extend(wins, vim.api.nvim_tabpage_list_wins(tab))
+  end
+  return vim.tbl_contains(wins, self._state.window)
+end
+
 ---Close the terminal window
 ---
 ---It's going to run the configured callback
@@ -337,13 +337,6 @@ function Terminal:close()
     vim.api.nvim_win_close(self._state.window, true)
   end
   return self
-end
-
----Returns whether the terminal is focused
----
----@return boolean
-function Terminal:is_focused()
-  return self._state.window == vim.api.nvim_get_current_win()
 end
 
 ---Focus the terminal window
@@ -362,8 +355,11 @@ function Terminal:focus(layout)
   return self
 end
 
-function Terminal:is_stopped()
-  return self._state.job_id == nil
+---Returns whether the terminal is focused
+---
+---@return boolean
+function Terminal:is_focused()
+  return self._state.window == vim.api.nvim_get_current_win()
 end
 
 ---Stop the terminal
@@ -377,6 +373,10 @@ function Terminal:stop()
   if self._state.bufnr then
     vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
   end
+end
+
+function Terminal:is_stopped()
+  return self._state.job_id == nil
 end
 
 function Terminal:delete()

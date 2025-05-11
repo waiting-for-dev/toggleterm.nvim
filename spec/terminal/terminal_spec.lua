@@ -741,20 +741,6 @@ describe(":update", function()
   end)
 end)
 
-describe(":is_started", function()
-  it("returns true if terminal is started", function()
-    local term = terms.Terminal:new():start()
-
-    assert.is_true(term:is_started())
-  end)
-
-  it("returns false if terminal is not started", function()
-    local term = terms.Terminal:new()
-
-    assert.is_false(term:is_started())
-  end)
-end)
-
 describe(":start", function()
   it("creates a new buffer", function()
     local term = terms.Terminal:new()
@@ -808,25 +794,17 @@ describe(":start", function()
   end)
 end)
 
-describe(":is_open", function()
-  it("returns false if terminal is not open", function()
-    local term = terms.Terminal:new()
+describe(":is_started", function()
+  it("returns true if terminal is started", function()
+    local term = terms.Terminal:new():start()
 
-    assert.is_false(term:is_open())
+    assert.is_true(term:is_started())
   end)
 
-  it("returns true if terminal is open", function()
+  it("returns false if terminal is not started", function()
     local term = terms.Terminal:new()
-    term:open()
 
-    assert.is_true(term:is_open())
-  end)
-
-  it("returns false if terminal is open in another tab", function()
-    local term = terms.Terminal:new()
-    term:open("tab")
-
-    assert.is_true(term:is_open())
+    assert.is_false(term:is_started())
   end)
 end)
 
@@ -1019,6 +997,28 @@ describe(":open", function()
     term:open()
 
     assert.equal(initial_window, term:get_state("window"))
+  end)
+end)
+
+describe(":is_open", function()
+  it("returns false if terminal is not open", function()
+    local term = terms.Terminal:new()
+
+    assert.is_false(term:is_open())
+  end)
+
+  it("returns true if terminal is open", function()
+    local term = terms.Terminal:new()
+    term:open()
+
+    assert.is_true(term:is_open())
+  end)
+
+  it("returns false if terminal is open in another tab", function()
+    local term = terms.Terminal:new()
+    term:open("tab")
+
+    assert.is_true(term:is_open())
   end)
 end)
 
