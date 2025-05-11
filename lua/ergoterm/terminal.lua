@@ -341,6 +341,10 @@ end
 
 ---Focus the terminal window
 ---
+---If the terminal is not started, it will be started.
+---If the terminal is not open, it will be opened with the given layout or the current one if not given.
+---It'll run the configured `on_focus` callback.
+---
 ---@param layout string?
 function Terminal:focus(layout)
   if not self:is_started() then self:start() end
@@ -349,7 +353,7 @@ function Terminal:focus(layout)
     vim.api.nvim_set_current_tabpage(self._state.tabpage)
     vim.api.nvim_set_current_win(self._state.window)
     self:_set_last_focused()
-    self:_set_initial_mode()
+    self:_set_return_mode()
   end
   self:on_focus()
   return self

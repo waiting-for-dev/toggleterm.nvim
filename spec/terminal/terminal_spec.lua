@@ -1054,3 +1054,98 @@ describe(":close", function()
     assert.is_false(term:is_open())
   end)
 end)
+
+describe(":focus", function()
+  it("starts the terminal if it is not already started", function()
+    local term = terms.Terminal:new()
+
+    term:focus()
+
+    assert.is_true(term:is_started())
+  end)
+
+  it("opens the terminal if it is not already open", function()
+    local term = terms.Terminal:new()
+
+    term:focus()
+
+    assert.is_true(term:is_open())
+  end)
+
+  it("forwards given layout when opening the terminal", function()
+    local term = terms.Terminal:new()
+
+    term:focus("right")
+
+    assert.equal("right", term:get_state("layout"))
+  end)
+
+  it("sets the terminal window as the current window", function()
+    local term = terms.Terminal:new()
+    term:open()
+
+    term:focus()
+
+    assert.equal(term:get_state("window"), vim.api.nvim_get_current_win())
+  end)
+
+  it("sets the terminal tab as the current tab", function()
+    local term = terms.Terminal:new()
+    term:open("tab")
+
+    term:focus()
+
+    assert.equal(term:get_state("tabpage"), vim.api.nvim_get_current_tabpage())
+  end)
+
+  it("sets the terminal as the last focused", function()
+    local term = terms.Terminal:new()
+
+    term:focus()
+
+    assert.equal(term, terms.get_last_focused())
+  end)
+
+  it("runs the on_focus callback", function()
+    local called = false
+    local term = terms.Terminal:new({
+      on_focus = function() called = true end,
+    })
+
+    term:focus()
+
+    assert.is_true(called)
+  end)
+
+  it("does nothing if already focused", function()
+    local term = terms.Terminal:new()
+    term:focus()
+    local initial_window = vim.api.nvim_get_current_win()
+    local initial_tabpage = vim.api.nvim_get_current_tabpage()
+
+    term:focus()
+
+    assert.equal(initial_window, vim.api.nvim_get_current_win())
+    assert.equal(initial_tabpage, vim.api.nvim_get_current_tabpage())
+  end)
+end)
+
+describe(":is_focused", function()
+  it("returns true if the terminal is focused", function()
+    local term = terms.Terminal:new()
+
+    term:focus()
+
+    assert.is_true(term:is_focused())
+  end)
+
+  it("returns false if the terminal is not focused", function()
+    local term1 = terms.Terminal:new()
+    local term2 = terms.Terminal:new()
+
+    term1:focus()
+
+    assert.is_false(term2:is_focused())
+  end)
+end)
+
