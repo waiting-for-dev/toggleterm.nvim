@@ -354,8 +354,8 @@ function Terminal:focus(layout)
     vim.api.nvim_set_current_win(self._state.window)
     self:_set_last_focused()
     self:_set_return_mode()
+    self:on_focus()
   end
-  self:on_focus()
   return self
 end
 
@@ -368,21 +368,35 @@ end
 
 ---Stop the terminal
 ---
----Close window and remove buffer
+---It will stop the job and delete the buffer.
+---It'll run the configured `on_stop` callback.
+---If the terminal is open, it will be closed.
+---
+---@return Terminal
 function Terminal:stop()
   if self:is_open() then self:close() end
-  self:on_stop()
-  vim.fn.jobstop(self._state.job_id)
-  self._state.job_id = nil
-  if self._state.bufnr then
-    vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
+  if self:is_started() then
+    self:on_stop()
+    vim.fn.jobstop(self._state.job_id)
+    self._state.job_id = nil
+    if self._state.bufnr then
+      vim.api.nvim_buf_delete(self._state.bufnr, { force = true })
+      self._state.bufnr = nil
+    end
   end
+  return self
 end
 
+---Check if the terminal is stopped
+---
+---@return boolean
 function Terminal:is_stopped()
   return self._state.job_id == nil
 end
 
+---Deletes the reference to the terminal
+---
+---It'll stop the terminal if running.
 function Terminal:delete()
   if not self:is_stopped() then
     self:stop()
@@ -395,7 +409,7 @@ end
 
 ---Toggle the terminal window
 ---
----If the terminal is open, it will be closed. If it's closed, it will be focused
+---If the terminal is open, it will be closed. Otherwise, it will be focused.
 ---
 ---@param layout string?
 ---

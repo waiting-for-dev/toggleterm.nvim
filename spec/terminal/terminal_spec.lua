@@ -1149,3 +1149,151 @@ describe(":is_focused", function()
   end)
 end)
 
+describe(":stop", function()
+  it("closes the terminal if open", function()
+    local term = terms.Terminal:new()
+    term:open()
+
+    term:stop()
+
+    assert.is_false(term:is_open())
+  end)
+
+  it("runs the on_stop callback", function()
+    local called = false
+    local term = terms.Terminal:new({
+      on_stop = function() called = true end,
+    })
+    term:start()
+
+    term:stop()
+
+    assert.is_true(called)
+  end)
+
+  it("stops the running process", function()
+    local term = terms.Terminal:new()
+    term:start()
+    local job_id = term:get_state("job_id")
+    local spy_jobstop = spy.on(vim.fn, "jobstop")
+
+    term:stop()
+
+    assert.spy(spy_jobstop).was_called_with(job_id)
+  end)
+
+  it("resets the job id in the state", function()
+    local term = terms.Terminal:new()
+    term:start()
+
+    term:stop()
+
+    assert.is_nil(term:get_state("job_id"))
+  end)
+
+  it("deletes the associated buffer", function()
+    local term = terms.Terminal:new()
+    term:start()
+    local bufnr = term:get_state("bufnr")
+
+    term:stop()
+
+    assert.is_false(vim.api.nvim_buf_is_valid(bufnr))
+  end)
+
+  it("resets the buffer id in the state", function()
+    local term = terms.Terminal:new()
+    term:start()
+
+    term:stop()
+
+    assert.is_nil(term:get_state("bufnr"))
+  end)
+end)
+
+describe(":is_stopped", function()
+  it("returns true if the terminal job is stopped", function()
+    local term = terms.Terminal:new()
+    term:start()
+    term:stop()
+
+    assert.is_true(term:is_stopped())
+  end)
+
+  it("returns false if the terminal job is running", function()
+    local term = terms.Terminal:new()
+    term:start()
+
+    assert.is_false(term:is_stopped())
+  end)
+end)
+
+describe(":delete", function()
+  it("stops the terminal if started", function()
+    local term = terms.Terminal:new()
+    term:start()
+
+    term:delete()
+
+    assert.is_true(term:is_stopped())
+  end)
+
+  it("removes the terminal from the state", function()
+    local term = terms.Terminal:new()
+
+    term:delete()
+
+    assert.is_nil(terms.get(term.id))
+  end)
+
+  it("removes the terminal from the last focused cache if it was focused", function()
+    local term = terms.Terminal:new()
+    term:focus()
+
+    term:delete()
+
+    assert.is_nil(terms.get_last_focused())
+  end)
+end)
+
+describe(":toggle", function()
+  it("closes the terminal if open", function()
+    local term = terms.Terminal:new()
+    term:open()
+
+    term:toggle()
+
+    assert.is_false(term:is_open())
+  end)
+
+  it("focuses the terminal if closed", function()
+    local term = terms.Terminal:new()
+    term:open()
+    term:close()
+
+    term:toggle()
+
+    assert.is_true(term:is_focused())
+  end)
+
+  it("uses layout in the state if set", function()
+    local term = terms.Terminal:new({ layout = "right" })
+    term:open()
+    term:close()
+
+    term:toggle()
+
+    assert.equal("right", term:get_state("layout"))
+  end)
+
+  it("uses given layout if given", function()
+    local term = terms.Terminal:new({ layout = "below" })
+    term:open()
+    term:close()
+
+    term:toggle("left")
+
+    assert.equal("left", term:get_state("layout"))
+    assert.is_true(term:is_focused())
+  end)
+end)
