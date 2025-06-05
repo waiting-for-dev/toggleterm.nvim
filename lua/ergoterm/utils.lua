@@ -54,29 +54,6 @@ function M.is_windows()
   return vim.fn.has("win32") == 1
 end
 
----@param shell string
-function M.is_pwsh(shell)
-  return shell:find("pwsh") or shell:find("powershell")
-end
-
----@param shell string
-function M.is_nushell(shell)
-  return shell:find("nu")
-end
-
----@return string
-function M.get_newline_chr()
-  local shell = config.get("shell")
-  if type(shell) == "function" then shell = shell() end
-  if M.is_windows() then
-    return M.is_pwsh(shell) and "\r" or "\r\n"
-  elseif M.is_nushell(shell) then
-    return "\r"
-  else
-    return "\n"
-  end
-end
-
 ---@param dir string?
 ---@return string?
 function M.get_dir(dir)

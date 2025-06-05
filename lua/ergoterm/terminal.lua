@@ -160,7 +160,6 @@ end
 ---@field layout layout? the layout to open the terminal in the first time
 ---@field env? table<string, string> environmental variables passed to jobstart()
 ---@field name string?
----@field newline_chr? string user specified newline chararacter
 ---@field float_opts FloatOpts? options for the floating window
 ---@field float_winblend? number
 ---@field on_close on_close? Callback to run when the terminal is closed. It takes the terminal as an argument.
@@ -196,7 +195,6 @@ function Terminal:new(args)
   term.layout = term.layout or conf.layout
   term.env = term.env
   term.name = term.name or term.cmd
-  term.newline_chr = term.newline_chr or utils.get_newline_chr()
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts) --@type FloatOpts
   term.float_winblend = term.float_winblend or conf.float_winblend
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)

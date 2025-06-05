@@ -326,18 +326,6 @@ describe(":new", function()
     assert.equal("echo hello", term.name)
   end)
 
-  it("takes newline_chr option", function()
-    local term = terms.Terminal:new({ newline_chr = "<END>" })
-
-    assert.equal("<END>", term.newline_chr)
-  end)
-
-  it("defaults to config's newline_chr", function()
-    local term = terms.Terminal:new()
-
-    assert.equal("\n", term.newline_chr)
-  end)
-
   it("takes float_opts option", function()
     local term = terms.Terminal:new({ float_opts = { width = 100, height = 50 } })
 
@@ -1327,24 +1315,30 @@ describe(":send", function()
   end)
 
   it("adds a newline by default", function()
-    local term = terms.Terminal:new({ cmd = "cat", newline_chr = "B" }):start()
+    local term = terms.Terminal:new():start()
+    local spy_chansend = spy.on(vim.fn, "chansend")
 
     term:send({ "foo" })
     vim.wait(100)
 
-    local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
-    assert.is_true(vim.tbl_contains(lines, "B"))
+    assert.spy(spy_chansend).was_called_with(
+      term:get_state("job_id"),
+      { "foo", "" }
+    )
   end)
 
-  --it("does not add a newline if new_line is false", function()
-  --  local term = terms.Terminal:new({ cmd = "cat -n" }):start()
+  it("does not add a newline if new_line is false", function()
+    local term = terms.Terminal:new():start()
+    local spy_chansend = spy.on(vim.fn, "chansend")
 
-  --  term:send({ "foo" })
-  --  vim.wait(100)
+    term:send({ "foo" }, nil, nil, false)
+    vim.wait(100)
 
-  --  local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
-  --  assert.is_true(vim.tbl_contains(lines, "     1  foo"))
-  --end)
+    assert.spy(spy_chansend).was_called_with(
+      term:get_state("job_id"),
+      { "foo" }
+    )
+  end)
 
   it("trims input by default", function()
     local term = terms.Terminal:new({ cmd = "cat" }):start()
