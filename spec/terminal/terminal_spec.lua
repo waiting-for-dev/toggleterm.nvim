@@ -792,6 +792,23 @@ describe(":start", function()
     assert.equal(initial_bufnr, term:get_state("bufnr"))
     assert.equal(initial_job_id, term:get_state("job_id"))
   end)
+
+  it("adds a new buffer autocommand", function()
+    local term = terms.Terminal:new()
+
+    term:start()
+
+    local bufnr = term:get_state("bufnr")
+    local aucmds = vim.api.nvim_get_autocmds({
+      event = "TermClose",
+      buffer = bufnr,
+      group = "ErgoTermBuffer",
+    })
+
+    assert.is_true(#aucmds > 0)
+    assert.is_true(aucmds[1].buffer == bufnr)
+    assert.is_true(aucmds[1].group_name == "ErgoTermBuffer")
+  end)
 end)
 
 describe(":is_started", function()
@@ -1295,5 +1312,111 @@ describe(":toggle", function()
 
     assert.equal("left", term:get_state("layout"))
     assert.is_true(term:is_focused())
+  end)
+end)
+
+describe(":send", function()
+  it("sends input to the terminal process", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+
+    term:send({ "hello" })
+    vim.wait(100)
+
+    local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
+    assert.is_true(vim.tbl_contains(lines, "hello"))
+  end)
+
+  it("adds a newline by default", function()
+    local term = terms.Terminal:new({ cmd = "cat", newline_chr = "B" }):start()
+
+    term:send({ "foo" })
+    vim.wait(100)
+
+    local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
+    assert.is_true(vim.tbl_contains(lines, "B"))
+  end)
+
+  --it("does not add a newline if new_line is false", function()
+  --  local term = terms.Terminal:new({ cmd = "cat -n" }):start()
+
+  --  term:send({ "foo" })
+  --  vim.wait(100)
+
+  --  local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
+  --  assert.is_true(vim.tbl_contains(lines, "     1  foo"))
+  --end)
+
+  it("trims input by default", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    term:send({ "  baz  " })
+
+    vim.wait(100)
+    local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
+
+    assert.is_true(vim.tbl_contains(lines, "baz"))
+    assert.is_false(vim.tbl_contains(lines, "  baz  "))
+  end)
+
+  it("does not trim input if trim is false", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    term:send({ "  qux  " }, nil, false)
+
+    vim.wait(100)
+    local lines = vim.api.nvim_buf_get_lines(term:get_state("bufnr"), 0, -1, false)
+
+    assert.is_true(vim.tbl_contains(lines, "  qux  "))
+  end)
+
+  it("opens the terminal if not open and action is not silent", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    term:close()
+
+    term:send({ "foo" }, "visible")
+    vim.wait(100)
+
+    assert.is_true(term:is_open())
+  end)
+
+  it("does not open the terminal if action is silent", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    term:close()
+
+    term:send({ "foo" }, "silent")
+    vim.wait(100)
+
+    assert.is_false(term:is_open())
+  end)
+
+  it("focuses the terminal if action is interactive", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    term:close()
+
+    term:send({ "foo" }, "interactive")
+    vim.wait(100)
+
+    assert.is_true(term:is_focused())
+  end)
+
+  it("restores focus to original window if action is visible", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    local original_win = vim.api.nvim_get_current_win()
+
+    term:send({ "foo" }, "visible")
+    vim.wait(100)
+
+    assert.equal(original_win, vim.api.nvim_get_current_win())
+  end)
+
+  it("scrolls to the bottom after sending", function()
+    local term = terms.Terminal:new({ cmd = "cat" }):start()
+    term:open()
+    vim.api.nvim_win_set_cursor(term:get_state("window"), { 1, 0 })
+
+    term:send({ "foo" })
+    vim.wait(100)
+
+    local cursor = vim.api.nvim_win_get_cursor(term:get_state("window"))
+    local lines = vim.api.nvim_buf_line_count(term:get_state("bufnr"))
+    assert.equal(lines, cursor[1])
   end)
 end)

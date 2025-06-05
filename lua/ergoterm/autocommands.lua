@@ -5,7 +5,6 @@ local lazy = require("ergoterm.lazy")
 local terms = lazy.require("ergoterm.terminal")
 
 local AUGROUP = "ErgoTermAutoCommands"
-local BUFFER_AUGROUP = "ErgoTermBufferAutoCommands"
 
 local M = {}
 
@@ -25,7 +24,8 @@ function M.on_filetype(ev)
   vim.api.nvim_buf_set_option(bufnr, "foldtext", "foldtext()")
 end
 
-function M.on_term_close(term)
+function M.on_term_close()
+  local term = terms.identify()
   term:on_term_close()
 end
 

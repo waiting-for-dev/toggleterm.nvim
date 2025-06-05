@@ -253,6 +253,7 @@ function Terminal:start()
     vim.api.nvim_buf_call(self._state.bufnr, function()
       self._state.job_id = self:_start_job()
     end)
+    self:_setup_buffer_autocommands()
     self:on_create()
   end
   return self
@@ -475,6 +476,10 @@ function Terminal:on_win_leave()
   if self._state.layout == "float" then self:close() end
 end
 
+function Terminal:on_term_close()
+  self:delete()
+end
+
 function Terminal:get_state(key)
   return self._state[key]
 end
@@ -639,6 +644,15 @@ end
 function Terminal:_set_float_options()
   utils.wo_setlocal(self._state.window, "sidescrolloff", 0)
   utils.wo_setlocal(self._state.window, "winblend", self.float_winblend)
+end
+
+function Terminal:_setup_buffer_autocommands()
+  local group = vim.api.nvim_create_augroup("ErgoTermBuffer", { clear = true })
+  vim.api.nvim_create_autocmd("TermClose", {
+    buffer = self._state.bufnr,
+    group = group,
+    callback = function() self:delete() end,
+  })
 end
 
 ---@private
