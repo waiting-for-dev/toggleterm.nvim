@@ -1414,3 +1414,39 @@ describe(":send", function()
     assert.equal(lines, cursor[1])
   end)
 end)
+
+describe(":clear", function()
+  local original_is_windows
+
+  before_each(function()
+    original_is_windows = utils.is_windows
+  end)
+
+  after_each(function()
+    utils.is_windows = original_is_windows
+  end)
+
+  it("sends 'clear' to the terminal on Unix", function()
+    ---@diagnostic disable-next-line: duplicate-set-field
+    utils.is_windows = function() return false end
+    local term = terms.Terminal:new():start()
+    local spy_chansend = spy.on(vim.fn, "chansend")
+
+    term:clear()
+    vim.wait(100)
+
+    assert.spy(spy_chansend).was_called_with(term:get_state("job_id"), { "clear", "" })
+  end)
+
+  it("sends 'cls' to the terminal on Windows", function()
+    ---@diagnostic disable-next-line: duplicate-set-field
+    utils.is_windows = function() return true end
+    local term = terms.Terminal:new():start()
+    local spy_chansend = spy.on(vim.fn, "chansend")
+
+    term:clear()
+    vim.wait(100)
+
+    assert.spy(spy_chansend).was_called_with(term:get_state("job_id"), { "cls", "" })
+  end)
+end)

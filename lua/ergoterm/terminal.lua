@@ -456,6 +456,7 @@ function Terminal:send(input, action, trim, new_line)
       vim.api.nvim_set_current_win(caller_window)
     end)
   end
+  return self
 end
 
 ---Clear the terminal screen
