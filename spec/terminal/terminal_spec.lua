@@ -1496,3 +1496,66 @@ describe(":on_buf_enter", function()
     assert.spy(spy_mode_set_initial).was_called_with(false)
   end)
 end)
+
+describe(":on_win_leave", function()
+  it("persists mode if persist_mode is true", function()
+    local term = terms.Terminal:new({ persist_mode = true, start_in_insert = true }):start()
+    local original_mode_get = mode.get
+    ---@diagnostic disable-next-line: duplicate-set-field
+    mode.get = function() return "n" end
+
+    term:on_win_leave()
+
+    assert.equal("n", term:get_state("mode"))
+
+    mode.get = original_mode_get
+  end)
+
+  it("does not persist mode if persist_mode is false", function()
+    local term = terms.Terminal:new({ persist_mode = false, start_in_insert = true }):start()
+    local original_mode_get = mode.get
+    ---@diagnostic disable-next-line: duplicate-set-field
+    mode.get = function() return "n" end
+
+    term:on_win_leave()
+
+    assert.equal("i", term:get_state("mode"))
+
+    mode.get = original_mode_get
+  end)
+
+
+  it("closes terminal if layout is float", function()
+    local term = terms.Terminal:new({ layout = "float" }):open()
+
+    term:on_win_leave()
+
+    assert.is_false(term:is_open())
+  end)
+
+  it("does not close terminal if layout is not float", function()
+    local term = terms.Terminal:new({ layout = "below" }):open()
+
+    term:on_win_leave()
+
+    assert.is_true(term:is_open())
+  end)
+end)
+
+describe(":on_term_close", function()
+  it("deletes the terminal", function()
+    local term = terms.Terminal:new()
+
+    term:on_term_close()
+
+    assert.is_nil(terms.get(term.id))
+  end)
+end)
+
+describe(":get_state", function()
+  it("returns the given key in the state of the terminal", function()
+    local term = terms.Terminal:new()
+
+    assert.equal("below", term:get_state("layout"))
+  end)
+end)
