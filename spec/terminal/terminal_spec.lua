@@ -4,6 +4,7 @@ local terms = require("ergoterm.terminal")
 
 local config = require("ergoterm.config")
 local utils = require("ergoterm.utils")
+local mode = require("ergoterm.mode")
 
 local function mocking_notify(callback)
   local result = nil
@@ -1448,5 +1449,50 @@ describe(":clear", function()
     vim.wait(100)
 
     assert.spy(spy_chansend).was_called_with(term:get_state("job_id"), { "cls", "" })
+  end)
+end)
+
+describe(":on_buf_enter", function()
+  it("sets the filetype", function()
+    local term = terms.Terminal:new():start()
+
+    term:on_buf_enter()
+
+    assert.equal("ErgoTerm", vim.bo[term:get_state("bufnr")].filetype)
+  end)
+
+  it("sets buflisted to false", function()
+    local term = terms.Terminal:new():start()
+
+    term:on_buf_enter()
+
+    assert.is_false(vim.bo[term:get_state("bufnr")].buflisted)
+  end)
+
+  it("restores last mode if persist_mode is true", function()
+    local term = terms.Terminal:new({ persist_mode = true, start_in_insert = false }):start()
+    local spy_mode_set = spy.on(mode, "set")
+
+    term:on_buf_enter()
+
+    assert.spy(spy_mode_set).was_called_with("n")
+  end)
+
+  it("starts in insert mode if persist_mode is false and start_in_insert is true", function()
+    local term = terms.Terminal:new({ persist_mode = false, start_in_insert = true }):start()
+    local spy_mode_set_initial = spy.on(mode, "set_initial")
+
+    term:on_buf_enter()
+
+    assert.spy(spy_mode_set_initial).was_called_with(true)
+  end)
+
+  it("starts in normal mode if persist_mode is false and start_in_insert is false", function()
+    local term = terms.Terminal:new({ persist_mode = false, start_in_insert = false }):start()
+    local spy_mode_set_initial = spy.on(mode, "set_initial")
+
+    term:on_buf_enter()
+
+    assert.spy(spy_mode_set_initial).was_called_with(false)
   end)
 end)

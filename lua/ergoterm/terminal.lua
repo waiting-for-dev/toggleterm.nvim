@@ -546,7 +546,7 @@ function Terminal:_initialize_state()
     layout = self.layout,
     float_opts = self:_initialize_float_opts(),
     job_id = nil,
-    mode = mode.get_initial_mode(self.start_in_insert),
+    mode = mode.get_initial(self.start_in_insert),
     on_job_exit = self:_initialize_exit_handler(self.on_job_exit),
     on_job_stdout = self:_initialize_output_handler(self.on_job_stdout),
     on_job_stderr = self:_initialize_output_handler(self.on_job_stderr),
@@ -557,7 +557,7 @@ end
 
 ---@private
 function Terminal:_recompute_state()
-  self._state.mode = mode.get_initial_mode(self.start_in_insert)
+  self._state.mode = mode.get_initial(self.start_in_insert)
   self._state.layout = self.layout
   self._state.on_job_exit = self:_initialize_exit_handler(self.on_job_exit)
   self._state.on_job_stdout = self:_initialize_output_handler(self.on_job_stdout)
@@ -635,7 +635,7 @@ end
 
 ---@private
 function Terminal:_set_initial_mode()
-  mode.set_initial_mode(self.start_in_insert)
+  mode.set_initial(self.start_in_insert)
   return self
 end
 

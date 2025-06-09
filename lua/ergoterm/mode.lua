@@ -14,7 +14,7 @@ function M.get()
   end
 end
 
-function M.get_initial_mode(start_in_insert)
+function M.get_initial(start_in_insert)
   if start_in_insert then
     return M.INSERT
   else
@@ -22,8 +22,8 @@ function M.get_initial_mode(start_in_insert)
   end
 end
 
-function M.set_initial_mode(start_in_insert)
-  M.set(M.get_initial_mode(start_in_insert))
+function M.set_initial(start_in_insert)
+  M.set(M.get_initial(start_in_insert))
 end
 
 function M.set(mode)
