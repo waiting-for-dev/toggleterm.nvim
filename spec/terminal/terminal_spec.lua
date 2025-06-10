@@ -1,25 +1,10 @@
 ---@diagnostic disable: undefined-field
 
 local terms = require("ergoterm.terminal")
-
 local config = require("ergoterm.config")
 local utils = require("ergoterm.utils")
 local mode = require("ergoterm.mode")
-
-local function mocking_notify(callback)
-  local result = nil
-  local original_notify = utils.notify
-  ---@diagnostic disable-next-line: duplicate-set-field
-  utils.notify = function(msg, level)
-    result = {
-      msg = msg,
-      level = level
-    }
-  end
-  callback()
-  utils.notify = original_notify
-  return result
-end
+local test_helpers = require("test_helpers")
 
 after_each(function()
   terms.delete_all()
@@ -199,7 +184,7 @@ describe(".select", function()
         return nil
       end
     }
-    local result = mocking_notify(function()
+    local result = test_helpers.mocking_notify(function()
       terms.select(picker, "prompt", {})
     end)
 
@@ -557,7 +542,7 @@ describe(":new", function()
   end)
 
   it("errors if dir is not a valid directory", function()
-    local result = mocking_notify(function()
+    local result = test_helpers.mocking_notify(function()
       terms.Terminal:new({ dir = "/invalid" })
     end)
 
@@ -706,7 +691,7 @@ describe(":update", function()
   it("doesn't allow updating cmd", function()
     local term = terms.Terminal:new({ cmd = "echo hello" })
 
-    local result = mocking_notify(function()
+    local result = test_helpers.mocking_notify(function()
       term:update({ cmd = "echo world" })
     end)
 
@@ -719,7 +704,7 @@ describe(":update", function()
   it("doesn't allow updating dir", function()
     local term = terms.Terminal:new({ dir = "/tmp" })
 
-    local result = mocking_notify(function()
+    local result = test_helpers.mocking_notify(function()
       term:update({ dir = "/home" })
     end)
 

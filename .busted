@@ -3,7 +3,7 @@ return {
     lua = "nvim -l",
     verbose = true,
     output = "tap",
-    lpath = "lua/?.lua",
+    lpath = "lua/?.lua;spec/support/?.lua",
     shuffle = true,
   }
 }
