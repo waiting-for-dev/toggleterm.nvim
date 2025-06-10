@@ -1,9 +1,3 @@
----@module "ergoterm.lazy"
-local lazy = require("ergoterm.lazy")
-
----@module "ergoterm.config"
-local config = lazy.require("ergoterm.config")
-
 local M = {}
 
 ---@alias error_types 'error' | 'info' | 'warn'
