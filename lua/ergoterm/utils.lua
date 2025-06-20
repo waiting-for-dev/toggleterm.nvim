@@ -35,14 +35,6 @@ function M.tbl_filter_empty(tbl)
   )
 end
 
---- TODO: replace with double-indexing on `vim.wo` when neovim/neovim#20288 (hopefully) merges
----@param win number
----@param option string
----@param value any
-function M.wo_setlocal(win, option, value)
-  vim.api.nvim_set_option_value(option, value, { scope = "local", win = win })
-end
-
 ---@return boolean
 function M.is_windows()
   return vim.fn.has("win32") == 1

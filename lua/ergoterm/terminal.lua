@@ -492,9 +492,9 @@ end
 
 ---@private
 function Terminal:_set_win_options()
-  utils.wo_setlocal(self._state.window, "number", false)
-  utils.wo_setlocal(self._state.window, "signcolumn", "no")
-  utils.wo_setlocal(self._state.window, "relativenumber", false)
+  vim.api.nvim_set_option_value("number", false, { scope = "local", win = self._state.window })
+  vim.api.nvim_set_option_value("signcolumn", "no", { scope = "local", win = self._state.window })
+  vim.api.nvim_set_option_value("relativenumber", false, { scope = "local", win = self._state.window })
   if self._state.layout == "float" then
     self:_set_float_options()
   end
@@ -641,8 +641,8 @@ end
 
 ---Sets the floating terminal options
 function Terminal:_set_float_options()
-  utils.wo_setlocal(self._state.window, "sidescrolloff", 0)
-  utils.wo_setlocal(self._state.window, "winblend", self.float_winblend)
+  vim.api.nvim_set_option_value("sidescrolloff", 0, { scope = "local", win = self._state.window })
+  vim.api.nvim_set_option_value("winblend", self.float_winblend, { scope = "local", win = self._state.window })
 end
 
 function Terminal:_setup_buffer_autocommands()
