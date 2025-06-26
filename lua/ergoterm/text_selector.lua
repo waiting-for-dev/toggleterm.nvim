@@ -36,7 +36,6 @@ function M.select(selection_type)
   end
 end
 
----@private
 function M._get_visual_selection(res, motion)
   motion = motion or false
   local mode = vim.fn.visualmode()
@@ -73,7 +72,6 @@ function M._get_visual_selection(res, motion)
   end
 end
 
----@private
 function M._get_line_selection(mode)
   local start_char, end_char = unpack(({
     visual = { "'<", "'>" },
