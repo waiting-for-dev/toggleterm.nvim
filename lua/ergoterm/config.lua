@@ -99,10 +99,12 @@ function M.build_picker(conf)
 end
 
 function M._detect_picker()
-  if require("fzf-lua") then
-    return require("ergoterm.pickers.fzf_lua")
+  if pcall(require, "telescope") then
+    return require("ergoterm.pickers.p_telescope")
+  elseif pcall(require, "fzf-lua") then
+    return require("ergoterm.pickers.p_fzf_lua")
   else
-    return require("ergoterm.pickers.vim_ui_select")
+    return require("ergoterm.pickers.p_vim_ui_select")
   end
 end
 
