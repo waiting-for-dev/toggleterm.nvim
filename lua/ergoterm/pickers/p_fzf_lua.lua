@@ -34,15 +34,7 @@ end
 function M.previewer:populate_preview_buf(entry_str)
   if not self.win or not self.win:validate_preview() then return end
   local entry = self:parse_entry(entry_str)
-  local lines = vim.api.nvim_buf_get_lines(entry.bufnr, 0, -1, false)
-  local tmpbuf = self:get_tmp_buffer()
-  vim.api.nvim_buf_set_lines(tmpbuf, 0, -1, false, lines)
-  vim.bo[tmpbuf].filetype = "sh"
-  self:set_preview_buf(tmpbuf)
-  local line_count = #lines
-  if line_count > 0 then
-    vim.api.nvim_win_set_cursor(self.win.preview_winid, { line_count, 0 })
-  end
+  self:set_preview_buf(entry.bufnr)
   self.win:update_preview_title(" " .. entry.name .. " ")
   self.win:update_preview_scrollbar()
 end

@@ -346,7 +346,6 @@ end
 ---
 ---@param layout string?
 function Terminal:focus(layout)
-  if not self:is_started() then self:start() end
   if not self:is_open() then self:open(layout) end
   if not self:is_focused() then
     vim.api.nvim_set_current_tabpage(self._state.tabpage)

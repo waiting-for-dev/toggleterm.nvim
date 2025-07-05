@@ -25,21 +25,9 @@ function M.select(terminals, prompt, definitions)
       local term = entry.value
       local bufnr = term:get_state("bufnr")
 
-      if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-        vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-        vim.bo[self.state.bufnr].filetype = "sh"
-        local line_count = #lines
-        if line_count > 0 then
-          vim.schedule(function()
-            if vim.api.nvim_win_is_valid(self.state.winid) then
-              vim.api.nvim_win_set_cursor(self.state.winid, { line_count, 0 })
-            end
-          end)
-        end
-      else
-        vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, { "Terminal not started" })
-      end
+      vim.schedule(function()
+        vim.api.nvim_win_set_buf(self.state.winid, bufnr)
+      end)
     end
   })
 
