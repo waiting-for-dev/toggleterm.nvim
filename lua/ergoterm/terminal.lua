@@ -487,6 +487,7 @@ function Terminal:_set_ft_options()
   local buf = vim.bo[self._state.bufnr]
   buf.filetype = FILETYPE
   buf.buflisted = false
+  buf.bufhidden = "hide"
 end
 
 ---@private

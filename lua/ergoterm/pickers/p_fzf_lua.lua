@@ -9,7 +9,7 @@ function M.get_term_id_from_selected(selected)
   return tonumber(selected:match("(%d+)-"))
 end
 
-M.previewer = fzf_lua_builtin_previewer.base:extend()
+M.previewer = fzf_lua_builtin_previewer.buffer_or_file:extend()
 
 function M.previewer:new(o, opts, fzf_win)
   M.previewer.super.new(self, o, opts, fzf_win)
@@ -31,10 +31,33 @@ function M.previewer:parse_entry(entry_str)
   end
 end
 
+--function M.previewer:populate_preview_buf(entry_str)
+--  if not self.win or not self.win:validate_preview() then return end
+--  local entry = self:parse_entry(entry_str)
+--  self:set_preview_buf(entry.bufnr)
+--  self.win:update_preview_title(" " .. entry.name .. " ")
+--  self.win:update_preview_scrollbar()
+--end
+
+--function M.previewer:clear_preview_buf()
+--  -- no-op
+--end
+
 function M.previewer:populate_preview_buf(entry_str)
   if not self.win or not self.win:validate_preview() then return end
   local entry = self:parse_entry(entry_str)
-  self:set_preview_buf(entry.bufnr)
+  if not entry then return end
+
+  -- Get a temporary buffer for the preview
+  local tmpbuf = self:get_tmp_buffer()
+
+  -- Copy the terminal buffer content to the preview buffer
+  local term_lines = vim.api.nvim_buf_get_lines(entry.bufnr, 0, -1, false)
+  vim.api.nvim_buf_set_lines(tmpbuf, 0, -1, false, term_lines)
+
+  -- Set the preview buffer
+  self:set_preview_buf(tmpbuf)
+
   self.win:update_preview_title(" " .. entry.name .. " ")
   self.win:update_preview_scrollbar()
 end
