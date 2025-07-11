@@ -1530,10 +1530,16 @@ end)
 describe(":on_term_close", function()
   it("deletes the terminal", function()
     local term = terms.Terminal:new()
+    local original_schedule = vim.schedule
+    ---@diagnostic disable-next-line: duplicate-set-field
+    vim.schedule = function(fn)
+      fn()
+    end
 
     term:on_term_close()
 
     assert.is_nil(terms.get(term.id))
+    vim.schedule = original_schedule
   end)
 end)
 

@@ -475,7 +475,7 @@ function Terminal:on_win_leave()
 end
 
 function Terminal:on_term_close()
-  self:delete()
+  vim.schedule(function() self:delete() end)
 end
 
 function Terminal:get_state(key)
