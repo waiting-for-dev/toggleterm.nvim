@@ -28,6 +28,8 @@ function M.select(terminals, prompt, definitions)
       vim.schedule(function()
         vim.api.nvim_win_set_buf(self.state.winid, bufnr)
       end)
+    end,
+    teardown = function()
     end
   })
 
@@ -44,6 +46,8 @@ function M.select(terminals, prompt, definitions)
         }
       end,
     }),
+    teardown = function()
+    end,
     sorter = conf.generic_sorter({}),
     previewer = terminal_previewer,
     attach_mappings = function(prompt_bufnr, map)
