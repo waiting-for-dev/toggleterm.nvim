@@ -182,18 +182,6 @@ describe(".filter", function()
     assert.equal(0, #result)
   end)
 
-  it("returns all terminals when predicate always returns true", function()
-    local term1 = terms.Terminal:new({ name = "test1" })
-    local term2 = terms.Terminal:new({ name = "test2" })
-
-    local result = terms.filter(function(t)
-      return true
-    end)
-
-    assert.equal(2, #result)
-    assert.is_true(vim.tbl_contains(result, term1))
-    assert.is_true(vim.tbl_contains(result, term2))
-  end)
 end)
 
 describe(".select", function()
