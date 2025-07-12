@@ -181,7 +181,6 @@ describe(".filter", function()
 
     assert.equal(0, #result)
   end)
-
 end)
 
 describe(".select", function()
