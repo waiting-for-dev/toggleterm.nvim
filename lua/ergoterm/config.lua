@@ -52,6 +52,7 @@ M.NULL_CALLBACK = function(...) end
 ---@field on_start on_start
 ---@field persist_mode boolean
 ---@field shell string|fun():string
+---@field show_in_picker boolean
 ---@field start_in_insert boolean
 ---@field picker Picker?
 
@@ -71,6 +72,7 @@ local config = {
   },
   float_winblend = 10,
   persist_mode = false,
+  show_in_picker = true,
   on_close = M.NULL_CALLBACK,
   on_create = M.NULL_CALLBACK,
   on_focus = M.NULL_CALLBACK,

@@ -186,6 +186,25 @@ describe(".select", function()
     ---@diagnostic enable: need-check-nil
   end)
 
+  it("excludes terminals with show_in_picker=false from picker", function()
+    local picker = {
+      select = function(terminals, prompt, callbacks)
+        return { terminals, prompt, callbacks }
+      end
+    }
+    local visible_term = terms.Terminal:new({ show_in_picker = true }):start()
+    local hidden_term = terms.Terminal:new({ show_in_picker = false }):start()
+    local callbacks = {}
+
+    local result = terms.select(picker, "prompt", callbacks)
+
+    ---@diagnostic disable: need-check-nil
+    assert.equal(1, #result[1])
+    assert.is_true(vim.tbl_contains(result[1], visible_term))
+    assert.is_false(vim.tbl_contains(result[1], hidden_term))
+    ---@diagnostic enable: need-check-nil
+  end)
+
   it("notifies when no terminals are started", function()
     local picker = {
       select = function()
@@ -374,6 +393,18 @@ describe(":new", function()
     local term = terms.Terminal:new()
 
     assert.is_true(term.start_in_insert)
+  end)
+
+  it("takes show_in_picker option", function()
+    local term = terms.Terminal:new({ show_in_picker = false })
+
+    assert.is_false(term.show_in_picker)
+  end)
+
+  it("defaults to config's show_in_picker", function()
+    local term = terms.Terminal:new()
+
+    assert.is_true(term.show_in_picker)
   end)
 
   it("takes on_close option", function()

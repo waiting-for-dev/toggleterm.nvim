@@ -109,7 +109,7 @@ end
 ---@param callbacks table<string, PickerCallbackDefinition> a table of callbacks to run when the user selects a terminal
 ---@return any
 function M.select(picker, prompt, callbacks)
-  local terminals = M.filter(function(term) return term:is_started() end)
+  local terminals = M.filter(function(term) return term:is_started() and term.show_in_picker end)
   if #terminals == 0 then return utils.notify("No ergoterms have been started yet", "info") end
   return picker.select(terminals, prompt, callbacks)
 end
@@ -174,6 +174,7 @@ end
 ---@field on_stop on_stop?
 ---@field on_start on_start?
 ---@field persist_mode boolean? whether or not to persist the mode of the terminal on return
+---@field show_in_picker boolean? whether or not the terminal is visible in picker selections
 ---@field start_in_insert boolean?
 
 ---@class Terminal : TermCreateArgs
@@ -200,6 +201,7 @@ function Terminal:new(args)
   term.float_opts = vim.tbl_deep_extend("keep", term.float_opts or {}, conf.float_opts) --@type FloatOpts
   term.float_winblend = term.float_winblend or conf.float_winblend
   term.persist_mode = vim.F.if_nil(term.persist_mode, conf.persist_mode)
+  term.show_in_picker = vim.F.if_nil(term.show_in_picker, conf.show_in_picker)
   term.start_in_insert = vim.F.if_nil(term.start_in_insert, conf.start_in_insert)
   term.on_close = vim.F.if_nil(term.on_close, conf.on_close)
   term.on_create = vim.F.if_nil(term.on_create, conf.on_create)
