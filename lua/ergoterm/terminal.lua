@@ -11,6 +11,8 @@ local lazy = require("ergoterm.lazy")
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.mode"
 local mode = lazy.require("ergoterm.mode")
+---@module "ergoterm.text_decorators"
+local text_decorators = lazy.require("ergoterm.text_decorators")
 ---@module "ergoterm.utils"
 local utils = lazy.require("ergoterm.utils")
 
@@ -439,7 +441,7 @@ function Terminal:send(input, action, trim, new_line, decorator)
   local computed_action = action or "interactive"
   local computed_trim = trim == nil or trim
   local computed_new_line = new_line == nil or new_line
-  local computed_decorator = decorator or function(text) return text end
+  local computed_decorator = decorator or text_decorators.identity
   local caller_window = vim.api.nvim_get_current_win()
   if computed_new_line then
     table.insert(input, "")
