@@ -172,6 +172,18 @@ M._all_options = {
     )
   end,
 
+  decorator = function(typed_decorator)
+    local decorators = {
+      "identity",
+      "markdown_code"
+    }
+    if utils.str_is_empty(typed_decorator) then return decorators end
+    return vim.tbl_filter(
+      function(decorator) return decorator:match("^" .. typed_decorator .. "*") ~= nil end,
+      decorators
+    )
+  end,
+
   trim = function() return { "true", "false" } end,
 
   new_line = function() return { "true", "false" } end,
@@ -191,6 +203,7 @@ M._term_update_options = {
 M._term_send_options = {
   cmd = M._all_options.cmd,
   action = M._all_options.action,
+  decorator = M._all_options.decorator,
   trim = M._all_options.trim,
   new_line = M._all_options.new_line,
 }

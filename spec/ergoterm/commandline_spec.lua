@@ -56,6 +56,7 @@ describe("commandline.term_send_complete", function()
 
     assert.is_true(vim.tbl_contains(result, "cmd="))
     assert.is_true(vim.tbl_contains(result, "action="))
+    assert.is_true(vim.tbl_contains(result, "decorator="))
     assert.is_true(vim.tbl_contains(result, "trim="))
     assert.is_true(vim.tbl_contains(result, "new_line="))
   end)
@@ -73,6 +74,13 @@ describe("commandline.term_send_complete", function()
     assert.is_true(vim.tbl_contains(result, "action=interactive"))
     assert.is_true(vim.tbl_contains(result, "action=silent"))
     assert.is_true(vim.tbl_contains(result, "action=visible"))
+  end)
+
+  it("completes decorator values", function()
+    local result = commandline.term_send_complete("decorator=", "decorator=", 10)
+
+    assert.is_true(vim.tbl_contains(result, "decorator=identity"))
+    assert.is_true(vim.tbl_contains(result, "decorator=markdown_code"))
   end)
 end)
 

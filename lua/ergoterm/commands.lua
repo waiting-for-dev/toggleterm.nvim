@@ -11,6 +11,8 @@ local config = lazy.require("ergoterm.config")
 local terms = lazy.require("ergoterm.terminal")
 ---@module "ergoterm.text_selector"
 local text_selector = lazy.require("ergoterm.text_selector")
+---@module "ergoterm.text_decorators"
+local text_decorators = lazy.require("ergoterm.text_decorators")
 
 local M = {}
 
@@ -68,14 +70,20 @@ function M.send(args, range, bang, picker)
   vim.validate({
     cmd = { parsed.cmd, "string", true },
     action = { parsed.action, "string", true },
+    decorator = { parsed.decorator, "string", true },
     trim = { parsed.trim, "boolean", true },
     new_line = { parsed.new_line, "boolean", true },
   })
   local selection = range == 0 and "single_line" or
       (vim.fn.visualmode() == "V" and "visual_lines" or "visual_selection")
   local input = parsed.cmd and { parsed.cmd } or text_selector.select(selection)
+  
+  -- Get the decorator function
+  local decorator_name = parsed.decorator or "identity"
+  local decorator = text_decorators[decorator_name]
+  
   local send_to_terminal = function(t)
-    t:send(input, parsed.action, parsed.trim, parsed.new_line)
+    t:send(input, parsed.action, parsed.trim, parsed.new_line, decorator)
   end
   if bang then
     send_to_terminal(terms.get_last_focused())
