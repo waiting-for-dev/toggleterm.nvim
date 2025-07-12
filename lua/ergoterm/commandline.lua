@@ -3,6 +3,8 @@ local lazy = require("ergoterm.lazy")
 
 ---@module "ergoterm.utils"
 local utils = lazy.require("ergoterm.utils")
+---@module "ergoterm.text_decorators"
+local text_decorators = lazy.require("ergoterm.text_decorators")
 
 local M = {}
 
@@ -174,10 +176,7 @@ M._all_options = {
   end,
 
   decorator = function(typed_decorator)
-    local decorators = {
-      "identity",
-      "markdown_code"
-    }
+    local decorators = vim.tbl_values(text_decorators.DECORATORS)
     if utils.str_is_empty(typed_decorator) then return decorators end
     return vim.tbl_filter(
       function(decorator) return decorator:match("^" .. typed_decorator .. "*") ~= nil end,

@@ -9,10 +9,10 @@ local commandline = lazy.require("ergoterm.commandline")
 local config = lazy.require("ergoterm.config")
 ---@module "ergoterm.terminal"
 local terms = lazy.require("ergoterm.terminal")
----@module "ergoterm.text_selector"
-local text_selector = lazy.require("ergoterm.text_selector")
 ---@module "ergoterm.text_decorators"
 local text_decorators = lazy.require("ergoterm.text_decorators")
+---@module "ergoterm.text_selector"
+local text_selector = lazy.require("ergoterm.text_selector")
 
 local M = {}
 
@@ -60,6 +60,10 @@ end
 ---
 ---The `trim` argument can be used to remove leading and trailing whitespace from the text before sending it.
 ---
+---The `decorator` argument can be used to specify a text decorator function that will be applied to the text before sending it. It can be one of the following:
+--- - `identity`: No changes to the text.
+--- - `markdown_code`: Wraps the text in a markdown code block with the current buffer's filetype.
+---
 ---In bang mode, the last focused terminal will be used. Otherwise, the user will be prompted to select a terminal.
 ---@param args string
 ---@param range number
@@ -77,11 +81,10 @@ function M.send(args, range, bang, picker)
   local selection = range == 0 and "single_line" or
       (vim.fn.visualmode() == "V" and "visual_lines" or "visual_selection")
   local input = parsed.cmd and { parsed.cmd } or text_selector.select(selection)
-  
-  -- Get the decorator function
-  local decorator_name = parsed.decorator or "identity"
+
+  local decorator_name = parsed.decorator or text_decorators.DECORATORS.IDENTITY
   local decorator = text_decorators[decorator_name]
-  
+
   local send_to_terminal = function(t)
     t:send(input, parsed.action, parsed.trim, parsed.new_line, decorator)
   end
