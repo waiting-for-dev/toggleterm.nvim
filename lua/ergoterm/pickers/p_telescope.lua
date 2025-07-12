@@ -29,8 +29,6 @@ function M.select(terminals, prompt, definitions)
         vim.api.nvim_win_set_buf(self.state.winid, bufnr)
       end)
     end,
-    teardown = function()
-    end
   })
 
   -- Create the picker
@@ -46,8 +44,6 @@ function M.select(terminals, prompt, definitions)
         }
       end,
     }),
-    teardown = function()
-    end,
     sorter = conf.generic_sorter({}),
     previewer = terminal_previewer,
     attach_mappings = function(prompt_bufnr, map)
