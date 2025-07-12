@@ -3,6 +3,24 @@ local decorators = require("ergoterm.text_decorators")
 ---@diagnostic disable: undefined-field
 
 describe("text_decorators", function()
+  describe(".identity", function()
+    it("returns text unchanged", function()
+      local input = { "line1", "line2", "" }
+
+      local result = decorators.identity(input)
+
+      assert.same(input, result)
+    end)
+
+    it("handles empty input", function()
+      local input = {}
+
+      local result = decorators.identity(input)
+
+      assert.same({}, result)
+    end)
+  end)
+
   describe(".markdown_code", function()
     local original_bo
 

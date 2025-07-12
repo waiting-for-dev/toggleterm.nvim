@@ -2,6 +2,13 @@
 
 local M = {}
 
+---Identity decorator that returns text unchanged
+---@param text string[]
+---@return string[]
+function M.identity(text)
+  return text
+end
+
 ---Wraps text in markdown code block with current buffer's filetype
 ---
 ---@param text string[]
