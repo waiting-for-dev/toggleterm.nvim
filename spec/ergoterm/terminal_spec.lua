@@ -1386,6 +1386,39 @@ describe(":send", function()
     assert.is_true(vim.tbl_contains(lines, "  qux  "))
   end)
 
+  it("applies decorator function to input", function()
+    local term = terms.Terminal:new():start()
+    local spy_chansend = spy.on(vim.fn, "chansend")
+    local decorator = function(text)
+      local result = {}
+      for _, line in ipairs(text) do
+        table.insert(result, "decorated: " .. line)
+      end
+      return result
+    end
+
+    term:send({ "foo" }, nil, nil, nil, decorator)
+    vim.wait(100)
+
+    assert.spy(spy_chansend).was_called_with(
+      term:get_state("job_id"),
+      { "decorated: foo", "decorated: " }
+    )
+  end)
+
+  it("uses identity function as default decorator", function()
+    local term = terms.Terminal:new():start()
+    local spy_chansend = spy.on(vim.fn, "chansend")
+
+    term:send({ "foo" })
+    vim.wait(100)
+
+    assert.spy(spy_chansend).was_called_with(
+      term:get_state("job_id"),
+      { "foo", "" }
+    )
+  end)
+
   it("opens the terminal if not open and action is not silent", function()
     local term = terms.Terminal:new({ cmd = "cat" }):start()
     term:close()

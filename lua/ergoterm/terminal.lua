@@ -434,10 +434,12 @@ end
 ---  - "silent": Just sends the command without changing terminal visibility
 ---@param trim? boolean Whether to trim leading and trailing whitespace from the input
 ---@param new_line? boolean Whether to add a new line after the input
-function Terminal:send(input, action, trim, new_line)
+---@param decorator? fun(text: string[]): string[] Function to modify the text before sending
+function Terminal:send(input, action, trim, new_line, decorator)
   local computed_action = action or "interactive"
   local computed_trim = trim == nil or trim
   local computed_new_line = new_line == nil or new_line
+  local computed_decorator = decorator or function(text) return text end
   local caller_window = vim.api.nvim_get_current_win()
   if computed_new_line then
     table.insert(input, "")
@@ -447,7 +449,8 @@ function Terminal:send(input, action, trim, new_line)
       input[i] = line:gsub("^%s+", ""):gsub("%s+$", "")
     end
   end
-  vim.fn.chansend(self._state.job_id, input)
+  local decorated_input = computed_decorator(input)
+  vim.fn.chansend(self._state.job_id, decorated_input)
   self:_scroll_bottom()
   if computed_action ~= "silent" and not self:is_open() then
     self:open()
