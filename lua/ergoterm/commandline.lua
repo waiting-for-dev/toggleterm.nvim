@@ -17,6 +17,7 @@ local p = {
 ---@field dir string?
 ---@field name string?
 ---@field action string?
+---@field decorator string?
 ---@field trim boolean?
 ---@field new_line boolean?
 ---@field trailing string?
