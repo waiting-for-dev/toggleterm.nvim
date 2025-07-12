@@ -100,6 +100,20 @@ function M.find(predicate)
   return nil
 end
 
+---Get all terminals that match a predicate
+---
+---@param predicate fun(term: Terminal): boolean
+---@return Terminal[]
+function M.filter(predicate)
+  local result = {}
+  for _, term in pairs(M._state.terminals) do
+    if predicate(term) then
+      table.insert(result, term)
+    end
+  end
+  return result
+end
+
 ---Calls given picker to prompt the user to select a started terminal
 ---
 ---@param picker Picker

@@ -157,6 +157,45 @@ describe(".find", function()
   end)
 end)
 
+describe(".filter", function()
+  it("returns all terminals matching given predicate", function()
+    local term1 = terms.Terminal:new({ name = "test" })
+    local term2 = terms.Terminal:new({ name = "test" })
+    terms.Terminal:new({ name = "foo" })
+
+    local result = terms.filter(function(t)
+      return t.name == "test"
+    end)
+
+    assert.equal(2, #result)
+    assert.is_true(vim.tbl_contains(result, term1))
+    assert.is_true(vim.tbl_contains(result, term2))
+  end)
+
+  it("returns empty table when no terminals match predicate", function()
+    terms.Terminal:new({ name = "foo" })
+
+    local result = terms.filter(function(t)
+      return t.name == "bar"
+    end)
+
+    assert.equal(0, #result)
+  end)
+
+  it("returns all terminals when predicate always returns true", function()
+    local term1 = terms.Terminal:new({ name = "test1" })
+    local term2 = terms.Terminal:new({ name = "test2" })
+
+    local result = terms.filter(function(t)
+      return true
+    end)
+
+    assert.equal(2, #result)
+    assert.is_true(vim.tbl_contains(result, term1))
+    assert.is_true(vim.tbl_contains(result, term2))
+  end)
+end)
+
 describe(".select", function()
   it("returns result of calling given picker with started terminal and given prompt and callbacks", function()
     local picker = {
