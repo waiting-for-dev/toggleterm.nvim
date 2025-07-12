@@ -3,21 +3,21 @@
 local M = {}
 
 ---Wraps text in markdown code block with current buffer's filetype
+---
 ---@param text string[]
 ---@return string[]
 function M.markdown_code(text)
   local filetype = vim.bo.filetype
   local result = { "```" .. filetype }
-
-  for _, line in ipairs(text) do
-    -- Skip empty lines that were added for newlines
-    if line ~= "" then
-      table.insert(result, line)
-    end
+  local lines_to_add = text
+  if #text > 0 and text[#text] == "" then
+    lines_to_add = vim.list_slice(text, 1, #text - 1)
   end
-
+  for _, line in ipairs(lines_to_add) do
+    table.insert(result, line)
+  end
   table.insert(result, "```")
-  table.insert(result, "") -- Add newline at the end
+  table.insert(result, "")
 
   return result
 end

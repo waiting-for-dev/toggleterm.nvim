@@ -1,5 +1,7 @@
 local decorators = require("ergoterm.text_decorators")
 
+---@diagnostic disable: undefined-field
+
 describe("text_decorators", function()
   describe(".markdown_code", function()
     local original_bo
@@ -15,9 +17,9 @@ describe("text_decorators", function()
 
     it("wraps text in markdown code block with current filetype", function()
       local input = { "local x = 1", "print(x)" }
-      
+
       local result = decorators.markdown_code(input)
-      
+
       assert.same({
         "```lua",
         "local x = 1",
@@ -29,9 +31,9 @@ describe("text_decorators", function()
 
     it("handles empty input", function()
       local input = {}
-      
+
       local result = decorators.markdown_code(input)
-      
+
       assert.same({
         "```lua",
         "```",
@@ -39,14 +41,15 @@ describe("text_decorators", function()
       }, result)
     end)
 
-    it("skips empty lines from input", function()
-      local input = { "local x = 1", "", "print(x)" }
-      
+    it("preserves empty lines in the middle but skips trailing empty line", function()
+      local input = { "local x = 1", "", "print(x)", "" }
+
       local result = decorators.markdown_code(input)
-      
+
       assert.same({
         "```lua",
         "local x = 1",
+        "",
         "print(x)",
         "```",
         ""
@@ -56,9 +59,9 @@ describe("text_decorators", function()
     it("uses current buffer filetype", function()
       vim.bo.filetype = "python"
       local input = { "x = 1", "print(x)" }
-      
+
       local result = decorators.markdown_code(input)
-      
+
       assert.same({
         "```python",
         "x = 1",
@@ -71,9 +74,9 @@ describe("text_decorators", function()
     it("handles empty filetype", function()
       vim.bo.filetype = ""
       local input = { "some text" }
-      
+
       local result = decorators.markdown_code(input)
-      
+
       assert.same({
         "```",
         "some text",
