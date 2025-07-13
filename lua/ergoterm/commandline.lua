@@ -22,6 +22,10 @@ local p = {
 ---@field decorator string?
 ---@field trim boolean?
 ---@field new_line boolean?
+---@field auto_scroll boolean?
+---@field persist_mode boolean?
+---@field show_in_picker boolean?
+---@field start_in_insert boolean?
 ---@field trailing string?
 
 ---@see https://stackoverflow.com/a/27007701
@@ -54,7 +58,7 @@ function M.parse(args)
       if #part > 1 then
         local arg = vim.split(part, "=")
         local key, value = arg[1], arg[2]
-        if key == "trim" or key == "new_line" then
+        if key == "trim" or key == "new_line" or key == "auto_scroll" or key == "persist_mode" or key == "show_in_picker" or key == "start_in_insert" then
           value = M._toboolean(value)
         end
         result[key] = value
@@ -187,6 +191,14 @@ M._all_options = {
   trim = function() return { "true", "false" } end,
 
   new_line = function() return { "true", "false" } end,
+
+  auto_scroll = function() return { "true", "false" } end,
+
+  persist_mode = function() return { "true", "false" } end,
+
+  show_in_picker = function() return { "true", "false" } end,
+
+  start_in_insert = function() return { "true", "false" } end,
 }
 
 M._term_new_options = {
@@ -198,6 +210,10 @@ M._term_new_options = {
 M._term_update_options = {
   layout = M._all_options.layout,
   name = M._all_options.name,
+  auto_scroll = M._all_options.auto_scroll,
+  persist_mode = M._all_options.persist_mode,
+  show_in_picker = M._all_options.show_in_picker,
+  start_in_insert = M._all_options.start_in_insert,
 }
 
 M._term_send_options = {

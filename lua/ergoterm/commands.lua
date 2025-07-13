@@ -100,7 +100,7 @@ end
 
 ---Updates a terminal
 ---
----The following fields can be updated by providing the corresponding arguments: dir, layout and name.
+---The following fields can be updated by providing the corresponding arguments: layout, name, auto_scroll, persist_mode, show_in_picker, start_in_insert.
 ---
 ---In bang mode, the last focused terminal will be used. Otherwise, the user will be prompted to select a terminal.
 ---
@@ -110,9 +110,12 @@ end
 function M.update(args, bang, picker)
   local parsed = commandline.parse(args)
   vim.validate({
-    dir = { parsed.dir, "string", true },
     layout = { parsed.layout, "string", true },
     name = { parsed.name, "string", true },
+    auto_scroll = { parsed.auto_scroll, "boolean", true },
+    persist_mode = { parsed.persist_mode, "boolean", true },
+    show_in_picker = { parsed.show_in_picker, "boolean", true },
+    start_in_insert = { parsed.start_in_insert, "boolean", true },
   })
   local update_terminal = function(t)
     t:update(parsed)

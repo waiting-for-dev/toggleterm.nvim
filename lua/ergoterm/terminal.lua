@@ -238,8 +238,9 @@ function Terminal:update(opts)
         string.format("Cannot change %s after terminal creation", k),
         "error"
       )
+    else
+      self[k] = v
     end
-    self[k] = v
   end
   self:_recompute_state()
   return self
