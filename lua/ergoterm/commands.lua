@@ -91,12 +91,7 @@ function M.send(args, range, bang, picker)
     t:send(input, parsed.action, parsed.trim, parsed.new_line, decorator)
   end
   if bang then
-    local term = terms.get_last_focused()
-    if not term then
-      return utils.notify("No terminals are open", "error")
-    else
-      send_to_terminal(term)
-    end
+    M._execute_on_last_focused(send_to_terminal)
   else
     terms.select(picker, "Please select a terminal to send text: ",
       { default = { fn = send_to_terminal, desc = "send-text" } })
@@ -123,17 +118,25 @@ function M.update(args, bang, picker)
     t:update(parsed)
   end
   if bang then
-    local term = terms.get_last_focused()
-    if not term then
-      return utils.notify("No terminals are open", "error")
-    else
-      update_terminal(terms.get_last_focused())
-    end
+    M._execute_on_last_focused(update_terminal)
   else
     terms.select(picker, "Please select a terminal to update: ",
       { default = { fn = update_terminal, desc = "update-terminal" } })
   end
 end
+
+---@private
+M._execute_on_last_focused = function(action_fn)
+  local term = terms.get_last_focused()
+  if not term then
+    utils.notify("No terminals are open", "error")
+    return false
+  else
+    action_fn(term)
+    return true
+  end
+end
+
 
 ---Sets up the ErgoTerm default commands
 ---
