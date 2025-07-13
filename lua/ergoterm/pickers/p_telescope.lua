@@ -44,6 +44,8 @@ function M.select(terminals, prompt, definitions)
           if vim.api.nvim_win_is_valid(preview_winid) then
             local utils = require("telescope.utils")
             utils.win_set_buf_noautocmd(preview_winid, bufnr)
+            -- Clear telescope's preview window highlighting to show terminal colors properly
+            vim.api.nvim_win_set_option(preview_winid, "winhl", "")
           end
         end)
       end
