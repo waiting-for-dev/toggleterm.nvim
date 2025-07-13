@@ -27,7 +27,7 @@ function M.select(terminals, prompt, definitions)
 
     dynamic_title = function(_, entry)
       local term = entry.value
-      return term.id .. " - " .. term.name
+      return " " .. term.name .. " (" .. term.layout .. ") "
     end,
 
     get_buffer_by_name = function(_, entry)
