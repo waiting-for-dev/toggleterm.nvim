@@ -13,6 +13,8 @@ local terms = lazy.require("ergoterm.terminal")
 local text_decorators = lazy.require("ergoterm.text_decorators")
 ---@module "ergoterm.text_selector"
 local text_selector = lazy.require("ergoterm.text_selector")
+---@module "ergoterm.utils"
+local utils = lazy.require("ergoterm.utils")
 
 local M = {}
 
@@ -89,7 +91,12 @@ function M.send(args, range, bang, picker)
     t:send(input, parsed.action, parsed.trim, parsed.new_line, decorator)
   end
   if bang then
-    send_to_terminal(terms.get_last_focused())
+    local term = terms.get_last_focused()
+    if not term then
+      return utils.notify("No terminals are open", "error")
+    else
+      send_to_terminal(term)
+    end
   else
     terms.select(picker, "Please select a terminal to send text: ",
       { default = { fn = send_to_terminal, desc = "send-text" } })
@@ -116,7 +123,12 @@ function M.update(args, bang, picker)
     t:update(parsed)
   end
   if bang then
-    update_terminal(terms.get_last_focused())
+    local term = terms.get_last_focused()
+    if not term then
+      return utils.notify("No terminals are open", "error")
+    else
+      update_terminal(terms.get_last_focused())
+    end
   else
     terms.select(picker, "Please select a terminal to update: ",
       { default = { fn = update_terminal, desc = "update-terminal" } })
