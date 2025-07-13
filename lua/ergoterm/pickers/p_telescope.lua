@@ -23,23 +23,28 @@ function M.select(terminals, prompt, definitions)
   -- Create a custom previewer for terminals
   local terminal_previewer = previewers.new_buffer_previewer({
     title = "Terminal Preview",
-    keep_last_buf = true,  -- Prevent buffer deletion
-    
+    keep_last_buf = true, -- Prevent buffer deletion
+
+    dynamic_title = function(self, entry)
+      local term = entry.value
+      return term.id .. " - " .. term.name
+    end,
+
     get_buffer_by_name = function(_, entry)
       local term = entry.value
       return tostring(term:get_state("bufnr"))
     end,
-    
+
     define_preview = function(self, entry, status)
       local term = entry.value
       local bufnr = term:get_state("bufnr")
       local preview_winid = status.layout.preview and status.layout.preview.winid
-      
+
       if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
         -- Use the existing terminal buffer directly
         self.state.bufnr = bufnr
         self.state.bufname = tostring(bufnr)
-        
+
         vim.schedule(function()
           if vim.api.nvim_win_is_valid(preview_winid) then
             local utils = require("telescope.utils")
@@ -50,7 +55,7 @@ function M.select(terminals, prompt, definitions)
         end)
       end
     end,
-    
+
     -- Override teardown to prevent terminal buffer deletion
     teardown = function(self)
       -- Clear references but don't delete terminal buffers
