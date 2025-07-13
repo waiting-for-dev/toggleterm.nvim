@@ -23,6 +23,7 @@ function M.select(terminals, prompt, definitions)
   -- Create a custom previewer for terminals
   local terminal_previewer = previewers.new_buffer_previewer({
     title = "Terminal Preview",
+    keep_last_buf = true,  -- Prevent buffer deletion
     
     get_buffer_by_name = function(_, entry)
       local term = entry.value
@@ -35,7 +36,10 @@ function M.select(terminals, prompt, definitions)
       local preview_winid = status.layout.preview and status.layout.preview.winid
       
       if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
-        -- Set the terminal buffer directly in the preview window
+        -- Use the existing terminal buffer directly
+        self.state.bufnr = bufnr
+        self.state.bufname = tostring(bufnr)
+        
         vim.schedule(function()
           if vim.api.nvim_win_is_valid(preview_winid) then
             local utils = require("telescope.utils")
@@ -47,32 +51,20 @@ function M.select(terminals, prompt, definitions)
     
     -- Override teardown to prevent terminal buffer deletion
     teardown = function(self)
-      -- Don't delete terminal buffers - they should persist
+      -- Clear references but don't delete terminal buffers
       if self.state then
-        self.state.bufnr = nil
-        self.state.bufname = nil
+        -- Only clear if it's not a terminal buffer
+        if self.state.bufnr and vim.api.nvim_buf_is_valid(self.state.bufnr) then
+          local ok, filetype = pcall(vim.api.nvim_buf_get_option, self.state.bufnr, 'filetype')
+          if not ok or filetype ~= terms.FILETYPE then
+            -- Only clear non-terminal buffers
+            self.state.bufnr = nil
+            self.state.bufname = nil
+          end
+        end
       end
     end,
   })
-
-  -- Override the buffer deletion method to protect terminal buffers
-  local original_buf_delete = terminal_previewer.state and terminal_previewer.state.buf_delete
-  if terminal_previewer.state then
-    terminal_previewer.state.buf_delete = function(bufnr)
-      -- Check if this is a terminal buffer before allowing deletion
-      if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
-        local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
-        if filetype == terms.FILETYPE then
-          -- Don't delete terminal buffers
-          return
-        end
-      end
-      -- For non-terminal buffers, use original deletion logic
-      if original_buf_delete then
-        original_buf_delete(bufnr)
-      end
-    end
-  end
 
   -- Create the picker
   pickers.new({}, {
