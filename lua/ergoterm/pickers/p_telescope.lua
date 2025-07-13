@@ -1,3 +1,5 @@
+local terms = require("ergoterm.terminal")
+
 local M = {}
 
 function M.select_actions()
@@ -21,15 +23,56 @@ function M.select(terminals, prompt, definitions)
   -- Create a custom previewer for terminals
   local terminal_previewer = previewers.new_buffer_previewer({
     title = "Terminal Preview",
-    define_preview = function(self, entry)
+    
+    get_buffer_by_name = function(_, entry)
+      local term = entry.value
+      return tostring(term:get_state("bufnr"))
+    end,
+    
+    define_preview = function(self, entry, status)
       local term = entry.value
       local bufnr = term:get_state("bufnr")
-
-      vim.schedule(function()
-        vim.api.nvim_win_set_buf(self.state.winid, bufnr)
-      end)
+      local preview_winid = status.layout.preview and status.layout.preview.winid
+      
+      if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+        -- Set the terminal buffer directly in the preview window
+        vim.schedule(function()
+          if vim.api.nvim_win_is_valid(preview_winid) then
+            local utils = require("telescope.utils")
+            utils.win_set_buf_noautocmd(preview_winid, bufnr)
+          end
+        end)
+      end
+    end,
+    
+    -- Override teardown to prevent terminal buffer deletion
+    teardown = function(self)
+      -- Don't delete terminal buffers - they should persist
+      if self.state then
+        self.state.bufnr = nil
+        self.state.bufname = nil
+      end
     end,
   })
+
+  -- Override the buffer deletion method to protect terminal buffers
+  local original_buf_delete = terminal_previewer.state and terminal_previewer.state.buf_delete
+  if terminal_previewer.state then
+    terminal_previewer.state.buf_delete = function(bufnr)
+      -- Check if this is a terminal buffer before allowing deletion
+      if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+        local filetype = vim.api.nvim_buf_get_option(bufnr, 'filetype')
+        if filetype == terms.FILETYPE then
+          -- Don't delete terminal buffers
+          return
+        end
+      end
+      -- For non-terminal buffers, use original deletion logic
+      if original_buf_delete then
+        original_buf_delete(bufnr)
+      end
+    end
+  end
 
   -- Create the picker
   pickers.new({}, {
