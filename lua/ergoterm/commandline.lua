@@ -150,7 +150,7 @@ M._all_options = {
       "above",
       "below",
       "tab",
-      "buffer",
+      "window",
     }
     if utils.str_is_empty(typed_layout) then return layouts end
     return vim.tbl_filter(

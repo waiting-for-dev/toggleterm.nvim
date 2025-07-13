@@ -285,6 +285,7 @@ end
 ---- "right": open the terminal to the right of the current window
 ---- "tab": open the terminal in a new tab
 ---- "float": open the terminal in a floating window
+---  "window": open the terminal in the current window
 ---
 ---@param layout string?
 ---

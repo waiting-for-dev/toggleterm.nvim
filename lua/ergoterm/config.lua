@@ -12,7 +12,7 @@ local M = {}
 
 M.NULL_CALLBACK = function(...) end
 
----@alias layout "buffer" | "below" | "left" | "right" | "tab" | "above" | "float"
+---@alias layout "window" | "below" | "left" | "right" | "tab" | "above" | "float"
 ---@alias on_close fun(term: Terminal)
 ---@alias on_create fun(term: Terminal)
 ---@alias on_focus fun(term: Terminal)
