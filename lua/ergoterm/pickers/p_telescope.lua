@@ -25,7 +25,7 @@ function M.select(terminals, prompt, definitions)
     title = "Terminal Preview",
     keep_last_buf = true, -- Prevent buffer deletion
 
-    dynamic_title = function(self, entry)
+    dynamic_title = function(_, entry)
       local term = entry.value
       return term.id .. " - " .. term.name
     end,
